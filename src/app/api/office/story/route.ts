@@ -8,13 +8,25 @@ const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'C
 const requests=new Map<string,{count:number;reset:number}>();
 function sameOrigin(request:Request){const origin=request.headers.get('origin');return !origin||origin===new URL(request.url).origin;}
 function rateLimit(request:Request){const ip=request.headers.get('x-nf-client-connection-ip')||request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()||'unknown';const now=Date.now();const entry=requests.get(ip);if(entry&&entry.reset>now&&entry.count>=8)return false;if(!entry||entry.reset<=now)requests.set(ip,{count:1,reset:now+60_000});else entry.count++;return true;}
+/**
+ * 유료 호출을 켜려면 승인 플래그와 키가 둘 다 있어야 합니다.
+ *
+ * 키가 있다는 사실만으로 켜면 안 됩니다. 2026-11-05 첫 공개 배포에서
+ * 프로젝트 환경 변수를 하나도 넣지 않았는데도 OPENAI_API_KEY 가 런타임에
+ * 들어와 있었고(팀 환경 또는 확장이 주입), 공개 사이트에서 생성이 켜진
+ * 상태로 떠 있었습니다. 환경은 내가 넣은 것만 들어 있다고 믿을 수 없습니다.
+ *
+ * 저장소의 다른 유료 기능(OFFICE_PAID_CALLS_APPROVED,
+ * OFFICE_CODEX_FIRST_RUN_APPROVED)과 같은 방식입니다.
+ */
+function generationApproved(){return process.env.OFFICE_STORY_GENERATION_APPROVED==='1'&&Boolean(process.env.OPENAI_API_KEY);}
 function safeBook(value:any,id:string){if(!value||typeof value.title!=='string'||!value.title.trim()||value.title.length>160||!Array.isArray(value.chapters)||value.chapters.length<1||value.chapters.length>8||!value.chapters.every((c:any)=>c&&typeof c.title==='string'&&c.title.length<=160&&typeof c.text==='string'&&c.text.trim()&&c.text.length<=10000))throw Error('invalid response');return parseGeneratedBook({id,title:value.title,chapters:value.chapters,note:typeof value.note==='string'?value.note.slice(0,500):'창작 동화입니다.',model:process.env.OPENAI_MODEL||'gpt-4.1-mini',createdAt:new Date().toISOString()},id);}
 export async function POST(request:Request){
  if(!sameOrigin(request))return json({error:'요청 출처를 확인할 수 없습니다.'},403);
  if(!rateLimit(request))return json({error:'요청이 많습니다. 잠시 후 다시 시도하세요.'},429);
- // 키가 없으면 생성 기능이 꺼집니다. 온라인 1단계는 이 상태로 배포합니다.
+ // 승인 플래그가 없으면 생성 기능이 꺼집니다. 온라인 1단계는 이 상태로 배포합니다.
  // 질문·책장·읽기·내려받기는 그대로 동작하므로 사용자에게 보이는 문구로 안내합니다.
- if(!process.env.OPENAI_API_KEY)return json({error:'동화 만들기 기능은 아직 준비 중입니다. 질문 답변과 책장은 그대로 사용할 수 있고, 저장한 내용은 사라지지 않습니다.'},503);
+ if(!generationApproved())return json({error:'동화 만들기 기능은 아직 준비 중입니다. 질문 답변과 책장은 그대로 사용할 수 있고, 저장한 내용은 사라지지 않습니다.'},503);
  let id='',fingerprint='';
  try{
   const raw=await request.text();if(raw.length>6000)throw Error();const body=JSON.parse(raw);
@@ -27,4 +39,4 @@ export async function POST(request:Request){
   return json(book);
  }catch{return json({error:'동화를 생성하지 못했습니다. 입력 내용을 확인한 뒤 다시 시도하세요.'},400);}
 }
-export async function GET(){return json({available:Boolean(process.env.OPENAI_API_KEY),persistence:'browser-local',message:'생성한 동화는 현재 사용 중인 브라우저 책장에 저장됩니다.'});}
+export async function GET(){return json({available:generationApproved(),persistence:'browser-local',message:'생성한 동화는 현재 사용 중인 브라우저 책장에 저장됩니다.'});}

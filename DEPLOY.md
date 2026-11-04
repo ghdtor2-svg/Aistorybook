@@ -76,10 +76,19 @@
    [build.environment]
      NODE_VERSION = "20"
    ```
-4. **환경 변수는 아무것도 넣지 않습니다.** 두 가지가 동시에 걸려 있습니다.
-   - `NEXT_PUBLIC_OFFICE_LOCAL` 을 넣으면 **사무실이 인터넷에 공개됩니다.** 넣지 마세요.
-   - `OPENAI_API_KEY` 를 넣으면 그 순간부터 동화 생성이 켜지고 **과금**됩니다.
+4. **환경 변수는 아무것도 넣지 않습니다.**
+   - `NEXT_PUBLIC_OFFICE_LOCAL` 을 넣으면 **사무실이 인터넷에 공개됩니다.** 넣으면 빌드가 실패합니다.
+   - `OFFICE_STORY_GENERATION_APPROVED` 를 넣으면 동화 생성이 켜지고 **과금**됩니다.
    - `OFFICE_ADMIN_PASSWORD` 는 넣어도 소용없습니다 (`localOrigin()`이 먼저 막음).
+
+> **환경에는 내가 넣은 것만 들어 있지 않습니다 (2026-11-05 확인).**
+> 첫 배포에서 프로젝트 환경 변수를 **하나도 넣지 않았는데도** 런타임에
+> `OPENAI_API_KEY` 가 들어와 있었습니다(팀 환경 또는 설치된 확장이 주입).
+> `GET /api/office/story` 가 `{"available":true}` 로 응답해 알아냈습니다.
+> 그래서 생성 조건을 "키가 있으면"에서 **"승인 플래그와 키가 둘 다 있으면"** 으로
+> 바꿨습니다. 키가 환경에 떠다녀도 생성은 꺼진 상태로 남습니다.
+>
+> 배포 뒤에는 `GET /api/office/story` 로 **반드시 `available:false` 를 확인하세요.**
 5. Deploy → 주소를 받으면 아래를 확인합니다.
 
 ## 배포 후 확인 목록
@@ -91,6 +100,7 @@
 - [ ] `/storybook` 질문이 뜨고 답변 저장·건너뛰기가 된다
 - [ ] `/storybook` 상단에 **직원 사무실 링크가 없다**
 - [ ] 동화 만들기를 누르면 **“동화 만들기 기능은 아직 준비 중입니다”** 안내가 뜬다 (오류 아님)
+- [ ] `GET /api/office/story` 가 **`{"available":false}`** 로 답한다 (생성이 꺼져 있다는 증거)
 - [ ] 주소창에 `/office` 를 직접 쳐도 **404** 가 뜬다
 - [ ] 주소창에 `/api/office/development` 를 직접 쳐도 **404** 가 뜬다
 - [ ] 내 PC 에서는 `npm run dev` 로 `/office` 가 **그대로 열린다** (`.env.local` 스위치)
