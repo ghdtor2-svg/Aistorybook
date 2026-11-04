@@ -1,0 +1,39 @@
+node_modules
+.next
+.env.local
+*.tsbuildinfo
+
+.npm-cache
+.dev-output.log
+.dev-error.log
+
+.test-build
+playwright-report
+test-results
+
+.office-test-build
+
+.office-data
+.live-test-build
+
+.env*
+!.env.example
+
+# 신규 플랫폼 참고자료 — 외부 출판물 PDF 약 330MB. 저작권 자료이므로 저장소에 넣지 않는다.
+신규플랫폼_가치기반_동화/참고자료(동화)/
+
+# 동화 원고 — 대표 결정(2026-11-05): 공개 저장소에 올리지 않는다. 내 PC에만 둔다.
+# 30_content.js 에는 「사계의 탑」·「23살 우리엄마」 본문 전문과 헌사가 들어 있다.
+# 따라서 이 저장소를 받아도 python build.py 는 바로 돌지 않는다. 원고 파일을 직접 넣어야 한다.
+*.hwpx
+신규플랫폼_가치기반_동화/책/src/30_content.js
+
+# 책 빌드 산출물 — python build.py 로 언제든 다시 만든다. 조판 소스(src/, build.py)는 추적한다.
+신규플랫폼_가치기반_동화/책/*.pdf
+신규플랫폼_가치기반_동화/책/본문_보기용.html
+신규플랫폼_가치기반_동화/책/본문_인쇄용.html
+신규플랫폼_가치기반_동화/책/표지_인쇄용.html
+신규플랫폼_가치기반_동화/책/_report.json
+
+# 별도 프로젝트 스냅샷(Next 16 + Tailwind). 이 저장소와 스택이 다르다.
+aioffice-ed-main/

@@ -1,0 +1,119 @@
+<!-- ══════════════════════════════════════════════════════════════
+     표지 별쇄 — 뒤표지 + 책등 + 앞표지 펼침 한 장
+     책등 두께는 build.py 가 쪽수 × 종이 두께로 계산해 __SPINE__ 에 넣는다.
+     ══════════════════════════════════════════════════════════ -->
+<div style="display:none">
+
+<!-- 앞표지 바탕 -->
+<svg id="art-cover" viewBox="0 0 364 464" preserveAspectRatio="xMidYMid slice">
+  <g class="w2">
+    <rect style="fill:#FBF4E6" x="-4" y="-4" width="372" height="472"/>
+    <path style="fill:#DCEBF4" d="M-4,-4 L368,-4 L368,300 C260,318 110,318 -4,300 Z"/>
+    <path style="fill:#D4E4B8" d="M-4,292 C110,274 260,274 368,292 L368,468 L-4,468 Z"/>
+    <path style="fill:#C6D9A6" d="M-4,344 C110,330 260,348 368,336 L368,468 L-4,468 Z"/>
+  </g>
+  <!-- 구름 -->
+  <g class="w"><g style="fill:#FDFEFE">
+    <ellipse cx="62" cy="128" rx="30" ry="13"/><ellipse cx="82" cy="120" rx="20" ry="12"/>
+    <ellipse cx="300" cy="158" rx="26" ry="11"/><ellipse cx="284" cy="151" rx="17" ry="10"/></g></g>
+  <!-- 탑 -->
+  <g class="w">
+    <path style="fill:#E9DDC6" d="M148,300 L148,186 C148,172 158,164 182,164 C206,164 216,172 216,186 L216,300 Z"/>
+    <path style="fill:#DBCDB1" d="M182,164 C206,164 216,172 216,186 L216,300 L182,300 Z"/>
+    <path style="fill:#C79C74" d="M140,168 L182,132 L224,168 Z"/>
+    <circle style="fill:#FBF3E0" cx="182" cy="204" r="23"/>
+    <path style="fill:#F6C9D6" d="M182,204 L182,181 A23,23 0 0 1 205,204 Z"/>
+    <path style="fill:#FBD89A" d="M182,204 L205,204 A23,23 0 0 1 182,227 Z"/>
+    <path style="fill:#EBB077" d="M182,204 L182,227 A23,23 0 0 1 159,204 Z"/>
+    <path style="fill:#CFE4EF" d="M182,204 L159,204 A23,23 0 0 1 182,181 Z"/>
+    <rect style="fill:#B9D3DF" x="168" y="246" width="11" height="16" rx="4"/>
+    <rect style="fill:#B9D3DF" x="185" y="246" width="11" height="16" rx="4"/>
+  </g>
+  <g class="ln">
+    <path d="M148,300 L148,186 C148,172 158,164 182,164 C206,164 216,172 216,186 L216,300"/>
+    <path d="M140,168 L182,132 L224,168 Z"/><path d="M140,168 L224,168"/>
+    <circle cx="182" cy="204" r="23"/><path d="M182,204 L182,188 M182,204 L196,204"/>
+    <rect x="168" y="246" width="11" height="16" rx="4"/><rect x="185" y="246" width="11" height="16" rx="4"/>
+    <path d="M144,300 L220,300"/>
+    <path d="M-4,296 C110,278 260,278 368,296"/>
+  </g>
+  <!-- 나무 -->
+  <g transform="translate(58,306) scale(1.5)" style="--lf:#9EC47C">
+    <g class="w"><use href="#treeRoundW"/></g><g class="ln"><use href="#treeRoundL"/></g></g>
+  <g transform="translate(312,312) scale(1.3)" style="--lf:#88B26C">
+    <g class="w"><use href="#treeRoundW"/></g><g class="ln"><use href="#treeRoundL"/></g></g>
+  <!-- 네 친구 -->
+  <g transform="translate(112,342) scale(.76)" style="--hr:#5A3D2B;--tp:#F2A2B8;--bt:#EBD3A8;--sf:#7E5F49">
+    <g class="w"><use href="#kidUpW"/><use href="#hairBob"/></g>
+    <g class="ln"><use href="#kidUpL"/></g><use href="#faceJoy"/></g>
+  <g transform="translate(160,346) scale(.74)" style="--hr:#4A3728;--tp:#F6B842;--bt:#7E93B8;--sf:#6B5847;--sk:#F8DCC4">
+    <g class="w"><use href="#kidW"/><use href="#hairShort"/></g>
+    <g class="ln"><use href="#kidL"/></g><use href="#faceJoy"/></g>
+  <g transform="translate(206,346) scale(.74)" style="--hr:#7E5637;--tp:#DB7F42;--bt:#8B7A64;--sf:#5E4C3C">
+    <g class="w"><use href="#kidW"/><use href="#hairCurl"/></g>
+    <g class="ln"><use href="#kidL"/></g><use href="#faceJoy"/></g>
+  <g transform="translate(252,342) scale(.76)" style="--hr:#3F3428;--tp:#92BFD9;--bt:#E4E9EE;--sf:#6B7480;--sk:#FCE8D8">
+    <g class="w"><use href="#kidUpW"/><use href="#hairTwin"/></g>
+    <g class="ln"><use href="#kidUpL"/></g><use href="#faceJoy"/></g>
+  <!-- 흩날리는 계절 -->
+  <g class="w">
+    <g style="fill:#F4B6C8"><ellipse cx="44" cy="222" rx="5" ry="3.2" transform="rotate(22 44 222)"/>
+      <ellipse cx="96" cy="256" rx="4.4" ry="2.8" transform="rotate(-16 96 256)"/></g>
+    <g style="fill:#DE9455"><ellipse cx="316" cy="238" rx="5.4" ry="3.4" transform="rotate(-26 316 238)"/>
+      <ellipse cx="282" cy="268" rx="4.6" ry="3" transform="rotate(12 282 268)"/></g>
+    <g style="fill:#FFFFFF"><circle cx="330" cy="206" r="3.6"/><circle cx="36" cy="268" r="3"/></g>
+  </g>
+</svg>
+
+<!-- 뒤표지 바탕 -->
+<svg id="art-back" viewBox="0 0 364 464" preserveAspectRatio="xMidYMid slice">
+  <g class="w2">
+    <rect style="fill:#FBF4E6" x="-4" y="-4" width="372" height="472"/>
+    <path style="fill:#EDE3CE" d="M-4,404 C110,390 260,390 368,404 L368,468 L-4,468 Z"/>
+  </g>
+  <!-- 아래 귀퉁이에만 작게 — 가운데는 문안 자리로 비워 둔다 -->
+  <g transform="translate(44,456) scale(.66)">
+    <g class="w"><use href="#treeRoundW"/></g><g class="ln ln-t"><use href="#treeRoundL"/></g></g>
+  <g transform="translate(324,458) scale(.54)" style="--lf:#A8CE86">
+    <g class="w"><use href="#treeRoundW"/></g><g class="ln ln-t"><use href="#treeRoundL"/></g></g>
+  <g class="w"><g style="fill:#F4B6C8">
+    <ellipse cx="104" cy="424" rx="4.6" ry="3" transform="rotate(20 104 424)"/>
+    <ellipse cx="268" cy="436" rx="4.2" ry="2.7" transform="rotate(-18 268 436)"/>
+    <ellipse cx="188" cy="446" rx="4" ry="2.6" transform="rotate(8 188 446)"/></g></g>
+</svg>
+
+</div>
+
+<div class="coversheet"
+     style="width:calc(2*var(--trim-w) + __SPINE__ + 2*var(--bleed));
+            height:calc(var(--trim-h) + 2*var(--bleed))">
+
+  <!-- 뒤표지 (왼쪽) -->
+  <div class="cv cv-back" style="left:var(--bleed);width:var(--trim-w)">
+    <div class="art"><svg viewBox="0 0 364 464" preserveAspectRatio="xMidYMid slice">
+      <use href="#art-back"/></svg></div>
+    <div class="msg">
+      <div class="big">아이에게 물려주고 싶은 것을<br>말로 하면 잔소리가 되지만,<br>이야기로 하면 오래 남습니다.</div>
+      <div class="small">무엇을 그릴지 묻지 않습니다.<br>무엇을 아꼈는지 묻습니다.<br>그 답이 모이면 한 권이 됩니다.</div>
+    </div>
+    <div class="cta">17개의 질문으로 만들어졌습니다 <span class="arrow">→</span></div>
+    <div class="brand">가치기반 동화 생성 플랫폼</div>
+  </div>
+
+  <!-- 책등 -->
+  <div class="cv-spine"
+       style="left:calc(var(--bleed) + var(--trim-w));width:__SPINE__;background:#F3E6CE">
+    <div class="s-title">이야기 서랍 · 첫 번째 책</div>
+  </div>
+
+  <!-- 앞표지 (오른쪽) -->
+  <div class="cv cv-front"
+       style="left:calc(var(--bleed) + var(--trim-w) + __SPINE__);width:var(--trim-w)">
+    <div class="art"><svg viewBox="0 0 364 464" preserveAspectRatio="xMidYMid slice">
+      <use href="#art-cover"/></svg></div>
+    <div class="tag">가치기반 동화 · 첫 번째 책</div>
+    <div class="tt"><h1>이야기 서랍</h1><div class="sub">두 편의 동화</div></div>
+    <div class="titles"><div class="t">사계의 탑</div><div class="t">23살 우리엄마</div></div>
+    <div class="foot">두 사람의 답변에서 시작되었습니다</div>
+  </div>
+</div>

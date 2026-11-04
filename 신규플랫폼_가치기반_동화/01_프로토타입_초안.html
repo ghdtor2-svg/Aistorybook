@@ -1,0 +1,2122 @@
+<title>이야기 서랍</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@300;500;700&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+
+<style>
+/* ─────────────────────────────────────────────
+   이야기 서랍 · 프로토타입 초안
+   원고지(채록) · 먹빛 잉크 · 교정용 주홍
+   ───────────────────────────────────────────── */
+
+:root{
+  /* 종이 — 갱지의 서늘한 녹회색 기미 */
+  --paper:      #EDEFE7;
+  --paper-2:    #F5F7F0;
+  --card:       #FDFDF9;
+  --card-2:     #F2F4EC;
+
+  /* 먹 */
+  --ink:        #16262A;
+  --ink-2:      #4B5F61;
+  --ink-3:      #7B8C8A;
+
+  /* 괘선 */
+  --rule:       #D2DBCE;
+  --rule-2:     #E1E7DC;
+  --grid:       #BACDB4;
+
+  /* 교정용 주홍(인장) — 극약처방으로만 */
+  --seal:       #A93A20;
+  --seal-2:     #C4573C;
+  --seal-wash:  #F3E2DB;
+
+  /* 6축 양극 — 냉/온 발산쌍 + 중립 */
+  --pole-cool:  #2A6E6A;
+  --pole-warm:  #A93A20;
+  --pole-null:  #A9B5B0;
+
+  --shadow: 0 1px 2px rgba(22,38,42,.05), 0 8px 24px -12px rgba(22,38,42,.18);
+  --shadow-lift: 0 2px 4px rgba(22,38,42,.06), 0 18px 40px -18px rgba(22,38,42,.30);
+
+  --serif: "Hahmlet", "Nanum Myeongjo", "Apple SD Gothic Neo", serif;
+  --book:  "Gowun Batang", "Hahmlet", "Apple SD Gothic Neo", serif;
+  --ui:    "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+
+  --maxw: 68rem;
+  --read: 34rem;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:     #101718;
+    --paper-2:   #151E1F;
+    --card:      #1A2425;
+    --card-2:    #202B2B;
+    --ink:       #E8EDE3;
+    --ink-2:     #A3B2AE;
+    --ink-3:     #7B8A87;
+    --rule:      #2B3838;
+    --rule-2:    #222E2E;
+    --grid:      #2C3D36;
+    --seal:      #E1795F;
+    --seal-2:    #C9634A;
+    --seal-wash: #33221D;
+    --pole-cool: #5FB2A7;
+    --pole-warm: #E1795F;
+    --pole-null: #55625F;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+    --shadow-lift: 0 2px 4px rgba(0,0,0,.45), 0 18px 40px -18px rgba(0,0,0,.85);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:     #101718;
+  --paper-2:   #151E1F;
+  --card:      #1A2425;
+  --card-2:    #202B2B;
+  --ink:       #E8EDE3;
+  --ink-2:     #A3B2AE;
+  --ink-3:     #7B8A87;
+  --rule:      #2B3838;
+  --rule-2:    #222E2E;
+  --grid:      #2C3D36;
+  --seal:      #E1795F;
+  --seal-2:    #C9634A;
+  --seal-wash: #33221D;
+  --pole-cool: #5FB2A7;
+  --pole-warm: #E1795F;
+  --pole-null: #55625F;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.7);
+  --shadow-lift: 0 2px 4px rgba(0,0,0,.45), 0 18px 40px -18px rgba(0,0,0,.85);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--ui);
+  font-weight:400;
+  font-size:15px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3,h4{ font-family:var(--serif); font-weight:700; text-wrap:balance; margin:0; letter-spacing:-.01em; }
+p{ margin:0; }
+a{ color:inherit; }
+button{ font:inherit; color:inherit; }
+
+:focus-visible{ outline:2px solid var(--seal); outline-offset:3px; border-radius:2px; }
+
+/* ── 원고지 괘선 ─────────────────────────── */
+.manuscript{ position:relative; isolation:isolate; }
+.manuscript::before{
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background-image:
+    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px 30px),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px 30px);
+  opacity:.30;
+  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.9), transparent 92%);
+  mask-image:linear-gradient(to bottom, rgba(0,0,0,.9), transparent 92%);
+}
+
+/* ── 상단 바 ─────────────────────────────── */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--rule);
+}
+.topbar-in{
+  max-width:var(--maxw); margin:0 auto; padding:.7rem 1.5rem;
+  display:flex; align-items:center; gap:1.25rem; flex-wrap:wrap;
+}
+.brand{ display:flex; align-items:baseline; gap:.55rem; margin-right:auto; }
+.brand-mark{
+  font-family:var(--serif); font-weight:700; font-size:1.05rem; letter-spacing:-.02em;
+}
+.brand-note{ font-size:.72rem; color:var(--ink-3); letter-spacing:.06em; }
+
+.viewnav{ display:flex; gap:.25rem; background:var(--card-2); padding:.22rem; border-radius:3px; border:1px solid var(--rule); }
+.viewnav button{
+  background:none; border:0; cursor:pointer; padding:.4rem .8rem; border-radius:2px;
+  font-size:.8rem; font-weight:500; color:var(--ink-2); white-space:nowrap;
+  transition:background .15s, color .15s;
+}
+.viewnav button:hover{ color:var(--ink); }
+.viewnav button[aria-selected="true"]{ background:var(--card); color:var(--ink); box-shadow:var(--shadow); }
+
+/* ── 초안 고지 ───────────────────────────── */
+.draftbar{
+  background:var(--seal-wash); border-bottom:1px solid var(--rule);
+  font-size:.78rem; color:var(--ink-2);
+}
+.draftbar-in{
+  max-width:var(--maxw); margin:0 auto; padding:.5rem 1.5rem;
+  display:flex; gap:.6rem; align-items:baseline; flex-wrap:wrap;
+}
+.draftbar strong{ color:var(--seal); font-weight:600; letter-spacing:.02em; }
+
+/* ── 레이아웃 ────────────────────────────── */
+.wrap{ max-width:var(--maxw); margin:0 auto; padding:0 1.5rem; }
+.stack{ display:flex; flex-direction:column; }
+section{ border-bottom:1px solid var(--rule-2); }
+section:last-child{ border-bottom:0; }
+.sec{ padding:4.5rem 0; }
+.sec-tight{ padding:3rem 0; }
+
+.eyebrow{
+  font-size:.7rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-3); display:block; margin-bottom:1rem;
+}
+.eyebrow .num{ color:var(--seal); }
+
+.lede{ font-size:1.02rem; color:var(--ink-2); max-width:var(--read); line-height:1.85; }
+
+/* ── 히어로 ──────────────────────────────── */
+.hero{ padding:4.5rem 0 4rem; }
+.hero-grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:3.5rem; align-items:start; }
+.hero h1{
+  font-size:clamp(2.1rem, 4.6vw, 3.25rem); line-height:1.28; letter-spacing:-.035em;
+  margin:0 0 1.4rem;
+}
+.hero h1 .q{ color:var(--seal); font-weight:700; }
+.hero h1 em{ font-style:normal; position:relative; white-space:nowrap; }
+.hero h1 em::after{
+  content:""; position:absolute; left:0; right:0; bottom:.08em; height:.36em;
+  background:var(--seal-wash); z-index:-1;
+}
+.hero-sub{ font-size:1rem; color:var(--ink-2); max-width:31rem; line-height:1.85; }
+.hero-cta{ display:flex; gap:.7rem; margin-top:2rem; flex-wrap:wrap; }
+.hero-trust{
+  margin-top:1.5rem; font-size:.78rem; color:var(--ink-3);
+  display:flex; gap:1rem; flex-wrap:wrap;
+}
+.hero-trust span{ display:flex; align-items:center; gap:.35rem; }
+.hero-trust span::before{ content:""; width:4px; height:4px; border-radius:50%; background:var(--pole-cool); }
+
+.btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.72rem 1.3rem; border-radius:2px; border:1px solid transparent;
+  font-size:.88rem; font-weight:500; cursor:pointer; text-decoration:none;
+  transition:transform .12s, box-shadow .15s, background .15s;
+}
+.btn-primary{ background:var(--ink); color:var(--paper); box-shadow:var(--shadow); }
+.btn-primary:hover{ transform:translateY(-1px); box-shadow:var(--shadow-lift); }
+.btn-ghost{ background:transparent; border-color:var(--rule); color:var(--ink); }
+.btn-ghost:hover{ background:var(--card); border-color:var(--ink-3); }
+.btn-seal{ background:var(--seal); color:#fff; box-shadow:var(--shadow); }
+.btn-seal:hover{ transform:translateY(-1px); box-shadow:var(--shadow-lift); }
+.btn-sm{ padding:.45rem .85rem; font-size:.8rem; }
+.btn[disabled]{ opacity:.4; cursor:not-allowed; transform:none; }
+
+/* ── 히어로 시연 카드 ────────────────────── */
+.demo-card{
+  background:var(--card); border:1px solid var(--rule); border-radius:3px;
+  box-shadow:var(--shadow-lift); overflow:hidden;
+}
+.demo-card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+  padding:.7rem 1.1rem; border-bottom:1px solid var(--rule-2); background:var(--card-2);
+}
+.demo-card-head .qid{
+  font-size:.72rem; font-weight:600; letter-spacing:.1em; color:var(--seal);
+}
+.demo-card-head .step{ font-size:.7rem; color:var(--ink-3); letter-spacing:.08em; }
+.demo-body{ padding:1.4rem 1.35rem 1.2rem; }
+.demo-q{ font-family:var(--serif); font-size:1.08rem; font-weight:500; line-height:1.6; min-height:3.4em; }
+.demo-a{
+  margin-top:1rem; padding:.75rem .9rem;
+  border:1px dashed var(--rule); border-radius:2px; background:var(--paper-2);
+  font-family:var(--book); font-size:1rem; color:var(--ink);
+  min-height:3.1em; display:flex; align-items:center;
+}
+.demo-a .caret{ display:inline-block; width:1px; height:1.05em; background:var(--seal); margin-left:1px; animation:blink 1.05s step-end infinite; vertical-align:-.14em; }
+@keyframes blink{ 50%{ opacity:0; } }
+.demo-arrow{
+  display:flex; align-items:center; gap:.6rem; margin:1.05rem 0 .7rem;
+  font-size:.7rem; letter-spacing:.12em; color:var(--ink-3);
+}
+.demo-arrow::before, .demo-arrow::after{ content:""; height:1px; background:var(--rule); flex:1; }
+.demo-out{
+  font-family:var(--book); font-size:1.02rem; line-height:1.95; color:var(--ink);
+  padding:.9rem 1rem; background:var(--paper-2); border-left:2px solid var(--seal);
+  min-height:5.4em;
+}
+.demo-out .role{ display:block; font-family:var(--ui); font-size:.7rem; letter-spacing:.1em; color:var(--ink-3); margin-bottom:.5rem; }
+.demo-dots{ display:flex; gap:.4rem; padding:.85rem 1.35rem 1.1rem; }
+.demo-dots button{
+  width:24px; height:3px; border:0; padding:0; border-radius:2px; cursor:pointer;
+  background:var(--rule); transition:background .2s;
+}
+.demo-dots button[aria-current="true"]{ background:var(--seal); }
+
+/* ── 공백 표 ─────────────────────────────── */
+.tablewrap{ overflow-x:auto; border:1px solid var(--rule); border-radius:3px; background:var(--card); }
+table{ width:100%; border-collapse:collapse; font-size:.86rem; min-width:34rem; }
+thead th{
+  text-align:left; font-weight:600; font-size:.72rem; letter-spacing:.09em; color:var(--ink-3);
+  padding:.75rem 1rem; border-bottom:1px solid var(--rule); background:var(--card-2); white-space:nowrap;
+}
+tbody td{ padding:.8rem 1rem; border-bottom:1px solid var(--rule-2); vertical-align:top; color:var(--ink-2); }
+tbody tr:last-child td{ border-bottom:0; }
+tbody td:first-child{ color:var(--ink); font-weight:500; white-space:nowrap; }
+tbody tr.ours td{ background:var(--seal-wash); color:var(--ink); }
+tbody tr.ours td:first-child{ color:var(--seal); font-weight:600; }
+.num-col{ font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+.pullquote{
+  font-family:var(--serif); font-size:clamp(1.35rem,2.9vw,1.9rem); line-height:1.55;
+  letter-spacing:-.025em; max-width:30rem; font-weight:500;
+}
+.pullquote .mark{ color:var(--seal); }
+
+/* ── 3단계 ───────────────────────────────── */
+.steps{ display:grid; grid-template-columns:repeat(3,1fr); gap:0; border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--card); }
+.step-cell{ padding:1.6rem 1.5rem 1.8rem; border-right:1px solid var(--rule-2); }
+.step-cell:last-child{ border-right:0; }
+.step-n{
+  font-family:var(--serif); font-size:.78rem; font-weight:700; letter-spacing:.06em;
+  color:var(--seal); display:block; margin-bottom:.9rem;
+}
+.step-cell h3{ font-size:1.12rem; margin-bottom:.55rem; letter-spacing:-.02em; }
+.step-cell p{ font-size:.86rem; color:var(--ink-2); line-height:1.8; }
+.step-meta{
+  margin-top:1rem; padding-top:.85rem; border-top:1px dashed var(--rule);
+  font-size:.74rem; color:var(--ink-3); letter-spacing:.02em;
+}
+
+/* ── 질문 설계 원칙 ──────────────────────── */
+.principles{ display:grid; gap:1px; background:var(--rule-2); border:1px solid var(--rule); border-radius:3px; overflow:hidden; }
+.principle{ background:var(--card); padding:1.5rem 1.6rem; display:grid; grid-template-columns:12.5rem 1fr; gap:2rem; }
+.principle h3{ font-size:1rem; letter-spacing:-.01em; }
+.principle h3 .pn{ display:block; font-family:var(--ui); font-size:.68rem; font-weight:600; letter-spacing:.14em; color:var(--ink-3); margin-bottom:.4rem; }
+.principle .why{ font-size:.82rem; color:var(--ink-3); margin-top:.6rem; line-height:1.7; }
+.qpair{ display:flex; flex-direction:column; gap:.75rem; }
+.qbad, .qgood{ display:flex; gap:.7rem; align-items:baseline; font-family:var(--book); font-size:.97rem; line-height:1.7; }
+.qbad{ color:var(--ink-3); }
+.qbad .t{ text-decoration:line-through; text-decoration-color:var(--seal); text-decoration-thickness:1px; }
+.qgood{ color:var(--ink); }
+.sig{ font-family:var(--ui); font-size:.72rem; font-weight:600; flex:none; width:1.1rem; }
+.qbad .sig{ color:var(--seal); }
+.qgood .sig{ color:var(--pole-cool); }
+
+/* ── 책 미리보기 ─────────────────────────── */
+.spread{ display:grid; grid-template-columns:.85fr 1fr 1fr; gap:1.25rem; align-items:start; }
+.bookcover{
+  min-height:25rem; border-radius:2px 4px 4px 2px; padding:1.6rem 1.3rem;
+  background:linear-gradient(150deg, var(--pole-cool), color-mix(in srgb, var(--pole-cool) 55%, var(--ink)));
+  color:#F2F5EF; display:flex; flex-direction:column; justify-content:space-between;
+  box-shadow:var(--shadow-lift); border-left:3px solid rgba(0,0,0,.22); position:relative; overflow:hidden;
+}
+.bookcover::after{
+  content:""; position:absolute; inset:.55rem; border:1px solid rgba(242,245,239,.28); border-radius:1px; pointer-events:none;
+}
+.bookcover .imprint{ font-size:.65rem; letter-spacing:.16em; opacity:.75; }
+.bookcover h4{ font-family:var(--serif); font-size:1.3rem; line-height:1.4; color:#F7F9F4; }
+.bookcover .subtitle{ font-family:var(--book); font-size:.82rem; opacity:.85; margin-top:.5rem; }
+.bookpage{
+  background:var(--card); border:1px solid var(--rule); border-radius:2px;
+  min-height:25rem; padding:1.7rem 1.5rem 1.2rem;
+  display:flex; flex-direction:column; box-shadow:var(--shadow);
+}
+.bookpage .txt{ font-family:var(--book); font-size:.95rem; line-height:1.95; flex:1; }
+.bookpage .txt p{ margin-bottom:.5rem; }
+.bookpage .pno{ font-size:.7rem; color:var(--ink-3); text-align:center; font-variant-numeric:tabular-nums; }
+.bookpage .art{
+  height:6.5rem; margin-bottom:1rem; border-radius:2px;
+  background:
+    radial-gradient(circle at 30% 40%, color-mix(in srgb, var(--pole-cool) 22%, transparent), transparent 60%),
+    radial-gradient(circle at 72% 65%, color-mix(in srgb, var(--seal) 16%, transparent), transparent 55%),
+    var(--card-2);
+  border:1px solid var(--rule-2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.68rem; color:var(--ink-3); letter-spacing:.1em;
+}
+.paywall{
+  margin-top:1.5rem; border:1px solid var(--rule); border-radius:3px; background:var(--card);
+  padding:1.5rem 1.6rem; display:grid; grid-template-columns:1fr auto; gap:1.5rem; align-items:center;
+}
+.paywall h4{ font-size:1.08rem; margin-bottom:.4rem; }
+.paywall p{ font-size:.85rem; color:var(--ink-2); max-width:36rem; }
+
+/* ── 가격 ────────────────────────────────── */
+.plans{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
+.plan{ background:var(--card); border:1px solid var(--rule); border-radius:3px; padding:1.35rem 1.3rem 1.5rem; display:flex; flex-direction:column; gap:.55rem; }
+.plan.featured{ border-color:var(--ink); box-shadow:var(--shadow-lift); }
+.plan .tier{ font-size:.72rem; font-weight:600; letter-spacing:.12em; color:var(--ink-3); }
+.plan.featured .tier{ color:var(--seal); }
+.plan .price{ font-family:var(--serif); font-size:1.55rem; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.plan .price small{ font-family:var(--ui); font-size:.72rem; font-weight:400; color:var(--ink-3); letter-spacing:0; margin-left:.2rem; }
+.plan ul{ margin:.4rem 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.4rem; }
+.plan li{ font-size:.82rem; color:var(--ink-2); padding-left:.9rem; position:relative; line-height:1.6; }
+.plan li::before{ content:"·"; position:absolute; left:.15rem; color:var(--ink-3); }
+.chip-soon{
+  display:inline-block; font-size:.66rem; letter-spacing:.08em; color:var(--ink-3);
+  border:1px solid var(--rule); border-radius:2px; padding:.1rem .4rem; margin-top:auto;
+}
+
+/* ── FAQ ─────────────────────────────────── */
+.faq{ border-top:1px solid var(--rule); }
+.faq details{ border-bottom:1px solid var(--rule-2); }
+.faq summary{
+  cursor:pointer; padding:1.05rem .2rem; font-family:var(--serif); font-size:1rem; font-weight:500;
+  list-style:none; display:flex; justify-content:space-between; gap:1rem; align-items:baseline;
+}
+.faq summary::-webkit-details-marker{ display:none; }
+.faq summary::after{ content:"+"; color:var(--seal); font-family:var(--ui); font-size:1.1rem; flex:none; }
+.faq details[open] summary::after{ content:"−"; }
+.faq .ans{ padding:0 .2rem 1.15rem; font-size:.88rem; color:var(--ink-2); max-width:44rem; line-height:1.85; }
+.faq .ans .ref{ color:var(--ink-3); font-size:.78rem; }
+
+/* ── Track B 예고 ────────────────────────── */
+.trackb{
+  background:var(--card); border:1px solid var(--rule); border-radius:3px;
+  padding:2rem 2rem 2.2rem; display:grid; grid-template-columns:1fr 1fr; gap:2.5rem;
+}
+.loop{ display:flex; flex-direction:column; gap:.5rem; }
+.loop-step{
+  display:grid; grid-template-columns:1.4rem 1fr; gap:.7rem; align-items:baseline;
+  font-size:.86rem; color:var(--ink-2); padding:.5rem 0; border-bottom:1px dashed var(--rule-2);
+}
+.loop-step:last-child{ border-bottom:0; }
+.loop-step b{ color:var(--ink); font-weight:600; }
+.loop-n{ font-size:.7rem; font-weight:600; color:var(--seal); letter-spacing:.04em; }
+
+/* ─────────────────────────────────────────────
+   질문 흐름 데모
+   ───────────────────────────────────────────── */
+.flow{ max-width:44rem; margin:0 auto; padding:2.5rem 1.5rem 5rem; }
+.flow-head{ display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.9rem; flex-wrap:wrap; }
+.flow-part{ font-size:.74rem; letter-spacing:.12em; color:var(--ink-3); }
+.flow-part b{ color:var(--ink-2); font-weight:600; }
+.toggle{ display:flex; align-items:center; gap:.5rem; font-size:.75rem; color:var(--ink-3); cursor:pointer; user-select:none; }
+.toggle input{ appearance:none; width:30px; height:16px; border-radius:9px; background:var(--rule); border:0; cursor:pointer; position:relative; transition:background .18s; flex:none; }
+.toggle input::after{ content:""; position:absolute; top:2px; left:2px; width:12px; height:12px; border-radius:50%; background:var(--card); transition:transform .18s; }
+.toggle input:checked{ background:var(--seal); }
+.toggle input:checked::after{ transform:translateX(14px); }
+
+.progress{ height:2px; background:var(--rule); border-radius:2px; overflow:hidden; }
+.progress i{ display:block; height:100%; background:var(--seal); transition:width .3s ease; }
+
+.qcard{
+  background:var(--card); border:1px solid var(--rule); border-radius:3px;
+  margin-top:1.6rem; padding:2.2rem 2.1rem 2rem; box-shadow:var(--shadow);
+}
+.qnum{ font-size:.72rem; font-weight:600; letter-spacing:.14em; color:var(--seal); }
+.qtext{ font-family:var(--serif); font-size:1.42rem; font-weight:500; line-height:1.55; letter-spacing:-.02em; margin:.7rem 0 .3rem; }
+.qhint{ font-size:.82rem; color:var(--ink-3); line-height:1.7; }
+.qfield{ margin-top:1.5rem; display:flex; flex-direction:column; gap:.7rem; }
+.qfield.two{ flex-direction:row; }
+.qfield.two > label{ flex:1; }
+.qfield label{ display:flex; flex-direction:column; gap:.35rem; font-size:.75rem; color:var(--ink-3); }
+input[type="text"], textarea{
+  font-family:var(--book); font-size:1.02rem; color:var(--ink);
+  background:var(--paper-2); border:1px solid var(--rule); border-radius:2px;
+  padding:.7rem .8rem; width:100%; transition:border-color .15s, background .15s;
+}
+input[type="text"]:focus, textarea:focus{ background:var(--card); border-color:var(--ink-3); outline-offset:0; }
+textarea{ resize:vertical; min-height:5.5rem; line-height:1.85; }
+.chips{ display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.2rem; }
+.chip{
+  font-size:.76rem; padding:.28rem .6rem; border:1px solid var(--rule); border-radius:2px;
+  background:var(--card-2); color:var(--ink-2); cursor:pointer; transition:border-color .15s, color .15s;
+}
+.chip:hover{ border-color:var(--ink-3); color:var(--ink); }
+
+.opts{ display:flex; flex-direction:column; gap:.55rem; margin-top:1.4rem; }
+.opt{
+  display:grid; grid-template-columns:1.5rem 1fr auto; gap:.75rem; align-items:baseline;
+  padding:.85rem 1rem; border:1px solid var(--rule); border-radius:2px; background:var(--paper-2);
+  cursor:pointer; text-align:left; width:100%; transition:border-color .15s, background .15s, transform .1s;
+  font-family:var(--book); font-size:1rem; line-height:1.65;
+}
+.opt:hover{ border-color:var(--ink-3); background:var(--card); }
+.opt[aria-pressed="true"]{ border-color:var(--ink); background:var(--card); box-shadow:var(--shadow); }
+.opt .mk{ font-family:var(--ui); font-size:.8rem; color:var(--ink-3); font-weight:500; }
+.opt[aria-pressed="true"] .mk{ color:var(--seal); }
+.opt .axis{
+  font-family:var(--ui); font-size:.68rem; letter-spacing:.06em; color:var(--pole-cool);
+  border:1px dashed color-mix(in srgb, var(--pole-cool) 45%, transparent); border-radius:2px;
+  padding:.1rem .4rem; white-space:nowrap; align-self:center;
+}
+.annot-off .axis{ display:none; }
+.annot{
+  font-family:var(--ui); font-size:.75rem; color:var(--pole-cool); line-height:1.7;
+  border-left:2px solid color-mix(in srgb, var(--pole-cool) 40%, transparent);
+  padding:.35rem 0 .35rem .7rem; margin-top:1.2rem;
+}
+.annot b{ font-weight:600; letter-spacing:.02em; }
+.annot-off .annot{ display:none; }
+
+.flow-nav{ display:flex; align-items:center; gap:.7rem; margin-top:1.6rem; }
+.flow-nav .spacer{ flex:1; }
+.saved{ font-size:.74rem; color:var(--ink-3); display:flex; align-items:center; gap:.4rem; }
+.saved::before{ content:""; width:5px; height:5px; border-radius:50%; background:var(--pole-cool); }
+
+/* ── 결과: 6축 미터 ──────────────────────── */
+.result{ display:flex; flex-direction:column; gap:2.5rem; }
+.rblock{ background:var(--card); border:1px solid var(--rule); border-radius:3px; padding:1.7rem 1.8rem 1.9rem; }
+.rblock > h3{ font-size:1.15rem; margin-bottom:.35rem; }
+.rblock > .rsub{ font-size:.82rem; color:var(--ink-3); margin-bottom:1.4rem; line-height:1.7; }
+
+.axes{ display:flex; flex-direction:column; gap:1.05rem; }
+.axis-row{ display:grid; grid-template-columns:2.1rem 5.2rem 1fr 5.2rem 3rem; gap:.7rem; align-items:center; }
+.axis-id{ font-size:.7rem; font-weight:600; letter-spacing:.06em; color:var(--ink-3); }
+.pole{ font-size:.82rem; color:var(--ink-3); transition:color .2s; }
+.pole-l{ text-align:right; }
+.pole.on{ color:var(--ink); font-weight:600; }
+.track{ position:relative; height:10px; background:var(--card-2); border:1px solid var(--rule-2); border-radius:5px; }
+.track .zero{ position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--pole-null); }
+.track .fill{ position:absolute; top:1px; bottom:1px; border-radius:4px; transition:left .5s ease, width .5s ease; }
+.track .fill.cool{ background:var(--pole-cool); }
+.track .fill.warm{ background:var(--pole-warm); }
+.track .fill.null{ background:var(--pole-null); }
+.axis-val{ font-size:.78rem; font-variant-numeric:tabular-nums; text-align:right; color:var(--ink-2); }
+.axis-eff{ grid-column:2 / -1; font-size:.74rem; color:var(--ink-3); margin-top:-.4rem; line-height:1.6; }
+
+.skel{ display:grid; grid-template-columns:auto 1fr; gap:2rem; align-items:start; }
+.skel-name{ font-family:var(--serif); font-size:1.9rem; font-weight:700; letter-spacing:-.03em; color:var(--seal); white-space:nowrap; }
+.skel-name small{ display:block; font-family:var(--ui); font-size:.7rem; font-weight:500; letter-spacing:.1em; color:var(--ink-3); margin-top:.3rem; }
+.beats{ display:grid; grid-template-columns:repeat(4,1fr); gap:.6rem; }
+.beat{ background:var(--paper-2); border:1px solid var(--rule-2); border-radius:2px; padding:.8rem .85rem; }
+.beat .bn{ font-size:.68rem; letter-spacing:.1em; color:var(--seal); font-weight:600; }
+.beat .bt{ font-family:var(--book); font-size:.92rem; margin-top:.35rem; line-height:1.6; }
+.beat .bp{ font-size:.7rem; color:var(--ink-3); margin-top:.5rem; font-variant-numeric:tabular-nums; }
+
+.slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule-2); border:1px solid var(--rule-2); border-radius:2px; overflow:hidden; }
+.slot{ background:var(--card); padding:.85rem .95rem; }
+.slot .sk{ font-size:.68rem; letter-spacing:.09em; color:var(--ink-3); }
+.slot .sv{ font-family:var(--book); font-size:.98rem; margin-top:.25rem; color:var(--ink); line-height:1.6; }
+.slot .src{ font-size:.66rem; color:var(--seal); margin-top:.3rem; letter-spacing:.04em; }
+
+/* ─────────────────────────────────────────────
+   설계 노트
+   ───────────────────────────────────────────── */
+.notes{ max-width:56rem; margin:0 auto; padding:2.5rem 1.5rem 5rem; }
+.note-sec{ padding:2.2rem 0; border-bottom:1px solid var(--rule-2); }
+.note-sec:last-child{ border-bottom:0; }
+.note-sec > h2{ font-size:1.3rem; letter-spacing:-.02em; margin-bottom:.4rem; }
+.note-sec > .nsub{ font-size:.85rem; color:var(--ink-3); margin-bottom:1.3rem; line-height:1.75; max-width:42rem; }
+.secmark{ font-family:var(--ui); font-size:.7rem; font-weight:600; letter-spacing:.12em; color:var(--seal); display:block; margin-bottom:.5rem; }
+
+.pipeline{ display:flex; flex-direction:column; gap:0; border:1px solid var(--rule); border-radius:3px; overflow:hidden; background:var(--card); }
+.pipe{ display:grid; grid-template-columns:2.4rem 9rem 1fr; gap:1rem; padding:.75rem 1rem; border-bottom:1px solid var(--rule-2); align-items:baseline; font-size:.86rem; }
+.pipe:last-child{ border-bottom:0; }
+.pipe .pn{ font-size:.72rem; color:var(--seal); font-weight:600; font-variant-numeric:tabular-nums; }
+.pipe .pt{ font-weight:600; color:var(--ink); }
+.pipe .pd{ color:var(--ink-2); }
+.pipe.key{ background:var(--seal-wash); }
+
+.guards{ display:flex; flex-direction:column; gap:.5rem; }
+.guard{ display:grid; grid-template-columns:1.6rem 1fr; gap:.8rem; align-items:baseline; padding:.7rem 0; border-bottom:1px dashed var(--rule-2); font-size:.88rem; }
+.guard:last-child{ border-bottom:0; }
+.guard .gn{ font-size:.72rem; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.guard b{ color:var(--ink); font-weight:600; }
+.guard .why{ display:block; font-size:.78rem; color:var(--ink-3); margin-top:.25rem; }
+
+.twocol{ display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+.panel{ background:var(--card); border:1px solid var(--rule); border-radius:3px; padding:1.3rem 1.4rem 1.5rem; }
+.panel h4{ font-size:.95rem; margin-bottom:.8rem; }
+.panel ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.5rem; }
+.panel li{ font-size:.85rem; color:var(--ink-2); padding-left:1.05rem; position:relative; line-height:1.7; }
+.panel li::before{ content:""; position:absolute; left:0; top:.62em; width:5px; height:1px; background:var(--ink-3); }
+.panel.excl li::before{ background:var(--seal); }
+
+.decisions{ display:flex; flex-direction:column; gap:.45rem; }
+.decision{
+  display:grid; grid-template-columns:auto 1fr auto; gap:1rem; align-items:center;
+  padding:.75rem .95rem; background:var(--card); border:1px solid var(--rule); border-radius:2px; font-size:.87rem;
+}
+.decision .dn{ font-size:.72rem; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.decision .di{ color:var(--ink); }
+.decision .dw{ font-size:.76rem; color:var(--ink-3); text-align:right; }
+.decision.hot{ border-color:var(--seal); }
+.decision.hot .dn{ color:var(--seal); font-weight:600; }
+
+.nsm{
+  background:var(--ink); color:var(--paper); border-radius:3px; padding:1.6rem 1.8rem;
+  display:grid; grid-template-columns:auto 1fr; gap:2rem; align-items:center;
+}
+.nsm .lbl{ font-size:.7rem; letter-spacing:.14em; opacity:.7; }
+.nsm .val{ font-family:var(--serif); font-size:1.6rem; font-weight:700; letter-spacing:-.02em; margin-top:.25rem; white-space:nowrap; }
+.nsm p{ font-size:.85rem; opacity:.82; line-height:1.8; }
+
+footer{ border-top:1px solid var(--rule); }
+.foot{ max-width:var(--maxw); margin:0 auto; padding:2rem 1.5rem 3rem; display:flex; justify-content:space-between; gap:1.5rem; flex-wrap:wrap; font-size:.78rem; color:var(--ink-3); }
+.foot b{ color:var(--ink-2); font-weight:600; }
+
+/* ─────────────────────────────────────────────
+   전권 뷰어
+   ───────────────────────────────────────────── */
+.reader{ position:fixed; inset:0; z-index:100; background:var(--paper); overflow-y:auto; }
+.reader-bar{
+  position:sticky; top:0; z-index:2; background:color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--rule);
+}
+.reader-bar-in{
+  max-width:64rem; margin:0 auto; padding:.7rem 1.5rem;
+  display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+}
+.reader-title{ margin-right:auto; display:flex; align-items:baseline; gap:.6rem; min-width:0; }
+.reader-title b{ font-family:var(--serif); font-size:1rem; font-weight:700; letter-spacing:-.02em; }
+.reader-title span{ font-size:.73rem; color:var(--ink-3); white-space:nowrap; }
+.reader-close{ background:none; border:1px solid var(--rule); border-radius:2px; cursor:pointer; padding:.35rem .7rem; font-size:.78rem; color:var(--ink-2); }
+.reader-close:hover{ border-color:var(--ink-3); color:var(--ink); }
+
+.reader-note{
+  max-width:64rem; margin:1.4rem auto 0; padding:0 1.5rem;
+}
+.reader-note p{
+  font-size:.78rem; color:var(--ink-2); line-height:1.75;
+  background:var(--seal-wash); border-left:2px solid var(--seal);
+  padding:.7rem .9rem; border-radius:0 2px 2px 0;
+}
+.reader-body{ max-width:64rem; margin:0 auto; padding:1.4rem 1.5rem 4rem; }
+
+.spread2{ display:grid; grid-template-columns:1fr 1fr; gap:1.6rem; align-items:start; }
+.gridall{ display:grid; grid-template-columns:repeat(auto-fill, minmax(10.5rem, 1fr)); gap:1rem; }
+
+.leaf{
+  position:relative; min-height:28rem; border-radius:2px; background:var(--card);
+  border:1px solid var(--rule); box-shadow:var(--shadow);
+  padding:1.8rem 1.6rem 1rem; display:flex; flex-direction:column;
+}
+.leaf-cover, .leaf-plain{ aspect-ratio:3/4; }
+.leaf .lf-art{
+  height:5.5rem; margin-bottom:1.1rem; border-radius:2px; flex:none;
+  background:
+    radial-gradient(circle at 32% 38%, color-mix(in srgb, var(--pole-cool) 20%, transparent), transparent 62%),
+    radial-gradient(circle at 74% 66%, color-mix(in srgb, var(--seal) 14%, transparent), transparent 58%),
+    var(--card-2);
+  border:1px solid var(--rule-2);
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:.66rem; color:var(--ink-3); letter-spacing:.08em; padding:.5rem;
+}
+.leaf .lf-txt{ font-family:var(--book); font-size:.98rem; line-height:1.95; flex:1; }
+.leaf .lf-txt p{ margin-bottom:.45rem; }
+.leaf .lf-no{ font-size:.68rem; color:var(--ink-3); text-align:center; font-variant-numeric:tabular-nums; flex:none; }
+.leaf .lf-act{
+  position:absolute; top:.6rem; right:.75rem; font-size:.6rem; letter-spacing:.12em;
+  color:var(--seal); border:1px solid color-mix(in srgb, var(--seal) 35%, transparent);
+  border-radius:2px; padding:.05rem .35rem;
+}
+
+.leaf-cover{
+  background:linear-gradient(150deg, var(--pole-cool), color-mix(in srgb, var(--pole-cool) 52%, var(--ink)));
+  border:0; border-left:3px solid rgba(0,0,0,.22); color:#F2F5EF;
+  justify-content:space-between; box-shadow:var(--shadow-lift);
+}
+.leaf-cover::after{ content:""; position:absolute; inset:.6rem; border:1px solid rgba(242,245,239,.28); pointer-events:none; }
+.leaf-cover .ci{ font-size:.62rem; letter-spacing:.16em; opacity:.78; }
+.leaf-cover h4{ font-family:var(--serif); font-size:1.35rem; line-height:1.42; color:#F7F9F4; }
+.leaf-cover .cs{ font-family:var(--book); font-size:.8rem; opacity:.85; margin-top:.45rem; }
+
+.leaf-plain{ justify-content:center; align-items:center; text-align:center; gap:1rem; }
+.leaf-plain .pl-lbl{ font-size:.64rem; letter-spacing:.16em; color:var(--ink-3); }
+.leaf-plain .pl-txt{ font-family:var(--book); font-size:1.06rem; line-height:2; color:var(--ink); max-width:15rem; }
+.leaf-toc{ justify-content:flex-start; padding-top:3rem; }
+.toc-list{ list-style:none; margin:0; padding:0; width:100%; display:flex; flex-direction:column; gap:.9rem; }
+.toc-list li{
+  display:grid; grid-template-columns:2.6rem 1fr auto; gap:.7rem; align-items:baseline;
+  font-family:var(--book); font-size:.95rem; text-align:left;
+  border-bottom:1px dotted var(--rule); padding-bottom:.55rem;
+}
+.toc-list .tc-n{ font-family:var(--ui); font-size:.7rem; color:var(--seal); font-weight:600; }
+.toc-list .tc-p{ font-family:var(--ui); font-size:.72rem; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.gridall .toc-list li{ font-size:.66rem; gap:.35rem; grid-template-columns:1.8rem 1fr auto; padding-bottom:.3rem; }
+.gridall .leaf-toc{ padding-top:1.6rem; }
+.leaf-last{ border-color:var(--seal); }
+.leaf-last .pl-txt{ font-size:1.14rem; }
+.leaf-colophon{ background:var(--card-2); }
+.leaf-colophon .pl-txt{ font-size:.88rem; color:var(--ink-2); }
+.leaf-colophon .pl-cta{ font-size:.8rem; color:var(--seal); font-family:var(--ui); }
+
+.gridall .leaf{ padding:1.05rem .95rem .65rem; min-height:15rem; }
+.gridall .leaf .lf-txt{ font-size:.66rem; line-height:1.8; }
+.gridall .leaf .lf-art{ height:2.8rem; font-size:.55rem; margin-bottom:.6rem; }
+.gridall .leaf .lf-no{ font-size:.6rem; }
+.gridall .leaf-cover h4{ font-size:.9rem; }
+.gridall .leaf-cover .cs{ font-size:.62rem; }
+.gridall .leaf-plain .pl-txt{ font-size:.72rem; line-height:1.9; }
+.gridall .leaf-last .pl-txt{ font-size:.76rem; }
+.gridall .leaf .lf-act{ font-size:.52rem; }
+
+.artnote{
+  grid-column:1 / -1; font-size:.76rem; color:var(--pole-cool); line-height:1.7;
+  border-left:2px solid color-mix(in srgb, var(--pole-cool) 40%, transparent);
+  padding:.3rem 0 .3rem .7rem; margin-top:-.3rem;
+}
+.artnote b{ font-weight:600; }
+.reader.noannot .artnote{ display:none; }
+
+.reader-nav{
+  display:flex; align-items:center; justify-content:center; gap:1.2rem;
+  margin-top:1.8rem; padding-top:1.4rem; border-top:1px solid var(--rule-2);
+}
+.reader-nav .pgn{ font-size:.78rem; color:var(--ink-3); font-variant-numeric:tabular-nums; min-width:6rem; text-align:center; }
+
+/* ── 반응형 ──────────────────────────────── */
+@media (max-width: 900px){
+  .hero-grid{ grid-template-columns:1fr; gap:2.5rem; }
+  .steps{ grid-template-columns:1fr; }
+  .step-cell{ border-right:0; border-bottom:1px solid var(--rule-2); }
+  .step-cell:last-child{ border-bottom:0; }
+  .principle{ grid-template-columns:1fr; gap:1rem; }
+  .spread{ grid-template-columns:1fr 1fr; }
+  .bookcover{ grid-column:1 / -1; max-width:16rem; }
+  .plans{ grid-template-columns:1fr 1fr; }
+  .trackb, .twocol{ grid-template-columns:1fr; gap:1.6rem; }
+  .beats{ grid-template-columns:1fr 1fr; }
+  .slots{ grid-template-columns:1fr 1fr; }
+  .skel{ grid-template-columns:1fr; gap:1.2rem; }
+  .paywall{ grid-template-columns:1fr; }
+}
+@media (max-width: 620px){
+  .sec{ padding:3rem 0; }
+  .qcard{ padding:1.6rem 1.3rem; }
+  .qtext{ font-size:1.2rem; }
+  .plans{ grid-template-columns:1fr; }
+  .spread{ grid-template-columns:1fr; }
+  .bookcover{ max-width:none; }
+  .axis-row{ grid-template-columns:1.9rem 4rem 1fr 4rem 2.6rem; gap:.4rem; }
+  .pole{ font-size:.72rem; }
+  .qfield.two{ flex-direction:column; }
+  .beats, .slots{ grid-template-columns:1fr; }
+  .decision{ grid-template-columns:auto 1fr; }
+  .decision .dw{ grid-column:2; text-align:left; }
+  .nsm{ grid-template-columns:1fr; gap:1rem; }
+  .spread2{ grid-template-columns:1fr; }
+  .gridall{ grid-template-columns:repeat(auto-fill, minmax(8rem, 1fr)); }
+  .leaf{ padding:1.4rem 1.2rem .9rem; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+}
+</style>
+
+<div class="draftbar">
+  <div class="draftbar-in">
+    <strong>초안 v0.1</strong>
+    <span>00_서비스기획.md를 그대로 화면으로 옮긴 것입니다. 카피·가격·삽화는 전부 가안이며, 미결 사항 7건은 「설계 노트」 마지막에 있습니다.</span>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <span class="brand-mark">이야기 서랍</span>
+      <span class="brand-note">너의 첫 책 · 한 권의 당신</span>
+    </div>
+    <nav class="viewnav" role="tablist" aria-label="초안 보기">
+      <button role="tab" aria-selected="true" data-view="landing">랜딩 초안</button>
+      <button role="tab" aria-selected="false" data-view="demo">질문 흐름</button>
+      <button role="tab" aria-selected="false" data-view="notes">설계 노트</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ══════════════════ 1. 랜딩 초안 ══════════════════ -->
+<main id="view-landing">
+
+  <section class="manuscript">
+    <div class="wrap hero">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow">Track A · <span class="num">너의 첫 책</span></span>
+          <h1><span class="q">열일곱 개의 질문</span>에 답하면,<br>아이를 닮은 <em>동화 한 권</em>이 됩니다.</h1>
+          <p class="hero-sub">
+            프롬프트를 넣어 그림을 뽑는 서비스가 아닙니다.
+            아이가 무엇을 무서워하는지, 무엇을 절대 못 버리는지,
+            우리 집은 무엇을 옳다고 하는지 — 그걸 <b>묻고 받아 적어서</b> 한 권으로 묶습니다.
+          </p>
+          <div class="hero-cta">
+            <button class="btn btn-primary" data-goto="demo">질문 시작하기 · 8분 · 무료</button>
+            <a class="btn btn-ghost" href="#preview">완성본 먼저 보기</a>
+          </div>
+          <div class="hero-trust">
+            <span>결제는 미리보기를 본 다음에</span>
+            <span>아이 사진은 받지 않습니다</span>
+            <span>실명 대신 집에서 부르는 별명으로</span>
+          </div>
+        </div>
+
+        <div class="demo-card">
+          <div class="demo-card-head">
+            <span class="qid" id="hx-qid">Q7</span>
+            <span class="step">질문 → 답변 → 동화 속 자리</span>
+          </div>
+          <div class="demo-body">
+            <p class="demo-q" id="hx-q">아이가 절대 못 버리게 하는 물건 하나</p>
+            <div class="demo-a"><span id="hx-a">귀 한쪽이 늘어진 토끼 인형, 몽이</span><span class="caret"></span></div>
+            <div class="demo-arrow">받아 적기</div>
+            <div class="demo-out">
+              <span class="role" id="hx-role">매개 사물 — 시련을 넘는 열쇠</span>
+              <span id="hx-out">지호는 몽이를 꼭 안았습니다.<br>몽이는 귀 한쪽이 늘어져 있습니다.</span>
+            </div>
+          </div>
+          <div class="demo-dots" id="hx-dots" role="tablist" aria-label="예시 전환"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec">
+      <span class="eyebrow">지금 있는 것 <span class="num">/</span> 없는 것</span>
+      <div class="hero-grid" style="align-items:center">
+        <p class="pullquote">
+          “싸고 빠른 생성”과 “비싸고 깊은 대필” 사이가
+          <span class="mark">통째로 비어 있습니다.</span>
+        </p>
+        <p class="lede">
+          AI 동화 생성기는 사용자가 누구인지 모른 채 만들기 때문에 결과물이 전부 비슷합니다.
+          자서전 대필은 좋지만 200만원부터 시작하고 서너 달이 걸립니다.
+          그 사이에, 8분과 만 원으로 <b>나를 아는 책</b>을 만들 자리가 있습니다.
+        </p>
+      </div>
+
+      <div class="tablewrap" style="margin-top:2.5rem">
+        <table>
+          <thead>
+            <tr><th>지금의 선택지</th><th>하는 일</th><th class="num-col">비용 · 시간</th><th>비어 있는 것</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>AI 동화 생성기</td><td>프롬프트를 넣으면 즉시 생성</td><td class="num-col">수천 원 · 1분</td><td>사용자가 누구인지 모른 채 만든다</td></tr>
+            <tr><td>이름만 바꾸는 동화</td><td>주인공 이름 치환</td><td class="num-col">2~3만원 · 3일</td><td>내용은 전원 동일 · 1회성 소비</td></tr>
+            <tr><td>포토북</td><td>사진 배치·인쇄</td><td class="num-col">3~7만원 · 1주</td><td>사진은 있는데 이야기가 없다</td></tr>
+            <tr><td>육아 기록 앱</td><td>기록 축적</td><td class="num-col">무료~월 구독</td><td>기록일 뿐, 작품이 되지 않는다</td></tr>
+            <tr><td>자서전 대필</td><td>인터뷰 후 집필</td><td class="num-col">200~500만원 · 3~6개월</td><td>대부분에게 진입장벽</td></tr>
+            <tr class="ours"><td>이야기 서랍</td><td>17개 질문으로 받아 적고 조판</td><td class="num-col">9,900원 · 8분 + 대기</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec">
+      <span class="eyebrow">어떻게 만들어지나</span>
+      <h2 style="font-size:1.7rem; letter-spacing:-.03em; margin-bottom:2rem">생성이 아니라 채록(採錄)입니다.</h2>
+      <div class="steps">
+        <div class="step-cell">
+          <span class="step-n">1단계</span>
+          <h3>답한다</h3>
+          <p>4개 파트, 17문항. 가치를 직접 묻지 않고 <b>장면</b>을 묻습니다. “아이가 길에서 돈을 주웠습니다. 우리 집의 답은?”</p>
+          <div class="step-meta">8~10분 · 중간 저장 · 이어하기 링크 문자 발송</div>
+        </div>
+        <div class="step-cell">
+          <span class="step-n">2단계</span>
+          <h3>우리 집의 좌표를 읽는다</h3>
+          <p>답변을 6개 축으로 점수화해 <b>서사 골격 6종</b> 중 하나를 고릅니다. 시련의 강도, 조력자 유무, 결말의 방향이 여기서 갈립니다.</p>
+          <div class="step-meta">심리검사가 아니라 이야기 모양을 정하는 장치</div>
+        </div>
+        <div class="step-cell">
+          <span class="step-n">3단계</span>
+          <h3>한 권으로 조판한다</h3>
+          <p>나이에 맞는 문체로 집필하고, 캐릭터 외형을 고정한 삽화를 얹습니다. 마지막 문장은 <b>당신이 쓴 문장 그대로</b> 들어갑니다.</p>
+          <div class="step-meta">10~12세 기준 24쪽 · 4챕터 · 쪽당 5~8문장</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec">
+      <span class="eyebrow">질문이 다릅니다</span>
+      <h2 style="font-size:1.7rem; letter-spacing:-.03em; margin-bottom:.6rem">좋은 동화는 좋은 질문에서만 나옵니다.</h2>
+      <p class="lede" style="margin-bottom:2rem">생성 모델은 언제든 바꿀 수 있지만, 질문지는 바꿀 수 없는 자산입니다. 네 가지 원칙으로 설계했습니다.</p>
+
+      <div class="principles">
+        <div class="principle">
+          <h3><span class="pn">원칙 1</span>가치를 묻지 말고 장면을 물어라</h3>
+          <div>
+            <div class="qpair">
+              <div class="qbad"><span class="sig">✗</span><span class="t">당신이 중요하게 여기는 가치는 무엇인가요?</span></div>
+              <div class="qgood"><span class="sig">✓</span><span>아이가 길에서 돈을 주웠습니다. 우리 집의 답은?</span></div>
+            </div>
+            <p class="why">가치를 직접 물으면 사회적으로 바람직한 답이 나옵니다. 전원 같은 답 → 전원 같은 동화. 상황은 실제 행동 성향을 드러내면서 동시에 이야기 소재가 됩니다.</p>
+          </div>
+        </div>
+
+        <div class="principle">
+          <h3><span class="pn">원칙 2</span>두 층으로 물어라</h3>
+          <div>
+            <div class="qpair">
+              <div class="qgood"><span class="sig">소재</span><span>구체적 사실·장면·감각 → 등장인물, 배경, 사물, 디테일</span></div>
+              <div class="qgood"><span class="sig">가치</span><span>딜레마 선택 → 주제, 갈등 구조, 결말 방식</span></div>
+            </div>
+            <p class="why">소재만 있으면 예쁘지만 알맹이 없는 동화가, 가치만 있으면 남의 이야기 같은 동화가 나옵니다. 둘이 만나야 “우리 이야기”가 됩니다.</p>
+          </div>
+        </div>
+
+        <div class="principle">
+          <h3><span class="pn">원칙 3</span>감각을 하나는 반드시 물어라</h3>
+          <div>
+            <div class="qpair">
+              <div class="qgood"><span class="sig">✓</span><span>그 시절을 떠올리면 가장 먼저 떠오르는 냄새는?</span></div>
+            </div>
+            <p class="why">냄새·소리·촉감 답변 <b>단 하나</b>가 동화 전체의 문학성을 결정합니다. “연탄 냄새”라는 답 하나가 전편을 관통하는 이미지가 됩니다.</p>
+          </div>
+        </div>
+
+        <div class="principle">
+          <h3><span class="pn">원칙 4</span>결핍과 두려움을 반드시 물어라</h3>
+          <div>
+            <div class="qpair">
+              <div class="qbad"><span class="sig">✗</span><span class="t">아이의 장점을 모두 알려주세요</span></div>
+              <div class="qgood"><span class="sig">✓</span><span>아이가 무서워하거나 싫어하는 것 하나</span></div>
+            </div>
+            <p class="why">갈등 없는 동화는 동화가 아니라 소개글입니다. 이 문항이 3막을 만듭니다. 빼면 서비스가 무너집니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="preview">
+    <div class="wrap sec">
+      <span class="eyebrow">완성본 미리보기</span>
+      <h2 style="font-size:1.7rem; letter-spacing:-.03em; margin-bottom:.6rem">지호(11세)의 답변으로 만든 책</h2>
+      <p class="lede" style="margin-bottom:2rem">
+        좋아하는 것은 공룡·물웅덩이·계란말이, 못 버리는 물건은 토끼 인형 몽이,
+        무서워하는 것은 밤에 불 꺼진 복도, 요즘 어려움은 동생 질투.
+        <span style="color:var(--ink-3)">— 아래는 그 답변만으로 조판한 표지와 앞 2쪽입니다. 어느 단어가 어느 문항에서 왔는지, 읽으면서는 보이지 않습니다.</span>
+      </p>
+
+      <div class="spread">
+        <div class="bookcover">
+          <span class="imprint">이야기 서랍</span>
+          <div>
+            <h4>깜깜한 곳에서<br>지호가 한 일</h4>
+            <p class="subtitle">시끌시끌, 우리 집 이야기</p>
+          </div>
+          <span class="imprint">지호에게, 2026년 가을 엄마가</span>
+        </div>
+        <div class="bookpage">
+          <div class="art">삽화 — 수채 프리셋</div>
+          <div class="txt">
+            <p>해가 낮게 걸린 오후였다.</p>
+            <p>지호는 집 앞 어린이 도서관으로 뛰어갔다. 가방이 등에서 통통 튀었다.</p>
+            <p>“내가 할래!”</p>
+            <p>누가 시킨 것도 아닌데 지호는 늘 뛴다. 걸어가면 뭔가 손해 보는 기분이 든다.</p>
+            <p>집 앞 어린이 도서관까지는 정확히 사백 걸음이다. 한 번 세어 본 적이 있다.</p>
+          </div>
+          <span class="pno">1</span>
+        </div>
+        <div class="bookpage">
+          <div class="art">삽화 — 캐릭터 시트 고정</div>
+          <div class="txt">
+            <p>거기서 지호가 제일 좋아하는 자리는 딱 하나다.</p>
+            <p>창가 쪽, 책장과 벽 사이에 끼어 있는 좁은 틈이다.</p>
+            <p>거기 앉으면 아무도 지호를 못 본다. 대신 지호는 다 볼 수 있다.</p>
+            <p>그리고 고개를 조금만 돌리면 공룡이 제일 먼저 보인다.</p>
+          </div>
+          <span class="pno">2</span>
+        </div>
+      </div>
+
+      <div class="paywall">
+        <div>
+          <h4>실제 서비스에서는 여기까지 무료입니다.</h4>
+          <p>
+            나머지 13쪽과 마지막 문장은 결제 후에 열립니다.
+            마지막 문장은 당신이 Q16에 쓴 <b>그 문장 그대로</b> 들어갑니다 — 저희가 고쳐 쓰지 않습니다.
+            <span style="color:var(--seal)">이 초안에서는 결제 없이 전권을 열어 뒀습니다.</span>
+          </p>
+        </div>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap">
+          <button class="btn btn-seal" id="open-sample">완성본 전권 보기 · 24쪽 · 4챕터</button>
+          <button class="btn btn-ghost" data-goto="demo">직접 만들어 보기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec">
+      <span class="eyebrow">가격</span>
+      <h2 style="font-size:1.7rem; letter-spacing:-.03em; margin-bottom:2rem">보고 나서 결정하세요.</h2>
+      <div class="plans">
+        <div class="plan">
+          <span class="tier">미리보기</span>
+          <span class="price">무료</span>
+          <ul><li>표지 + 앞 4쪽</li><li>서사 골격 판정 결과</li><li>회원가입 없음</li></ul>
+        </div>
+        <div class="plan featured">
+          <span class="tier">디지털 전권</span>
+          <span class="price">9,900<small>원</small></span>
+          <ul><li>전체 열람 + PDF</li><li>공유 링크 발급</li><li>문장 수정 · 삽화 재생성 3회</li></ul>
+        </div>
+        <div class="plan">
+          <span class="tier">소프트커버</span>
+          <span class="price">29,000<small>원</small></span>
+          <ul><li>실물 12쪽 · 배송</li><li>인쇄 전 최종 승인</li></ul>
+          <span class="chip-soon">2차 · 준비 중</span>
+        </div>
+        <div class="plan">
+          <span class="tier">하드커버</span>
+          <span class="price">49,000<small>원</small></span>
+          <ul><li>실물 16쪽 · 선물 포장</li><li>헌사 페이지 인쇄</li></ul>
+          <span class="chip-soon">2차 · 준비 중</span>
+        </div>
+      </div>
+      <p style="font-size:.78rem; color:var(--ink-3); margin-top:1rem">
+        MVP 기간에는 디지털·PDF만 판매합니다. 실물 인쇄는 POD 제휴 후 2차에 엽니다. 구독 상품은 만들지 않습니다.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec">
+      <span class="eyebrow">Track B · 준비 중</span>
+      <div class="trackb">
+        <div>
+          <h3 style="font-size:1.3rem; letter-spacing:-.02em; margin-bottom:.7rem">한 권의 당신</h3>
+          <p style="font-size:.92rem; color:var(--ink-2); line-height:1.85">
+            부모님의 삶을 책으로 만들려면, 문제가 하나 있습니다.
+            <b>자녀는 부모의 절반을 모릅니다.</b>
+            그래서 모든 문항에 「모르겠어요 — 여쭤볼래요」 버튼을 둡니다.
+          </p>
+          <p style="font-size:.85rem; color:var(--ink-3); margin-top:1rem; line-height:1.8">
+            모른다는 사실이 결함이 아니라 기능이 되는 구조입니다.
+            서비스가 실제로 부모와 대화하게 만들고, 그 대화가 그대로 원고가 됩니다.
+          </p>
+        </div>
+        <div class="loop">
+          <div class="loop-step"><span class="loop-n">1</span><span>자녀가 18문항에 답하다 <b>모르는 문항을 남긴다</b></span></div>
+          <div class="loop-step"><span class="loop-n">2</span><span>미답변 문항이 <b>「부모님께 드리는 질문 카드」</b>로 자동 생성</span></div>
+          <div class="loop-step"><span class="loop-n">3</span><span>카톡으로 전송 → 부모님은 링크에서 <b>음성으로 답변</b> (앱 설치 없음)</span></div>
+          <div class="loop-step"><span class="loop-n">4</span><span>음성이 자동 채록되어 원고에 합류 · 부모님도 <b>완성본 열람권</b>을 받는다</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec">
+      <span class="eyebrow">자주 묻는 질문</span>
+      <div class="faq">
+        <details open>
+          <summary>아이 사진이 필요한가요?<span></span></summary>
+          <div class="ans">받지 않습니다. 만 14세 미만 아동의 사진·실명은 수집하지 않는 것이 원칙입니다. 주인공은 집에서 부르는 별명을 기본값으로 씁니다. 삽화는 답변에서 뽑은 특징으로 캐릭터를 새로 만듭니다.</div>
+        </details>
+        <details>
+          <summary>중간에 그만두면 처음부터 다시 해야 하나요?<span></span></summary>
+          <div class="ans">아니요. 5문항 이상 답하면 자동 저장되고, 이어하기 링크를 문자로 보내 드립니다. 앱을 설치할 필요도, 회원가입을 할 필요도 없습니다.</div>
+        </details>
+        <details>
+          <summary>페이지마다 아이 얼굴이 달라지지 않나요?<span></span></summary>
+          <div class="ans">삽화 생성 전에 캐릭터 시트(외형 고정)를 먼저 만들고, 모든 페이지를 그 시트로 묶습니다. 시트 없이 생성하는 것은 내부 규칙으로 금지되어 있습니다. 페이지마다 얼굴이 바뀌면 상품 가치가 0이 되기 때문입니다.</div>
+        </details>
+        <details>
+          <summary>내 답변을 얼마나 각색하나요?<span></span></summary>
+          <div class="ans">답변에 없는 고유명사는 만들지 않습니다. 이름·장소·사건을 지어내지 않는다는 뜻입니다. 각색 강도는 3단계 중에서 직접 고르고, 마지막 문장(Q16)은 원문 그대로 들어갑니다.<span class="ref"> — 품질 가드레일 1·5</span></div>
+        </details>
+        <details>
+          <summary>결과물이 마음에 안 들면요?<span></span></summary>
+          <div class="ans">그래서 결제를 뒤에 뒀습니다. 표지와 앞 4쪽을 보고 나서 결정하시면 됩니다. 결제 후에도 문장 수정과 삽화 재생성 3회가 포함됩니다.</div>
+        </details>
+        <details>
+          <summary>몇 살까지 가능한가요?<span></span></summary>
+          <div class="ans">지금은 <b>10~12세</b>가 기준입니다. 24쪽·4챕터·쪽당 5~8문장으로, 아이가 혼자 앉아서 읽는 분량입니다. 그림책이 아니라 단편동화라고 보시면 됩니다. 3~9세 구간은 같은 이야기를 그 나이의 문체로 다시 쓰는 작업이라 순차적으로 엽니다.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap sec" style="text-align:center">
+      <h2 style="font-size:clamp(1.6rem,3.4vw,2.3rem); letter-spacing:-.03em; margin-bottom:1rem; max-width:26rem; margin-inline:auto">
+        지금 물어보지 않으면,<br>나중에는 물어볼 수 없습니다.
+      </h2>
+      <p class="lede" style="margin:0 auto 2rem">8분이면 충분합니다. 결제는 결과를 보고 나서 하시면 됩니다.</p>
+      <button class="btn btn-primary" data-goto="demo">17개의 질문 시작하기</button>
+    </div>
+  </section>
+</main>
+
+<!-- ══════════════════ 2. 질문 흐름 ══════════════════ -->
+<main id="view-demo" hidden>
+  <div class="flow">
+    <div class="flow-head">
+      <span class="flow-part"><b id="fl-part">Part 1 · 주인공</b> <span id="fl-count">Q1 / 17</span></span>
+      <label class="toggle"><input type="checkbox" id="annot-toggle" checked>설계 주석 보기</label>
+    </div>
+    <div class="progress"><i id="fl-bar" style="width:6%"></i></div>
+
+    <div id="fl-stage"></div>
+  </div>
+</main>
+
+<!-- ══════════════════ 3. 설계 노트 ══════════════════ -->
+<main id="view-notes" hidden>
+  <div class="notes">
+
+    <div class="note-sec">
+      <span class="secmark">§1 · 한 줄 정의</span>
+      <h2>17개의 질문에 답하면, 그 사람의 가치관을 담은 동화 한 권이 만들어진다.</h2>
+      <p class="nsub">
+        파는 것은 동화책이 아니라 <b>“내가 어떤 사람인지 알게 되는 경험”</b>입니다.
+        동화는 그 경험의 증거물이자, 남에게 보여줄 수 있는 유일한 형태입니다.
+        따라서 이 서비스의 품질은 생성 기술이 아니라 <b>질문 설계</b>가 결정합니다.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>구분</th><th>Track A · 너의 첫 책</th><th>Track B · 한 권의 당신</th></tr></thead>
+          <tbody>
+            <tr><td>답변자</td><td><b>10~12세</b> 자녀를 둔 부모 (35~50세) <span style="color:var(--seal)">← 상향</span></td><td>성인 본인(40~70세) 또는 자녀(30~50세)</td></tr>
+            <tr><td>감정 동인</td><td>물려주고 싶다</td><td>남기고 싶다 · 늦기 전에 묻고 싶다</td></tr>
+            <tr><td>구매 계기</td><td>생일 · 첫 등원 · 크리스마스</td><td>어버이날 · 환갑 · 명절 · 투병</td></tr>
+            <tr><td class="num-col">결제 의사</td><td class="num-col">2~4만원</td><td class="num-col">5~15만원</td></tr>
+            <tr><td>확산 구조</td><td>맘카페 · 인스타 · 유치원 학부모</td><td>형제자매 공동구매 · 가족 단톡방</td></tr>
+            <tr class="ours"><td>MVP 우선순위</td><td>단독 개발 (볼륨이 큼)</td><td>질문지 오프라인 수동 테스트만</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note-sec">
+      <span class="secmark">§5 · 가치 좌표계</span>
+      <h2>이야기 모양을 실제로 바꾸는 축만 남긴다</h2>
+      <p class="nsub">심리검사가 아니라 서사 결정 장치입니다. 축이 결과물의 무엇을 바꾸는지 설명할 수 없으면 그 축은 뺍니다.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>축</th><th>양극</th><th>이야기에 미치는 영향</th></tr></thead>
+          <tbody>
+            <tr><td>V1</td><td>안전 ↔ 모험</td><td>시련의 강도 · 주인공의 이동 범위 (집 안 ↔ 먼 곳)</td></tr>
+            <tr><td>V2</td><td>나 ↔ 우리</td><td>문제를 혼자 푸는가 · 함께 푸는가 · 조력자 유무</td></tr>
+            <tr><td>V3</td><td>원칙 ↔ 관계</td><td>갈등의 성격 — 옳음의 문제인가, 마음의 문제인가</td></tr>
+            <tr><td>V4</td><td>성취 ↔ 충분함</td><td>결말 조건 — 이루어서 끝나는가, 알아서 끝나는가</td></tr>
+            <tr><td>V5</td><td>새로움 ↔ 지킴</td><td>결말의 방향 — 떠나는가, 돌아오는가</td></tr>
+            <tr><td>V6</td><td>축적 ↔ 나눔</td><td>얻은 것을 어떻게 하는가</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size:1rem; margin:2rem 0 .8rem">서사 골격 6종</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>골격</th><th>우세 축</th><th>4막 구조</th><th>모티프</th><th>대표 정서</th></tr></thead>
+          <tbody>
+            <tr><td>씨앗형</td><td>안전 · 우리 · 지킴</td><td>작은 것을 발견 → 위협 → 지켜냄 → 자라남</td><td>손바닥에 들어오던 크기</td><td>지켜주는 마음</td></tr>
+            <tr><td>첫걸음형</td><td>모험 · 나 · 성취</td><td>두려움 → 문 앞 → 한 발 → 넘어섬</td><td>한 발의 거리</td><td>해냈다</td></tr>
+            <tr><td>등불형</td><td>관계 · 우리 · 나눔</td><td>어두운 곳 → 누군가의 결핍 → 내 것을 나눔 → 함께 밝아짐</td><td>빛 한 줄</td><td>곁을 밝힘</td></tr>
+            <tr><td>뿌리형</td><td>지킴 · 우리 · 충분함</td><td>떠남 → 헤맴 → 기억을 만남 → 돌아옴</td><td>집 냄새</td><td>돌아온 자리</td></tr>
+            <tr><td>문지기형</td><td>원칙 · 나 · 성취</td><td>규칙 → 흔들림 → 홀로 지킴 → 인정받음</td><td>아무도 안 볼 때</td><td>부끄럽지 않음</td></tr>
+            <tr><td>강물형</td><td>충분함 · 나눔 · 유연</td><td>붙잡음 → 잃음 → 놓아줌 → 흘러감</td><td>쥔 손과 빈 손</td><td>담담한 여운</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note-sec">
+      <span class="secmark">§8 · 변환 엔진</span>
+      <h2>답변에서 동화까지 8단계</h2>
+      <p class="nsub">②③④가 이 서비스의 자산입니다. ⑤⑥은 모델 교체가 가능한 구간이고, ⑦을 빼면 환불이 늘어납니다.</p>
+      <div class="pipeline">
+        <div class="pipe"><span class="pn">①</span><span class="pt">답변 수집</span><span class="pd">17~18문항 · 4파트 분할 · 5문항 이상이면 자동 저장</span></div>
+        <div class="pipe key"><span class="pn">②</span><span class="pt">가치 스코어링</span><span class="pd">6축 점수화 → 상위 3축 → 서사 골격 1종 선택 (동점 시 Q13이 결정)</span></div>
+        <div class="pipe key"><span class="pn">③</span><span class="pt">소재 슬롯 채움</span><span class="pd">주인공 / 조력자 / 배경 / 매개사물 / 두려움 / 반복구절</span></div>
+        <div class="pipe key"><span class="pn">④</span><span class="pt">비트시트 생성</span><span class="pd">4막 × 페이지 배분 (골격 템플릿 + 연령 구간)</span></div>
+        <div class="pipe"><span class="pn">⑤</span><span class="pt">본문 집필</span><span class="pd">문체 규칙 적용 → 페이지별 텍스트</span></div>
+        <div class="pipe"><span class="pn">⑥</span><span class="pt">삽화 생성</span><span class="pd">스타일 프리셋 3종 × 캐릭터 시트 고정</span></div>
+        <div class="pipe"><span class="pn">⑦</span><span class="pt">사용자 교정</span><span class="pd">문장 수정 · 삽화 재생성 3회 무료 · 이름 교체</span></div>
+        <div class="pipe"><span class="pn">⑧</span><span class="pt">조판 · 출력</span><span class="pd">디지털 뷰어 / PDF / (2차) 인쇄 입고</span></div>
+      </div>
+
+      <h3 style="font-size:1rem; margin:2rem 0 .6rem">품질 가드레일 — 구현 필수</h3>
+      <div class="guards">
+        <div class="guard"><span class="gn">1</span><span><b>답변에 없는 고유명사 생성 금지</b><span class="why">없는 사실을 지어내면 신뢰가 즉시 붕괴합니다. 회고 트랙에서는 치명적입니다.</span></span></div>
+        <div class="guard"><span class="gn">2</span><span><b>각색 범위 사전 고지 + 사용자 승인</b><span class="why">사실 왜곡 분쟁을 예방합니다. 각색 강도 3단계를 사용자가 선택합니다.</span></span></div>
+        <div class="guard"><span class="gn">3</span><span><b>아이 트랙의 시련은 반드시 해결되고 끝난다</b><span class="why">미해결 결말은 아동 정서에 부적합합니다.</span></span></div>
+        <div class="guard"><span class="gn">4</span><span><b>훈계·교훈 직접 서술 금지</b><span class="why">“~해야 해요”를 쓰지 않습니다. 좋은 동화는 교훈을 말하지 않고 보여줍니다.</span></span></div>
+        <div class="guard"><span class="gn">5</span><span><b>Q16 답변은 원문 그대로 마지막 페이지에</b><span class="why">사용자 본인의 문장이 어떤 생성 문장보다 강력합니다.</span></span></div>
+        <div class="guard"><span class="gn">6</span><span><b>캐릭터 시트 없이 삽화 생성 금지</b><span class="why">페이지마다 얼굴이 바뀌면 상품 가치가 0이 됩니다.</span></span></div>
+        <div class="guard"><span class="gn">7</span><span><b>사망·질병 언급 시 표현 검수 룰 적용</b><span class="why">유족이 사용자인 서비스입니다.</span></span></div>
+      </div>
+
+      <h3 style="font-size:1rem; margin:2rem 0 .6rem">집필 규칙 12 — 답변이 슬롯처럼 보이지 않게</h3>
+      <p class="nsub" style="margin-bottom:1rem">
+        가드레일이 “하면 안 되는 것”이라면, 이건 “좋은 동화가 되는 조건”입니다.
+        1차 원고는 답변을 넣는 데는 성공했지만 이야기가 죽었고, 2차 원고는 문장은 살았지만 서사가 얇았습니다.
+        <b>KB창작동화제 수상작 모음집(1992~2025, 34회)</b>을 기준선으로 삼아 아래를 규칙으로 고정했습니다.
+      </p>
+      <div class="guards">
+        <div class="guard"><span class="gn">1</span><span><b>한 쪽에 한 이미지.</b><span class="why">설명하는 문장을 쓰지 않는다. “좋아한다” 대신 좋아하는 장면을 보여준다.</span></span></div>
+        <div class="guard"><span class="gn">2</span><span><b>두려움은 “무섭다”고 쓰지 않는다.</b><span class="why">“복도가 무섭다” → “복도는 자꾸 길어진다. 낮에는 다섯 걸음인데, 밤에는 세어 본 적이 없다.”</span></span></div>
+        <div class="guard"><span class="gn">3</span><span><b>매개 사물은 소개하지 않고 등장시킨다.</b><span class="why">“몽이가 있다” → “몽이가 옆에서 부스럭거렸다.”</span></span></div>
+        <div class="guard"><span class="gn">4</span><span><b>답변을 주어 자리에 몰아넣지 않는다.</b><span class="why">별명이 세 쪽 연속 주어가 되면 다시 쓴다. 슬롯처럼 읽히는 가장 큰 원인.</span></span></div>
+        <div class="guard"><span class="gn">5</span><span><b>막마다 의성어·의태어 최소 1회.</b><span class="why">통통 · 부스럭 · 삐걱 · 덜덜 · 슬금슬금. 소리가 없으면 아이가 읽지 않는다.</span></span></div>
+        <div class="guard"><span class="gn">6</span><span><b>모티프 하나를 4막에 걸쳐 변주한다.</b><span class="why">등불형은 ‘빛 한 줄’, 씨앗형은 ‘손바닥에 들어오던 크기’. 마지막 쪽은 1막의 이미지로 돌아온다.</span></span></div>
+        <div class="guard"><span class="gn">7</span><span><b>정점에는 한 문장짜리 쪽을 놓는다.</b><span class="why">페이지 넘김이 곧 호흡이다. 쪽마다 문장 수가 같으면 리듬이 죽는다.</span></span></div>
+        <div class="guard"><span class="gn">8</span><span><b>마지막 쪽은 설명하지 않는다.</b><span class="why">“이제 알게 되었다”를 지우고 이미지로 닫는다. 뜻은 독자가 만든다.</span></span></div>
+        <div class="guard"><span class="gn">9</span><span><b>아이의 논리로 생각하게 한다.</b><span class="why">“셋까지 세면 갈 거라고 정했다. 셋을 두 번 셌다.” 어른의 관찰이 아니라 아이의 계산이 문장이 되어야 한다.</span></span></div>
+        <div class="guard"><span class="gn">10</span><span><b>1막에 심고 4막에 회수한다.</b><span class="why">‘알려 주면 그냥 바닥이 되어 버릴 것 같았다’(2쪽) → ‘알려 줘도 바닥이 되지 않을 것 같았다’(19쪽). 복선 하나가 성장을 증명한다.</span></span></div>
+        <div class="guard"><span class="gn">11</span><span><b>주인공이 대가를 치르게 한다.</b><span class="why">나눔이 공짜면 감동이 가짜가 된다. 제일 아끼는 것을 내밀고 후회하는 한 줄이 반드시 있어야 한다.</span></span></div>
+        <div class="guard"><span class="gn">12</span><span><b>극복을 한 번에 끝내지 않는다.</b><span class="why">“그렇게 생각하기로 했다. 생각하기로 한 거지, 진짜 그렇게 생각한 건 아니었다.” 아이는 단번에 괜찮아지지 않는다.</span></span></div>
+      </div>
+
+      <h3 style="font-size:1rem; margin:2rem 0 .6rem">참고 기준선과 표절 방지</h3>
+      <p class="nsub">
+        <b>참고한 것</b> — KB창작동화제 수상작 모음집 19권과 심사평. 심사위원이 무엇을 칭찬하고 무엇을 지적하는지가
+        가장 정확한 품질 정의였습니다(“도입부가 흥미진진하면 독자를 책 앞으로 바싹 끌어당긴다”, “깃털을 서사 촉발 도구가 아니라
+        의미를 강화하는 은유로 쓴 점이 좋았다”, “결말에서 강한 인상을 줄 결정적 한 방”).
+      </p>
+      <p class="nsub">
+        <b>가져온 것</b> — 기법뿐입니다. 화자의 개성, 아이 특유의 논리, 복선과 회수, 설명하지 않는 결말, 의성어의 밀도.
+        <b>가져오지 않은 것</b> — 인물·설정·사건·문장. 6편의 소재는 전부 사용자의 답변에서 나오고, 문장은 전부 새로 씁니다.
+        생성 단계에서도 <b>참고 작품의 문장을 프롬프트에 넣지 않는 것</b>을 규칙으로 둡니다. 기법은 규칙으로 적어 전달하고,
+        예시가 필요하면 이 6편(자체 창작)만 씁니다.
+      </p>
+
+      <h3 style="font-size:1rem; margin:2rem 0 .6rem">한국어 조사 자동 선택</h3>
+      <p class="nsub">
+        받침 유무로 <b>이/가 · 은/는 · 을/를 · 으로/로 · 아/야</b>가 갈리고, 이름 뒤 접미사 ‘이’도 마찬가지입니다
+        (지훈<b>이는</b> / 지호<b>는</b>). 이 처리가 없으면 치환형 동화는 첫 문장에서 바로 들킵니다.
+        본문 템플릿에는 <code style="font-family:var(--ui); font-size:.82em; background:var(--card-2); border:1px solid var(--rule-2); border-radius:2px; padding:.05rem .3rem">{n|이는/는}</code> 형태로 조사 규칙을 함께 적어 둡니다.
+      </p>
+    </div>
+
+    <div class="note-sec">
+      <span class="secmark">§10 · MVP 12주</span>
+      <h2>무엇을 만들고, 무엇을 만들지 않는가</h2>
+      <div class="twocol">
+        <div class="panel">
+          <h4>포함</h4>
+          <ul>
+            <li>Track A 전용 모바일 웹 (앱 없음)</li>
+            <li>질문 17문항 + 진행 저장</li>
+            <li>6축 스코어링 + 골격 6종 템플릿 — <b>핵심 자산</b></li>
+            <li>텍스트 생성 12쪽 / 16쪽</li>
+            <li>삽화 스타일 3종 (수채 · 크레용 · 파스텔)</li>
+            <li>디지털 뷰어 + 공유 링크</li>
+            <li>PDF 다운로드 (유료)</li>
+          </ul>
+        </div>
+        <div class="panel excl">
+          <h4>제외 — 2차 이후</h4>
+          <ul>
+            <li>실물 인쇄·배송 (재고·반품·CS 리스크)</li>
+            <li>Track B 전체 (질문지는 오프라인 수동 테스트만)</li>
+            <li>앱 · 로그인 · 회원 시스템</li>
+            <li>다국어 · 음성 낭독 · 애니메이션</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="nsub" style="margin-top:1.2rem; color:var(--seal)">
+        <b>확정 — MVP 1차 타깃을 10~12세로 상향</b>. 기획서는 텍스트를 12쪽/16쪽으로 잡았지만,
+        참고 기준선(KB창작동화제 수상작) 수준의 서사 밀도는 <b>24쪽·4챕터에서부터</b> 나옵니다.
+        그림책 문체(문장 25~35자, 쪽당 2~3문장)로는 복선·회수·대화 주고받기·심리 묘사가 물리적으로 들어가지 않습니다.
+        6편 전부 이 구간으로 집필했습니다.
+      </p>
+      <div class="tablewrap" style="margin-top:1rem">
+        <table>
+          <thead><tr><th>타깃 상향의 파급</th><th>3~10세 기준 (기존)</th><th>10~12세 기준 (변경)</th></tr></thead>
+          <tbody>
+            <tr><td>결과물</td><td>그림동화 12~16쪽</td><td>단편동화 24쪽 · 4챕터</td></tr>
+            <tr><td>읽는 사람</td><td>부모가 읽어 준다</td><td><b>아이가 직접 읽는다</b> — 선물이 아니라 소장품</td></tr>
+            <tr><td>삽화 비중</td><td>쪽마다 필수</td><td>챕터 표제화 4장 + 표지 → <b>생성 원가 하락</b></td></tr>
+            <tr><td>구매 계기</td><td>생일 · 첫 등원 · 크리스마스</td><td>생일 · <b>졸업 · 전학 · 사춘기 진입</b></td></tr>
+            <tr><td>획득 채널</td><td>맘카페 · 유치원 제휴</td><td>초등 학부모 커뮤니티 · <b>학교 도서관 · 독서 지도</b></td></tr>
+            <tr class="ours"><td>새 리스크</td><td>—</td><td>아이가 <b>결과물을 평가한다.</b> 부모만 만족시키면 되던 게 아니게 된다</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="nsub" style="margin-top:.9rem">
+        3~6세 그림책 판본을 <b>버릴지, 별도 상품으로 남길지</b>는 아직 미결입니다.
+        볼륨은 그쪽이 크지만, 같은 서사를 짧은 문체로 다시 쓰는 작업이 별도로 필요합니다.
+      </p>
+
+      <div class="nsm" style="margin-top:1.5rem">
+        <div>
+          <div class="lbl">북극성 지표 (NSM)</div>
+          <div class="val">완성본 공유 건수</div>
+        </div>
+        <p>만족하지 않은 결과물은 절대 공유되지 않습니다. 품질과 확산을 동시에 측정하는 유일한 지표입니다. 가입·생성 건수는 허영 지표이므로 보고서 상단에 올리지 않습니다.</p>
+      </div>
+
+      <h3 style="font-size:1rem; margin:2rem 0 .6rem">12주 후 Go / No-Go 기준</h3>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>지표</th><th class="num-col">기준</th><th>미달 시 조치</th></tr></thead>
+          <tbody>
+            <tr><td>질문 완주율</td><td class="num-col">60% 이상</td><td>문항 수 축소 · Part 재배치</td></tr>
+            <tr><td>미리보기 → 유료 전환</td><td class="num-col">5% 이상</td><td>페이월 위치·가격 재설계</td></tr>
+            <tr class="ours"><td>NPS “지인에게 추천”</td><td class="num-col">50 이상</td><td>컨셉 자체 재검토</td></tr>
+            <tr><td>완성본 공유율</td><td class="num-col">25% 이상</td><td>공유 UX 재설계</td></tr>
+            <tr><td>건당 생성 원가</td><td class="num-col">2,000원 이하</td><td>페이지 상한 · 재생성 과금</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note-sec">
+      <span class="secmark">§14 · 착수 전 검증</span>
+      <h2>개발 전 4주 · 비용 0원</h2>
+      <p class="nsub">이 4주에서 확인할 것은 단 하나입니다 — <b>“질문에 답하는 것 자체가 좋은 경험이었는가.”</b> Yes면 생성 품질은 기술로 해결됩니다. No면 어떤 기술로도 해결되지 않습니다.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th class="num-col">주차</th><th>활동</th><th>판정할 것</th></tr></thead>
+          <tbody>
+            <tr><td class="num-col">1주</td><td>질문지 구글폼 제작 (A 17문항 / B 18문항)</td><td>—</td></tr>
+            <tr><td class="num-col">2주</td><td>Track A 20가구 · Track B 10명 실제 응답 수집</td><td>완주율 · 소요시간 · 이탈 문항 특정</td></tr>
+            <tr><td class="num-col">2주</td><td>응답 6건을 사람이 직접 동화로 집필</td><td>자동화 없이 결과물 품질의 상한 확인</td></tr>
+            <tr><td class="num-col">3주</td><td>결과물 전달 후 심층 인터뷰</td><td>지불 의향 · 지불 상한 · 공유 의향</td></tr>
+            <tr class="ours"><td class="num-col">4주</td><td>질문지 개정 + Go/No-Go</td><td>NPS 50 미만이면 컨셉 폐기</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="note-sec">
+      <span class="secmark">§15 · 미결</span>
+      <h2>결정이 필요한 7건</h2>
+      <p class="nsub">1번이 나머지 여섯 개를 대부분 해소합니다. 비용이 들지 않고 이번 주에 시작할 수 있습니다.</p>
+      <div class="decisions">
+        <div class="decision hot"><span class="dn">1</span><span class="di">4주 검증 실행 여부 (비용 0원)</span><span class="dw">최우선 · 즉시 착수 가능</span></div>
+        <div class="decision hot"><span class="dn">1b</span><span class="di">3~6세 그림책 판본 — 버릴 것인가, 별도 상품으로 남길 것인가</span><span class="dw">타깃 상향으로 새로 생긴 결정</span></div>
+        <div class="decision"><span class="dn">2</span><span class="di">MVP 트랙 — Track A 단독 vs 양 트랙 동시</span><span class="dw">개발 범위 2배 차이</span></div>
+        <div class="decision"><span class="dn">3</span><span class="di">페이월 위치 — 4쪽 미리보기 vs 전체무료+인쇄과금</span><span class="dw">수익모델 전제</span></div>
+        <div class="decision"><span class="dn">4</span><span class="di">실물 인쇄 포함 시점 (MVP vs 2차)</span><span class="dw">POD 파트너 선정 일정</span></div>
+        <div class="decision"><span class="dn">5</span><span class="di">서비스명 · 도메인 · 상표 출원</span><span class="dw">브랜드 착수 지연</span></div>
+        <div class="decision"><span class="dn">6</span><span class="di">삽화 생성 모델 · 라이선스 확정</span><span class="dw">저작권 리스크 미해소</span></div>
+        <div class="decision"><span class="dn">7</span><span class="di">초기 예산 규모</span><span class="dw">개발 인력 구성 불가</span></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="foot">
+    <span>이야기 서랍 · 프로토타입 초안 v0.1 · 2026-09-05</span>
+    <span>원본 기획서 <b>00_서비스기획.md</b> · 이 페이지의 모든 수치와 카피는 가안입니다</span>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+/* ───────── 뷰 전환 ───────── */
+const views = { landing:document.getElementById('view-landing'), demo:document.getElementById('view-demo'), notes:document.getElementById('view-notes') };
+const tabs = Array.from(document.querySelectorAll('.viewnav button'));
+function show(name){
+  Object.entries(views).forEach(([k,el]) => { el.hidden = (k !== name); });
+  tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.view === name)));
+  window.scrollTo({ top:0, behavior:'instant' in document.documentElement.style ? 'auto' : 'auto' });
+}
+tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
+document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => show(b.dataset.goto)));
+
+/* ───────── 히어로 시연 ───────── */
+const HX = [
+  { qid:'Q7', q:'아이가 절대 못 버리게 하는 물건 하나',
+    a:'토끼 인형 몽이',
+    role:'매개 사물 — 소개하지 않고 소리로 등장시킵니다',
+    out:'토끼 인형 몽이가 옆에서 부스럭거렸다.<br>“괜찮아. 나 여기 있어.”' },
+  { qid:'Q4', q:'아이가 요즘 자주 하는 말이나 버릇 하나',
+    a:'“내가 할래!”',
+    role:'반복 구절 — 1막과 3막, 완전히 다른 온도로',
+    out:'“내가 할래!”<br>지호는 소리 내지 않고 입만 움직였다.' },
+  { qid:'Q5', q:'아이가 무서워하거나 싫어하는 것 하나',
+    a:'밤에 불 꺼진 복도',
+    role:'3막 시련 — “무섭다”고 쓰지 않고 보여줍니다',
+    out:'복도는 자꾸 길어진다.<br>낮에는 다섯 걸음인데, 밤에는 세어 본 적이 없다.' }
+];
+const hxEls = { qid:document.getElementById('hx-qid'), q:document.getElementById('hx-q'), a:document.getElementById('hx-a'), role:document.getElementById('hx-role'), out:document.getElementById('hx-out') };
+const hxDots = document.getElementById('hx-dots');
+let hxI = 0, hxTimer = null;
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+HX.forEach((_, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.setAttribute('role','tab');
+  b.setAttribute('aria-label', '예시 ' + (i+1));
+  b.addEventListener('click', () => { hxSet(i); if(hxTimer){ clearInterval(hxTimer); hxTimer = null; } });
+  hxDots.appendChild(b);
+});
+function hxSet(i){
+  hxI = i;
+  const d = HX[i];
+  hxEls.qid.textContent = d.qid;
+  hxEls.q.textContent = d.q;
+  hxEls.a.textContent = d.a;
+  hxEls.role.textContent = d.role;
+  hxEls.out.innerHTML = d.out;
+  Array.from(hxDots.children).forEach((b,j) => b.setAttribute('aria-current', String(j === i)));
+}
+hxSet(0);
+if(!reduce) hxTimer = setInterval(() => hxSet((hxI + 1) % HX.length), 5200);
+
+/* ───────── 질문지 ───────── */
+const PARTS = [
+  { name:'Part 1 · 주인공', upto:5 },
+  { name:'Part 2 · 우리 집의 장면', upto:9 },
+  { name:'Part 3 · 물려주고 싶은 것', upto:15 },
+  { name:'Part 4 · 마지막 장', upto:17 }
+];
+
+const QUESTIONS = [
+  { id:'Q1', type:'two', text:'아이의 이름과, 집에서 부르는 별명을 알려주세요',
+    fields:[{k:'name',label:'이름',v:'김지호'},{k:'nick',label:'집에서 부르는 별명',v:'지호'}],
+    annot:'주인공 이름. <b>별명을 우선 사용</b>합니다 — 아동 실명 수집을 피하는 설계이기도 합니다.' },
+  { id:'Q2', type:'choice', text:'아이는 몇 살인가요?',
+    options:[{t:'3–4세',v:'3-4'},{t:'5–6세',v:'5-6'},{t:'7–9세',v:'7-9'},{t:'10–12세',v:'10+'}], pre:3,
+    annot:'이 답 하나가 <b>문체·쪽수·어휘 등급</b>을 전부 결정합니다. 10–12세 = 24쪽 · 4챕터 · 쪽당 5~8문장 · <b>대화 주고받기와 심리 묘사 허용</b>. 이 초안은 이 구간만 집필되어 있습니다.' },
+  { id:'Q3', type:'tags', text:'아이가 요즘 제일 좋아하는 것 세 가지',
+    hint:'동물·놀이·음식·사물 무엇이든 좋습니다',
+    fields:[{k:'t1',v:'공룡'},{k:'t2',v:'물웅덩이'},{k:'t3',v:'계란말이'}],
+    annot:'조력자 캐릭터와 배경 소품이 여기서 나옵니다.' },
+  { id:'Q4', type:'text', text:'아이가 요즘 자주 하는 말이나 버릇 하나',
+    hint:'예: “내가 할래!” · 잘 때 이불 귀퉁이 만지기', v:'“내가 할래!”',
+    annot:'<b>반복 구절(refrain)</b>이 되어 책에 2~3회 삽입됩니다. 아이가 자기 책이라고 느끼게 만드는 장치.' },
+  { id:'Q5', type:'text', text:'아이가 무서워하거나 싫어하는 것 하나', v:'밤에 불 꺼진 복도',
+    chips:['어두운 곳','큰 소리','벌레','병원','혼자 자기','높은 곳'],
+    annot:'<b>3막 시련의 정체.</b> 원칙 4 — 갈등 없는 동화는 동화가 아니라 소개글입니다.' },
+  { id:'Q6', type:'text', text:'아이와 가장 자주 가는 곳은 어디인가요?', v:'집 앞 어린이 도서관',
+    annot:'1막 배경.' },
+  { id:'Q7', type:'text', text:'아이가 절대 못 버리게 하는 물건 하나', v:'토끼 인형 몽이',
+    annot:'<b>매개 사물</b> — 시련 극복의 열쇠로 씁니다. 본문에 그대로 들어가므로 짧은 이름이 좋습니다.' },
+  { id:'Q8', type:'area', text:'최근 1년 중, 다시 보고 싶은 아이와의 순간 한 장면',
+    hint:'두세 줄이면 충분합니다',
+    v:'비 온 다음 날, 장화 신고 나가서 물웅덩이를 하나도 안 빼놓고 다 밟고 들어왔다. 온몸이 젖었는데 계속 웃었다.',
+    annot:'4막 귀환 장면의 원형이 됩니다.' },
+  { id:'Q9', type:'choice', text:'요즘 아이가 겪는 작은 어려움이 있다면?',
+    options:[{t:'동생 질투',v:'동생 질투'},{t:'등원 거부',v:'등원 거부'},{t:'친구와 다툼',v:'친구와 다툼'},{t:'편식',v:'편식'},{t:'분리불안',v:'분리불안'},{t:'이사·전학',v:'이사·전학'},{t:'없음',v:'없음'}], pre:0,
+    annot:'<b>중심 갈등.</b> Q5(두려움)가 시련의 표면이라면, 이 답은 시련의 내용입니다.' },
+
+  { id:'Q10', type:'value', text:'아이가 친구와 다투고 울면서 들어왔습니다. 가장 먼저 하고 싶은 말은?',
+    options:[
+      { t:'“무슨 일이 있었는지 말해줄래?”', tag:'관계', d:{V3:+35} },
+      { t:'“네가 잘못한 건 없어?”', tag:'원칙', d:{V3:-35} },
+      { t:'“괜찮아, 엄마아빠가 있잖아”', tag:'안전', d:{V1:-35} },
+      { t:'“내일 가서 다시 얘기해보자”', tag:'모험', d:{V1:+35} }], pre:0,
+    annot:'가치를 직접 묻지 않고 <b>장면</b>을 물었습니다. 어느 답도 정답처럼 보이지 않게 배치하는 것이 핵심입니다.' },
+  { id:'Q11', type:'value', text:'아이가 어려운 일을 앞두고 “나 못할 것 같아”라고 합니다.',
+    options:[
+      { t:'“안 해도 괜찮아”', tag:'충분함', d:{V4:+35} },
+      { t:'“한 번만 해보자, 옆에 있을게”', tag:'우리', d:{V2:+35} },
+      { t:'“너 저번에도 해냈잖아”', tag:'성취', d:{V4:-35} },
+      { t:'“왜 그렇게 생각해?”', tag:'나', d:{V2:-35} }], pre:1,
+    annot:'조력자를 붙일지, 혼자 넘게 할지가 여기서 갈립니다.' },
+  { id:'Q12', type:'value', text:'아이가 길에서 돈을 주웠습니다. 우리 집의 답은?',
+    options:[
+      { t:'주인을 찾아준다', tag:'원칙', d:{V3:-30} },
+      { t:'아이에게 어떻게 할지 물어본다', tag:'나', d:{V2:-30} },
+      { t:'필요한 사람에게 쓰자고 한다', tag:'나눔', d:{V6:+40} },
+      { t:'운이 좋았다고 함께 기뻐한다', tag:'충분함', d:{V4:+30} }], pre:2,
+    annot:'같은 상황에 네 집이 서로 다른 답을 냅니다. 이 문항이 <b>결말의 방식</b>을 바꿉니다.' },
+  { id:'Q13', type:'value', text:'20년 뒤, 아이가 이런 어른이면 좋겠습니다.',
+    options:[
+      { t:'자기가 원하는 걸 아는 사람', tag:'나 · 성취', d:{V2:-30,V4:-30} },
+      { t:'곁의 사람을 챙기는 사람', tag:'우리 · 나눔', d:{V2:+30,V6:+35} },
+      { t:'옳다고 믿는 걸 말할 수 있는 사람', tag:'원칙 · 모험', d:{V3:-30,V1:+30} },
+      { t:'어떤 일에도 잘 웃는 사람', tag:'충분함 · 안전', d:{V4:+35,V1:-30} }], pre:1,
+    annot:'골격이 동점일 때 <b>이 문항이 결정</b>합니다. 가중치가 가장 큰 문항.' },
+  { id:'Q14', type:'area', text:'아이에게만은 물려주고 싶지 않은 나의 모습이 있다면?',
+    hint:'건너뛰어도 됩니다', skippable:true,
+    v:'화가 나면 아무 말도 안 해버리는 것.',
+    annot:'책에 직접 쓰지 않습니다. <b>이면 서사</b> — 시련의 심층 동기로만 씁니다.' },
+  { id:'Q15', type:'text', text:'우리 가족을 한 단어로 표현한다면?', v:'시끌시끌',
+    annot:'전체 톤과 <b>표지 부제</b>에 씁니다.' },
+
+  { id:'Q16', type:'area', text:'아이가 스무 살이 되어 이 책을 다시 펼친다면, 딱 한 문장이 남았으면 합니다.',
+    hint:'그 문장을 그대로 써 주세요',
+    v:'네가 어떤 모습이어도, 우리는 늘 네 편이야.', peak:true,
+    annot:'<b>이 트랙의 감정 정점.</b> 마지막 페이지에 원문 그대로 들어갑니다 — 가드레일 5. 여기서 우는 부모가 나오면 설계 성공입니다.' },
+  { id:'Q17', type:'text', text:'책 첫 장에 남길 헌사', hint:'예: “○○에게, 2026년 가을 엄마가”',
+    v:'지호에게, 2026년 가을 엄마가',
+    annot:'헌정 페이지. 선물 맥락에서 이 한 줄이 상품성을 크게 바꿉니다.' }
+];
+
+const AXES = [
+  { id:'V1', l:'안전', r:'모험',   eff:'시련의 강도 · 주인공의 이동 범위' },
+  { id:'V2', l:'나',   r:'우리',   eff:'혼자 푸는가 · 함께 푸는가 (조력자 유무)' },
+  { id:'V3', l:'원칙', r:'관계',   eff:'갈등의 성격 — 옳음의 문제인가, 마음의 문제인가' },
+  { id:'V4', l:'성취', r:'충분함', eff:'결말 조건 — 이루어서 끝나는가, 알아서 끝나는가' },
+  { id:'V5', l:'새로움', r:'지킴', eff:'결말의 방향 — 떠나는가, 돌아오는가' },
+  { id:'V6', l:'축적', r:'나눔',   eff:'얻은 것을 어떻게 하는가' }
+];
+
+const SKELETONS = [
+  { key:'씨앗형',   proto:{V1:-70,V2:+60,V5:+70},  emo:'지켜주는 마음', motif:'손바닥에 들어오던 크기',
+    beats:['작은 것을 발견','위협','지켜냄','자라남'], title:n => `${josa(n,'이가/가')} 지킨 것` },
+  { key:'첫걸음형', proto:{V1:+80,V2:-60,V4:-70},  emo:'해냈다', motif:'한 발의 거리',
+    beats:['두려움','문 앞','한 발','넘어섬'], title:n => `${josa(n,'이의/의')} 한 발` },
+  { key:'등불형',   proto:{V2:+60,V3:+70,V6:+80},  emo:'곁을 밝힘', motif:'빛 한 줄',
+    beats:['어두운 곳','누군가의 결핍','내 것을 나눔','함께 밝아짐'], title:n => `깜깜한 곳에서 ${josa(n,'이가/가')} 한 일` },
+  { key:'뿌리형',   proto:{V2:+50,V4:+60,V5:+80},  emo:'돌아온 자리', motif:'집 냄새',
+    beats:['떠남','헤맴','기억을 만남','돌아옴'], title:n => `${josa(n,'이가/가')} 돌아온 길` },
+  { key:'문지기형', proto:{V2:-50,V3:-80,V4:-70},  emo:'부끄럽지 않음', motif:'아무도 안 볼 때',
+    beats:['규칙','흔들림','홀로 지킴','인정받음'], title:n => `${josa(n,'이만/만')} 아는 약속` },
+  { key:'강물형',   proto:{V3:+50,V4:+80,V6:+60},  emo:'담담한 여운', motif:'쥔 손과 빈 손',
+    beats:['붙잡음','잃음','놓아줌','흘러감'], title:n => `${josa(n,'이와/와')} {t}` }
+];
+
+/* ── 조사 자동 선택 — 받침 유무로 갈린다 ── */
+function batchim(w){
+  const c = String(w).replace(/[”"'’\s.!?…]+$/, '').slice(-1);
+  if(!c) return { has:false, rieul:false };
+  const code = c.charCodeAt(0);
+  if(code < 0xAC00 || code > 0xD7A3) return { has:false, rieul:false };
+  const jong = (code - 0xAC00) % 28;
+  return { has: jong !== 0, rieul: jong === 8 };
+}
+function josa(word, pair){
+  const [withB, without] = pair.split('/');
+  const b = batchim(word);
+  if(pair === '으로/로') return word + (b.has && !b.rieul ? '으로' : '로');
+  return word + (b.has ? withB : without);
+}
+/* {k} → 값, {k|을/를} → 값 + 조사 */
+function put(str, fill){
+  return String(str).replace(/\{(\w+)(?:\|([^}]+))?\}/g, (_, k, p) => {
+    const v = fill[k] != null ? fill[k] : '';
+    return p ? josa(v, p) : v;
+  });
+}
+
+/* ── 중심 갈등 → 2막 소재 (Q9) ── */
+const CONFLICT = {
+  '동생 질투':  { cw:'아기',     cl:'아기 울음소리가 벽을 타고 왔습니다.' },
+  '등원 거부':  { cw:'선생님',   cl:'노란 버스가 저 앞에 서 있었습니다.' },
+  '친구와 다툼':{ cw:'친구',     cl:'어제 놓친 손이 아직 따가웠습니다.' },
+  '편식':       { cw:'엄마',     cl:'접시 한가운데 낯선 것이 앉아 있었습니다.' },
+  '분리불안':   { cw:'엄마',     cl:'현관에서 신발 소리가 났습니다.' },
+  '이사·전학':  { cw:'새 친구',  cl:'창밖 골목이 전부 낯설었습니다.' },
+  '없음':       { cw:'엄마',     cl:'그날 밤은 유난히 조용했습니다.' }
+};
+
+/* ── 본문 20쪽 — 골격 6종 ──────────────────
+   문체 규칙(7–9세): 쪽당 3~5문장 · 45자 이내 · 심리 묘사 허용 · 대화 비중 30% 이상
+   막 배분 5·5·6·4 · 모티프 1개를 4막에 걸쳐 변주 · 1막의 이미지로 닫는다     */
+const BOOKS = {
+  '씨앗형': {
+    acts:[
+      { name:'담과 화단 사이',     art:'클로즈업 위주. 손바닥과 작은 것의 크기 대비를 세워 두면 마지막 장에서 그대로 회수된다.' },
+      { name:'온통 커다래진 집',   art:'카메라를 뒤로 빼 아이를 작게. 위협은 화면 밖 그림자와 잘린 발끝으로만 그린다.' },
+      { name:'두 팔을 폈다',       art:'벌린 두 팔이 화면을 가로지른다. 덮은 {t} 아래는 끝까지 보이지 않게 둔다.' },
+      { name:'어제보다 딱 그만큼', art:'1장과 같은 구도, 같은 손. 자란 만큼만 크게 그린다.' }
+    ],
+    pages:[
+      ['{p}에는 {n|이만/만} 다니는 길이 있다.','정확히 말하면 길이 아니라, 화단과 담 사이의 좁은 틈이다.','어깨를 옆으로 돌려야 지나갈 수 있다.','“{r}”','{n|이는/는} 거기를 지나갈 때마다 그렇게 말한다. 아무도 안 시켰는데 그렇게 된다.'],
+      ['{n|이는/는} 그 틈을 매일 지나간다.','{l|을/를} 보러 가는 길이기 때문이다.','“왜 굳이 그리로 가?”','엄마가 물은 적이 있다.','{n|이는/는} 대답을 안 했다. 대답하면 재미가 없어지니까.'],
+      ['틈 안쪽은 늘 조금 축축하다.','햇빛이 하루에 두 시간쯤만 들어온다. {n|이가/가} 세어 봤다.','그래서 거기 있는 것들은 다 조금씩 작다.','{n|이는/는} 작은 게 좋다. 작으면 다 볼 수 있으니까.'],
+      ['그날은 틈 끝에 뭔가가 있었다.','처음에는 쓰레기인 줄 알았다.','가까이 가서 보니 아니었다.','{n|이는/는} 쪼그려 앉아서 한참을 봤다. 그러고는 손바닥을 폈다.','그 안에 다 들어왔다.'],
+      ['{n|이는/는} 그걸 주머니에 넣고 왔다.','걸을 때마다 주머니가 조심스러웠다.','{n|이는/는} 평소보다 훨씬 천천히 걸었다. 뛰면 큰일 날 것 같았다.','집까지 오는 데 두 배쯤 걸렸다.'],
+      ['집에 와서 {t} 옆에 내려놓았다.','“여기가 네 자리야.”','{t|은/는} 자리를 조금 비켜 주었다. 물론 {n|이가/가} 비켜 준 것이지만.','그날 밤 {n|이는/는} 세 번이나 일어나서 확인했다.','세 번 다 그대로 있었다. 그래도 또 확인하고 싶었다.'],
+      ['{cl}','그날부터 집 안이 온통 커다래졌다.','목소리도, 발소리도, 물건 놓는 소리도 다 커졌다.','{n|이만/만} 그대로였다.'],
+      ['작은 것은 자꾸 구석으로 밀렸다.','{n|이가/가} 아침에 놓아둔 자리에 저녁이면 없었다.','찾아보면 늘 조금씩 더 구석에 있었다.','누가 일부러 그런 건 아니다. {n|이도/도} 그건 안다.','그런데 일부러가 아니어서 더 화가 났다.'],
+      ['“이거 좀 그대로 두면 안 돼?”','{n|이가/가} 말했다.','“뭘?”','아무도 못 봤다.','못 본 게 아니라 안 본 거라고 {n|이는/는} 생각했다. 둘은 다르다. {n|이는/는} 그 차이를 설명할 수는 없었지만 알고 있었다.'],
+      ['밤에는 {f}까지 왔다.','{n|이는/는} 숨을 오래 참았다.','참다 보면 무서운 게 지나갈 때도 있었다. 안 지나갈 때가 더 많았지만.','{n|이는/는} 이불 밖으로 손만 내밀어서 작은 것이 있는 쪽을 더듬었다.'],
+      ['“쉿.”','{n|이는/는} 작은 것한테 말했다.','“내가 여기 있어.”','작은 것은 아무 말도 안 했다.','대신 아주 조금 움직인 것 같았다. 착각일 수도 있다. {n|이는/는} 착각이 아니라고 생각하기로 했다.'],
+      ['다음 날 아침, 작은 것은 또 조금 더 구석에 있었다.','{n|이는/는} 그걸 원래 자리로 옮겨 놓았다.','저녁에 보니 또 구석이었다.','{n|이는/는} 그날 밤 잠을 잘 못 잤다.'],
+      ['{n|이는/는} {t|을/를} 가져다 덮었다.','{t|은/는} {n|이가/가} 제일 아끼는 거라, 잠깐 망설였다.','덮고 나니 바람 소리가 멀어졌다.','{n|이는/는} 그 옆에 앉았다. 앉으니까 딱 좋은 높이였다.'],
+      ['{cw|이/가} 가까이 왔다.','{n|이는/는} 두 팔을 넓게 폈다.','팔을 펴 봐야 별로 크지 않다는 걸 {n|이도/도} 알고 있었다.','그래도 폈다.'],
+      ['“{r}”','{n|이는/는} 처음으로 그 말을 크게 했다.','틈에서 혼자 할 때랑은 소리가 달랐다.','{cw|이/가} 걸음을 멈췄다.'],
+      ['“뭐 하는 거야.”','“…지키는 거.”','“그게 뭔데?”','{n|이는/는} 대답하지 않았다. 설명하면 더 이상해질 것 같았다.','{cw|은/는} 잠깐 서 있다가 그냥 갔다.'],
+      ['그날 밤, 아무도 그 자리를 밟지 않았다.','{n|이가/가} 계속 거기 앉아 있었으니까.','무릎이 저렸다.','“조금만 더.”','{n|이는/는} 자기한테 말했다. 다리를 폈다가 다시 접었다. 자리를 비우고 싶지는 않았다.'],
+      ['언제 잠들었는지 모르겠다.','눈을 떴을 때 {n|이는/는} 바닥에 웅크리고 있었다.','목이 뻣뻣했다.','{t|은/는} 여전히 작은 것 위에 덮여 있었다.'],
+      ['{n|이는/는} {t|을/를} 걷었다.','작은 것은 조금 커져 있었다.','어제보다 딱 그만큼.','“어? 봐 봐.”'],
+      ['{n|이는/는} {cw|을/를} 불렀다.','{cw|은/는} 처음에는 별거 아니라는 얼굴이었다.','“뭐가.”','“이거.”','그러다 가까이 와서 한참을 봤다.','“…진짜네.”'],
+      ['둘은 나란히 앉았다.','{n|이는/는} {l} 이야기를 했고, {cw|은/는} 듣는 둥 마는 둥 했다.','그래도 자리에서 일어나지는 않았다.','{n|이는/는} 그게 좋았다.'],
+      ['그날 이후로 작은 것은 자리를 옮기지 않았다.','{n|이가/가} 옮기지 않아서가 아니라, 아무도 안 옮겨서였다.','{n|이는/는} 그 차이도 알았다. 이번에는 설명할 수 있을 것 같았다.'],
+      ['{n|이는/는} {t|을/를} 원래 자리에 돌려놓았다.','{t|은/는} 조금 눌려 있었다. 며칠 동안 덮고 있었으니까.','{n|이는/는} 그 눌린 데를 손으로 폈다. 잘 안 펴졌다.','그냥 두기로 했다.'],
+      ['{n|이는/는} 손바닥을 펴 보았다.','거기 올려 보려고 했는데, 이제는 다 들어오지 않았다.','{n|이는/는} 손을 그냥 옆에 두었다.']
+    ]
+  },
+  '첫걸음형': {
+    acts:[
+      { name:'겁이 없다는 말',   art:'좋아하는 것과 무서운 것을 한 화면 좌우에. 아이는 가운데, 정면.' },
+      { name:'셋을 두 번 셌다',  art:'문·입구를 화면 중앙에 크게. 아이는 문턱 앞 실루엣으로만.' },
+      { name:'한 발',            art:'발과 무릎만 잡는 저각. 한 쪽마다 발이 프레임을 한 걸음씩 옮긴다.' },
+      { name:'눌린 자국',        art:'처음으로 화면 전체가 밝아진다. 마지막 장은 지나온 길을 뒤에서 본다.' }
+    ],
+    pages:[
+      ['{n|이는/는} 겁이 없다.','적어도 {n|이는/는} 그렇게 알고 있다.','{l} 앞에서도 그렇고, 높은 데서 뛰어내릴 때도 그렇다.','“{r}”','{n|이가/가} 제일 자주 하는 말이다. 엄마는 그 말을 들으면 한숨을 쉰다.'],
+      ['딱 하나만 빼고.','{f}이다.','그 앞에 서면 발바닥이 무거워진다. 발이 바닥에 붙는 것 같다.','{n|이는/는} 그게 겁이라고 생각하지 않는다. 그냥 발이 안 움직이는 거다.','겁하고 발은 다른 거다.'],
+      ['{t|은/는} 늘 {n} 손안에 있다.','쥐면 손안에서 조금 눌린다.','{n|이는/는} 그 눌리는 느낌을 좋아한다.','“그거 언제까지 들고 다닐 거야?”','엄마가 묻는다. {n|이는/는} “몰라” 하고 만다. 정말 모른다.'],
+      ['{n|이는/는} {f} 앞까지 간 적이 세 번 있다.','세 번 다 돌아왔다.','첫 번째는 배가 아파서. 두 번째는 신발 끈이 풀려서. 세 번째는 그냥.','{n|이는/는} 세 번째가 제일 마음에 안 든다.'],
+      ['“오늘은 안 갈래.”','{n|이는/는} 돌아섰다.','돌아설 때는 아무렇지도 않았다.','{cw|이/가} 뒤에서 뭐라고 했는데 못 들은 척했다.'],
+      ['이불 속에 들어가서야 조금 이상했다.','{n|이는/는} {t|을/를} 꺼내서 손에 쥐었다.','천장을 봤다. 아까 그 자리가 자꾸 떠올랐다.','안 무서웠는데 왜 자꾸 떠오르는지 모르겠다.'],
+      ['{cl}','오늘은 돌아설 수가 없었다.'],
+      ['{n|이는/는} {p}까지 왔다.','여기까지는 괜찮았다.','{p|은/는} {n|이가/가} 제일 잘 아는 데니까.','여기서부터가 문제였다.'],
+      ['{cw|이/가} 저만치서 기다렸다.','“천천히 와도 돼.”','{n|이는/는} 그 말이 제일 싫었다.','천천히 오라는 건, 결국 오라는 말이니까.'],
+      ['{n|이는/는} 뒤를 봤다.','엄마도, 아까 같이 온 아이도 없었다.','여기서부터는 혼자였다.','혼자라는 걸 알고 나니까 발이 더 무거워졌다.'],
+      ['{n|이는/는} {t|을/를} 꽉 쥐었다.','숨을 하나, 둘, 크게 쉬었다.','셋까지 세면 갈 거라고 정했다.','하나, 둘, 셋.','안 갔다.'],
+      ['{n|이는/는} 셋을 두 번 셌다.','두 번째에도 안 갔다.','“…네 번은 안 셀 거야.”','{n|이는/는} 그렇게 말하고 나서, 진짜로 안 셌다.'],
+      ['“{r}”'],
+      ['한 발.','딱 한 발이었다.','{n|이는/는} 그 자리에 서서 발을 내려다봤다.','발은 아무렇지도 않게 거기 있었다. 방금 전까지 그렇게 무겁던 발이었다.'],
+      ['무릎이 덜덜 떨렸다.','“괜찮아, 괜찮아.”','{n|이는/는} 두 번 말했다. 한 번은 부족한 것 같아서.'],
+      ['또 한 발.','{f|이/가} 어느새 옆에 있었다.','앞에 있을 때보다 옆에 있을 때가 덜 무서웠다.','{n|이는/는} 그게 신기했다. 똑같은 건데 자리만 바뀌었을 뿐인데.'],
+      ['{n|이는/는} {t|을/를} 주머니에 넣었다.','두 손을 다 쓰고 싶었다.','왜 두 손이 필요한지는 몰랐다. 그냥 그러고 싶었다.','이건 {n|이도/도} 나중에야 알았다.'],
+      ['반쯤 왔을 때 {n|이는/는} 뒤를 돌아보지 않았다.','돌아보면 처음부터 다시 세야 할 것 같았다.','{n|이는/는} 앞만 봤다.','앞은 생각보다 가까웠다.'],
+      ['{n|이는/는} 끝까지 걸었다.','“내가 했어!”','소리가 생각보다 크게 나와서 {n|이가/가} 더 놀랐다.','{cw}도 놀란 것 같았다.'],
+      ['{cw|이/가} 두 팔을 벌렸다.','{n|이는/는} 뛰어들었다.','{cw}한테서 낯선 냄새가 났다. 나쁘지 않았다.','“봤지?”','“봤어.”','{cw|은/는} 그 말만 했다. {n|이는/는} 그거면 됐다.'],
+      ['돌아오는 길에 {n|이는/는} 뒤를 돌아봤다.','{f|은/는} 그대로 거기 있었다.','없어진 게 아니었다.','그런데 생각보다 짧은 길이었다.'],
+      ['{n|이는/는} 걸으면서 걸음을 세어 봤다.','스물세 걸음이었다.','스물세 걸음짜리를 세 번이나 못 갔다는 게, {n|이는/는} 조금 웃겼다.'],
+      ['집에 와서 {n|이는/는} {t|을/를} 주머니에서 꺼냈다.','아직 손안에 눌린 자국이 남아 있었다.','{n|이는/는} 그걸 한참 봤다.'],
+      ['{n|이는/는} {t|을/를} 제자리에 놓았다.','내일도 가지고 나갈지는 아직 모르겠다.','그건 내일 정하기로 했다.']
+    ]
+  },
+  '등불형': {
+    acts:[
+      { name:'아무한테도 안 알려 준 자리', art:'낮의 채도 높은 빛. {p}의 넓은 공간에 아이를 작게 놓는다.' },
+      { name:'문틈으로 들어온 빛',         art:'광원은 문틈 한 줄만. 나머지는 전부 어둡게 눕힌다.' },
+      { name:'다섯 걸음',                  art:'화면에서 가장 밝은 것이 {t}가 되게. 인물은 실루엣으로 남긴다.' },
+      { name:'빈 손',                      art:'아침 역광. 두 인물이 처음으로 한 프레임에 들어온다.' }
+    ],
+    pages:[
+      ['해가 낮게 걸린 오후였다.','{n|이는/는} {p|으로/로} 뛰어갔다. 가방이 등에서 통통 튀었다.','“{r}”','누가 시킨 것도 아닌데 {n|이는/는} 늘 뛴다. 걸어가면 뭔가 손해 보는 기분이 든다.','{p}까지는 정확히 사백 걸음이다. 한 번 세어 본 적이 있다.'],
+      ['거기서 {n|이가/가} 제일 좋아하는 자리는 딱 하나다.','창가 쪽, 책장과 벽 사이에 끼어 있는 좁은 틈이다.','거기 앉으면 아무도 {n|이를/를} 못 본다. 대신 {n|이는/는} 다 볼 수 있다.','그리고 고개를 조금만 돌리면 {l|이/가} 제일 먼저 보인다.'],
+      ['{n|이는/는} 그 자리를 아무한테도 알려 주지 않았다.','같은 반 애가 물어본 적도 있었다.','“너 맨날 어디 숨어 있냐?”','“안 숨었는데.”','{n|이는/는} 그렇게만 말했다. 알려 주면 자리가 아니라 그냥 바닥이 되어 버릴 것 같았다.'],
+      ['집에 오면 {n|이는/는} 늘 같은 일을 한다.','신발을 아무 데나 벗어 놓고, 가방을 소파에 던지고, {t|을/를} 찾는다.','{t|은/는} 늘 소파 밑이나 이불 속에 숨어 있다.','“숨는 게 아니라 네가 자꾸 흘리고 다니는 거야.”','엄마는 매번 그렇게 말한다. {n|이도/도} 그건 안다. 그래도 찾을 때마다 조금 반갑다.'],
+      ['낮에는 아무 일도 없다.','학교도, {p}도, {l}도 다 낮에 있는 것들이다.','문제는 밤이다.','불을 끄면 집이 조금씩 낯설어진다. 낮에는 아무렇지도 않던 것들이 밤에는 다 조금씩 커진다.','그중에 제일 큰 게 {f}다.'],
+      ['{f|은/는} 밤이 되면 길어진다.','낮에는 다섯 걸음이다. {n|이가/가} 세어 봤다.','밤에는 세어 본 적이 없다.','{n|이는/는} 이불을 턱까지 끌어올렸다. {t|이/가} 옆에서 부스럭거렸다.','“괜찮아. 나 여기 있어.”','{t}한테 하는 말인지 자기한테 하는 말인지, {n|이도/도} 헷갈렸다.'],
+      ['{cl}','{n|이는/는} 눈을 떴다.','시계에 숫자 세 개가 켜져 있었다. 셋 다 처음 보는 숫자 같았다.','낮에 보면 그냥 시간인데, 밤에 보면 시간 같지가 않다.'],
+      ['소리는 벽을 타고 왔다.','작아졌다가, 커졌다가, 또 작아졌다.','{n|이는/는} 귀만 이불 밖으로 내밀었다.','잠깐 멈추면 끝난 줄 알았다. 그런데 조금 있다가 또 났다.'],
+      ['{n|이는/는} 이불을 조금 걷었다.','문틈으로 빛이 한 줄 들어와 있었다. 딱 손가락 하나 굵기였다.','누가 거실 불을 켜 놓은 모양이다.','{n|이는/는} 그 빛을 오래 봤다. 빛은 가만히 있는 것 같은데 자세히 보면 조금씩 흔들렸다.'],
+      ['{n|이는/는} 문 앞까지 기어갔다.','문틈에 눈을 대고 봤다.','빛 끝에 {cw|이/가} 있었다.','{cw|은/는} 혼자였다.'],
+      ['혼자인 게 어떤 건지 {n|이는/는} 알고 있었다.','{p}의 그 자리에 앉아 있을 때, {n|이도/도} 혼자다.','그런데 그건 {n|이가/가} 고른 혼자다. 고른 혼자하고 남은 혼자는 다르다.','{n|이는/는} 그 차이를 설명할 수는 없었지만 알고 있었다.'],
+      ['{n|이는/는} 다시 이불로 돌아왔다.','누워서 천장을 봤다. 천장은 아무 말도 안 했다.','“…내가 가 볼까?”','{t|은/는} 대답하지 않았다. {t|은/는} 원래 대답을 안 한다.','그런데 손안이 조금 따뜻해진 것 같았다. {n|이는/는} 그걸 대답이라고 치기로 했다.'],
+      ['{n|이는/는} 이불을 걷고 일어났다.','일어나고 나니 방이 아까보다 더 어두웠다.','{n|이는/는} {t|을/를} 손에 꽉 쥐었다.','문고리를 돌리는 데 시간이 좀 걸렸다. 소리가 안 나게 돌리려니까 그랬다.'],
+      ['한 발.','마루가 삐걱, 하고 울었다.','{n|이는/는} 그 자리에서 굳었다. 마루가 왜 하필 지금 우는지 모르겠다.','낮에는 백 번을 밟아도 조용하던 자리다.','{n|이는/는} 한참을 서 있었다. 아무도 안 나왔다.'],
+      ['두 발.','세 발.','{f|은/는} 생각보다 짧았다.','낮에 다섯 걸음이면, 밤에도 다섯 걸음이었다.','당연한 건데 {n|이는/는} 그게 좀 억울했다.'],
+      ['“{r}”','{n|이는/는} 소리 내지 않고 입만 움직였다.','소리가 안 나는데도 이상하게 힘이 났다.','{n|이는/는} 네 발째를 뗐다.'],
+      ['{cw|은/는} {n|이를/를} 보고 조금 놀란 것 같았다.','“안 자?”','“…응.”','{n|이는/는} 뭐라고 더 말해야 할지 몰랐다.','그래서 손에 있는 걸 그냥 앞으로 내밀었다.'],
+      ['“이거, 밤에는 네가 가져.”','말해 놓고 {n|이는/는} 조금 후회했다.','{t|은/는} {n|이가/가} 제일 아끼는 거다. 세탁기에 들어갈 뻔했을 때도 울면서 꺼냈다.','그런데 손이 이미 먼저 가 있었다. 손을 도로 당기는 건 더 이상한 것 같았다.'],
+      ['{cw|은/는} 한참 만에 손을 폈다.','{t|은/는} 그 손으로 옮겨 갔다.','{cw|은/는} 고맙다는 말은 안 했다. 대신 {t|을/를} 한 번 꾹 눌러 봤다.','{n|이는/는} 빈 손을 주머니에 넣었다. 주머니 안이 이상하게 넓었다.'],
+      ['돌아오는 길은 더 어두웠다.','{t}도 없었다.','그런데 이상하게 하나도 길지 않았다.','{n|이는/는} 걸음을 세지 않았다. 세지 않아도 금방 도착했다.'],
+      ['{n|이는/는} 이불 속에 들어갔다.','손이 자꾸 옆을 더듬었다. 늘 있던 게 없으니까 손이 먼저 알았다.','{n|이는/는} 그 손을 배 위에 올려놓았다.','잠은 생각보다 빨리 왔다.'],
+      ['아침에 눈을 떴더니 창이 환했다.','베개 옆에 {t|이/가} 돌아와 있었다.','한쪽이 조금 눌려 있었다. 누가 꼭 안고 잔 모양이다.','“잘 잤어?”','{n|이는/는} {t}한테 물었다. {t|은/는} 또 대답하지 않았다.'],
+      ['{n|이는/는} {p|으로/로} 갔다.','가는 길에 뒤를 한 번 돌아봤다. {cw|이/가} 따라오고 있었다.','“같이 가자.”','{n|이는/는} 그 자리를 알려 주기로 했다.','알려 줘도 바닥이 되지 않을 것 같았다. 왜 그런지는 몰랐다.'],
+      ['밤이 다시 왔다.','{n|이는/는} 불을 껐다.','{f|은/는} 그대로 거기 있었다.','{n|이도/도} 그대로 거기 있었다.']
+    ]
+  },
+  '뿌리형': {
+    acts:[
+      { name:'눈을 감고도 가는 길',   art:'익숙한 길을 부감으로. 집을 화면 구석에 늘 남겨 둔다.' },
+      { name:'왼쪽으로 꺾었다',       art:'집이 화면에서 사라지는 첫 컷. 그림자를 아이보다 크게 그린다.' },
+      { name:'주머니에서 나온 냄새',  art:'{t}의 극단적 클로즈업. 냄새를 색 번짐으로 표현한다.' },
+      { name:'늘 나던 냄새',          art:'1장의 부감을 다시 쓰되 집을 화면 중앙에 놓는다.' }
+    ],
+    pages:[
+      ['{n|이는/는} {p|으로/로} 가는 길을 다 안다.','몇 번째 골목에서 꺾는지, 어느 집 개가 짖는지까지 안다.','“눈 감고도 갈 수 있어.”','{n|이는/는} 그렇게 말한다.','“{r}”'],
+      ['실제로 눈을 감고 가 본 적은 없다.','두 번 해 봤는데 두 번 다 다섯 걸음에서 떴다.','{n|이는/는} 그 얘기는 아무한테도 안 했다.'],
+      ['길에는 {n|이만/만} 아는 표시가 있다.','세 번째 골목 담에 페인트가 벗겨진 자국. 그게 사람 얼굴처럼 생겼다.','{n|이는/는} 지나갈 때마다 거기다 인사한다. 소리는 안 낸다.','{l|을/를} 보러 갈 때도 꼭 그 길로 간다.'],
+      ['그날은 왼쪽으로 꺾어 봤다.','늘 오른쪽으로 가던 자리였다.','왼쪽은 한 번도 안 가 본 길이었다.','왜 그랬는지는 {n|이도/도} 모른다. 그냥 오른쪽이 지겨웠던 것 같다.'],
+      ['{n|이는/는} 주머니에 {t|을/를} 넣었다.','그거면 됐다고 생각했다.','뭐가 됐다는 건지는 몰랐다.','“금방 올게.”','{n|이는/는} 누구한테 한 말인지 모르는 채로 말했다. 골목은 조용했다.'],
+      ['처음 열 걸음은 재미있었다.','못 보던 대문, 못 보던 화분, 못 보던 자전거.','{n|이는/는} 다 기억해 두려고 했다.','스무 걸음쯤부터는 기억이 안 됐다.'],
+      ['{cl}','길이 자꾸 둘로 갈라졌다.'],
+      ['{l}도 없고, 아는 간판도 없었다.','페인트 벗겨진 얼굴도 없었다.','{n|이는/는} 걸음을 조금 늦췄다. 늦추면 뭔가 알아볼 게 나타날 것 같았다.'],
+      ['나타나지 않았다.','대신 해가 지붕 뒤로 내려갔다.','그림자가 {n}보다 커졌다.','{n|이는/는} 자기 그림자를 밟아 보려고 했는데 안 밟혔다.'],
+      ['“여기가 어디지.”','{n|이는/는} 소리 내어 말했다.','아무도 대답하지 않았다.','대답을 기대한 것도 아닌데 조금 서운했다.'],
+      ['{n|이는/는} 담벼락에 등을 붙이고 앉았다.','앉으니까 다리가 아픈 게 그제야 느껴졌다.','울면 안 될 것 같았다. 울면 진짜로 길을 잃은 게 되니까.','{n|이는/는} 눈을 세게 감았다가 떴다.'],
+      ['어디선가 밥 짓는 냄새가 났다.','누군가의 집이었다. {n|이의/의} 집은 아니었다.','{n|이는/는} 그 냄새 쪽으로 조금 걸어가다가 멈췄다.','남의 집 냄새를 따라가면 안 된다는 건 {n|이도/도} 안다.'],
+      ['주머니에서 {t|이/가} 나왔다.','{n|이는/는} 그걸 코 가까이 가져갔다.','익은 냄새가 났다.'],
+      ['그건 집 냄새였다.'],
+      ['{n|이는/는} 그 냄새를 오래 맡았다.','빨래 냄새 같기도 하고, 저녁 냄새 같기도 했다.','둘 다인 것 같기도 했다.','{n|이는/는} 한 번도 집에서 무슨 냄새가 나는지 생각해 본 적이 없었다.'],
+      ['“{r}”','{n|이가/가} 아주 작게 말했다.','말하고 나니 다리에 힘이 조금 들어왔다.'],
+      ['{n|이는/는} 일어났다.','어디로 가야 하는지는 여전히 몰랐다.','그런데 발이 먼저 방향을 알았다.','{n|이는/는} 발을 그냥 따라갔다.'],
+      ['한 골목.','또 한 골목.','가로등이 하나씩 켜졌다. {n|이가/가} 지나갈 때마다 켜지는 것 같았다.','세 번째 가로등 아래에 페인트 벗겨진 얼굴이 있었다.'],
+      ['{n|이는/는} 뛰었다.','뛰다가 한 번 넘어질 뻔했는데, 넘어지지는 않았다.'],
+      ['저 끝에 {p|이/가} 보였다.','{cw|이/가} 문 앞에 서 있었다.','“{n|아/야}!”'],
+      ['“다녀왔습니다.”','{n|이는/는} 숨이 찼다.','{cw|은/는} 아무 말도 안 하고 {n} 머리만 한참 만졌다.','혼날 줄 알았는데 안 혼났다. {n|이는/는} 그게 더 이상했다.'],
+      ['“어디 갔었어.”','“…왼쪽.”','“왼쪽 어디.”','“몰라.”','{cw|은/는} 더 안 물었다.'],
+      ['집에서는 늘 나던 냄새가 났다.','{n|이는/는} 그제야 그 냄새를 알아봤다.','늘 있었는데 한 번도 맡아 본 적이 없는 냄새였다.'],
+      ['{n|이는/는} {t|을/를} 주머니에서 꺼내 코에 대 봤다.','이제는 그냥 {t} 냄새가 났다.','{n|이는/는} 그것도 좋았다.']
+    ]
+  },
+  '문지기형': {
+    acts:[
+      { name:'누가 보고 있으면 더 쉽다', art:'정면·좌우 대칭. 규칙의 세계는 반듯하게 그린다.' },
+      { name:'아무도 없는 복도',         art:'구도를 살짝 기울인다. 아이만 여전히 반듯하게 서 있게.' },
+      { name:'나는 알아',                art:'아이와 그림자뿐. 아무도 없다는 사실이 화면으로 읽히게.' },
+      { name:'어깨를 툭',                art:'대칭 구도로 복귀. 이번에는 옆에 한 사람이 더 서 있다.' }
+    ],
+    pages:[
+      ['{n|이네/네} 집에는 약속이 하나 있다.','거창한 건 아니다. 다들 그런 거 하나쯤은 있다.','{n|이는/는} 그걸 한 번도 안 어겼다.','“{r}”'],
+      ['{p}에서도 지킨다.','{l|을/를} 볼 때도 지킨다.','“너 왜 그렇게까지 해?”','친구가 물으면 {n|이는/는} “그냥”이라고 한다.','설명하면 지는 것 같다.'],
+      ['{t|은/는} 늘 옆에서 본다.','{n|이가/가} 지키는 걸 전부 본다.','{t|은/는} 말을 못 하니까, {n|이는/는} {t}한테는 뭐든 말한다.','“오늘도 지켰어.”','{t|은/는} 아무 대답도 안 한다. {n|이는/는} 그게 편하다.'],
+      ['“약속은 약속이야.”','{n|이는/는} 가끔 어른처럼 말한다.','그럴 때 {n|이는/는} 자기 목소리가 조금 마음에 든다.','{cw|이/가} 웃은 적도 있다. {n|이는/는} 왜 웃는지 몰랐다.'],
+      ['지키는 건 사실 어렵지 않다.','누가 보고 있으면 더 쉽다.','{n|이는/는} 그걸 알고 있었지만, 알고 있다는 걸 인정하지는 않았다.'],
+      ['{n|이는/는} 지킨 날을 세어 본 적이 있다.','백 몇 일까지 세다가 그만뒀다.','세는 게 이상해서 그만둔 게 아니라, 세니까 지키는 게 재미없어져서 그만뒀다.'],
+      ['{cl}','그날은 아무도 보고 있지 않았다.'],
+      ['{cw|은/는} 저쪽으로 가 버렸다.','복도 끝까지 아무도 없었다.','{n|이는/는} 그 긴 복도를 한 번 봤다.','복도가 원래 이렇게 길었나 싶었다.'],
+      ['“한 번쯤은.”','누구 목소리인지 모르겠는 소리가 났다.','{n} 안에서 난 소리였다.','{n|이는/는} 처음에 그게 자기 소리인 줄도 몰랐다.'],
+      ['{f}까지 슬금슬금 왔다.','무서워서가 아니었다.','혼자 있으면 다들 커진다는 걸 {n|이는/는} 그때 알았다.','{f}도, 복도도, 그 소리도 다 커졌다.'],
+      ['{n|이는/는} 눈을 꼭 감았다.','감으면 아무도 안 보인다.','{n|이도/도} 안 보인다.'],
+      ['{n|이는/는} 손을 조금 들었다.','아주 조금이었다.','그런데 그 조금이 {n|이는/는} 이상하게 무서웠다.'],
+      ['{n|이는/는} 눈을 떴다.','{t|을/를} 내려다봤다.','{t|은/는} 그 자리에 그대로 있었다.','말도 못 하고, 볼 수도 없는데, 그냥 그 자리에 있었다.'],
+      ['{n|이는/는} 손을 내렸다.'],
+      ['“{r}”','아무도 못 듣게 말했다.','아무도 없으니 어차피 못 들었을 것이다.'],
+      ['“나는 알아.”','{n|이는/는} 한 번 더 말했다.','이번에는 조금 크게 말했다.','그거면 됐다.'],
+      ['복도를 걸어 나오는데 다리가 이상하게 가벼웠다.','아무 일도 안 일어났는데 그랬다.','{n|이는/는} 그게 이상해서 한 번 뛰어 봤다. 진짜 가벼웠다.'],
+      ['그날 밤은 유난히 길었다.','그런데 잠은 금방 왔다.','{n|이는/는} 그날 일을 아무한테도 말하지 않았다.','말할 만한 일도 아니었다. 아무 일도 안 일어났으니까.'],
+      ['며칠이 지났다.','{n|이는/는} 그날 일을 거의 잊었다.','거의 잊었다는 건 완전히는 안 잊었다는 뜻이다.'],
+      ['{cw|이/가} {n|이를/를} 불렀다.','“너, 그때 그랬지?”','{n|이는/는} 뭐라고 답해야 할지 몰랐다.','“뭐를요.”','“알잖아.”'],
+      ['{n|이는/는} {cw|이/가} 어떻게 알았는지 모른다.','아무도 없었는데.','물어보고 싶었는데 안 물어봤다. 물어보면 다 없어질 것 같았다.'],
+      ['{cw|은/는} 더 묻지 않았다.','대신 {n} 어깨를 한 번 툭 쳤다.','그게 다였다.'],
+      ['{n|이는/는} 아무 말도 안 했다.','귀가 조금 빨개졌을 뿐이다.','{n|이는/는} 얼른 뒤를 돌았다.'],
+      ['아무도 안 볼 때가 편했다.','그건 여전했다.','그런데 이제는 아무도 안 볼 때 뭘 하는지, {n|이가/가} 안다.']
+    ]
+  },
+  '강물형': {
+    acts:[
+      { name:'늘 손에 있던 것', art:'손과 물건이 늘 붙어 있는 프레임. 여백을 좁게 쓴다.' },
+      { name:'허전한 손',       art:'빈 손을 화면 중앙에. 배경은 흐리게 눕힌다.' },
+      { name:'울어도 돼',       art:'흐르는 것(바람·커튼)을 넣는다. 색을 한 단계 옅게.' },
+      { name:'잡은 손',         art:'여백을 넓게. 마지막은 두 손이 겹치는 컷 하나로 끝낸다.' }
+    ],
+    pages:[
+      ['{n} 손에는 늘 {t|이/가} 있다.','밥 먹을 때도 한 손에 쥐고 먹는다.','잘 때는 팔 안쪽에 끼고 잔다.','“{r}”'],
+      ['{p}에 갈 때도 같이 간다.','{l|을/를} 볼 때도 손에 있다.','{t|이/가} 없으면 {n|이는/는} 손을 어디에 둬야 할지 모른다.','주머니에 넣어 봤는데 이상했다.'],
+      ['한 번은 세탁기에 들어갈 뻔했다.','{n|이가/가} 울면서 꺼냈다.','꺼내고 나서도 한참 울었다. 이미 꺼냈는데도 그랬다.','그날 이후로 엄마는 빨래하기 전에 꼭 {n}한테 물어본다.'],
+      ['“이건 내 거야.”','{n|이는/는} 아무도 못 만지게 했다.','{cw|이/가} 한 번 만졌다가 크게 혼난 적도 있다.','그때 {n|이는/는} 미안하다고 안 했다. 지금도 안 했다.'],
+      ['{t|은/는} 여기저기 닳아 있다.','{n|이는/는} 그 닳은 데를 손가락으로 문지르는 버릇이 있다.','생각할 때도 문지르고, 심심할 때도 문지른다.','문지르면 생각이 잘 된다. 진짜 그런지는 모르겠지만 {n|이는/는} 그렇다고 믿는다.'],
+      ['{n|이는/는} {t|이/가} 없어지는 걸 상상해 본 적이 없다.','없어질 수 있는 거라고 생각해 본 적도 없다.','늘 있는 건 늘 있는 거니까.'],
+      ['{cl}','그날 손이 허전했다.'],
+      ['{p}에도, 이불 밑에도 없었다.','{n|이는/는} 온 집을 다 뒤졌다.','뒤진 데를 또 뒤졌다.','세 번째부터는 어디를 뒤졌는지도 헷갈렸다.'],
+      ['“어디 갔어.”','아무도 대답해 주지 않았다.','대답할 수 있는 사람이 없다는 걸 {n|이도/도} 알았다.','그래도 계속 물었다.'],
+      ['{f}보다 더 무서운 게 있었다.','없어진다는 것이었다.','{f|은/는} 아침이 되면 없어진다. 이건 아침이 돼도 그대로였다.'],
+      ['{n|이는/는} 울다가 잠들었다.','자다가 한 번 손을 뻗었다.','아무것도 안 잡혔다.','{n|이는/는} 그때 잠깐 깼다가 다시 잠들었다.'],
+      ['다음 날도 없었다.','그다음 날도 없었다.','{n|이는/는} 손을 자꾸 주머니에 넣었다. 빈 손이 자꾸 보이는 게 싫었다.'],
+      ['{cw|이/가} 옆에 앉았다.','“울어도 돼.”','{n|이는/는} 그 말을 듣고 더 울었다.','안 울려고 참고 있었는데, 그 말 때문에 다 무너졌다.'],
+      ['둘은 아무 말 없이 오래 앉아 있었다.'],
+      ['{n|이는/는} 손을 천천히 폈다.','손바닥에 아무것도 없었다.','늘 있던 자리라 이상했다.','{n|이는/는} 그 자리를 한참 봤다.'],
+      ['“{r}”','{n|이는/는} 조그맣게 말했다.','이번에는 아무한테도 하는 말이 아니었다.'],
+      ['창밖으로 바람이 지나갔다.','커튼이 한 번 부풀었다가 가라앉았다.','{n|이는/는} 그걸 봤다.','부풀 때는 뭐가 들어 있는 것 같은데, 가라앉으면 아무것도 없다.'],
+      ['{t|은/는} 어딘가에서 잘 있을 것이다.','{n|이는/는} 그렇게 생각하기로 했다.','생각하기로 한 거지, 진짜 그렇게 생각한 건 아니었다.'],
+      ['다음 날에도 해가 떴다.','{n|이는/는} 조금 놀랐다. 해가 뜨는 게 이상했다.','아무것도 안 변했는데 다 변한 것 같았다.'],
+      ['“오늘은 뭐 하고 놀까?”','{cw|이/가} 물었다.','{n|이는/는} 한참 생각하다가 대답했다.','“{p}.”'],
+      ['{n|이는/는} {p|으로/로} 나섰다.','한 손이 비어 있었다.','{n|이는/는} 그 손을 주머니에 넣었다가, 다시 꺼냈다.','넣으면 편한데, 편한 게 싫었다.'],
+      ['그래서 그 손으로 {cw} 손을 잡았다.','{cw} 손은 {t}보다 크고, 조금 축축했다.','{n|이는/는} 그래도 놓지 않았다.'],
+      ['{p}에 가는 동안 {n|이는/는} {l} 이야기를 했다.','{cw|은/는} 듣는 둥 마는 둥 했다.','{n|이는/는} 그래도 계속했다.'],
+      ['{n|이는/는} 이제 닳은 데를 문지르지 않는다.','대신 손을 잡는다.','그건 문지르는 것보다 조금 더 어렵다.']
+    ]
+  }
+};
+
+const STYLE_BY_AGE = {
+  '3-4': { label:'3–4세',   per:'쪽당 1~2문장 · 25자 이내 · 반복 구절 3회',  total:12, split:[3,3,4,2] },
+  '5-6': { label:'5–6세',   per:'쪽당 2~3문장 · 35자 이내 · 반복 구절 2회',  total:16, split:[4,4,5,3] },
+  '7-9': { label:'7–9세',   per:'쪽당 3~5문장 · 45자 이내 · 심리 묘사 허용', total:20, split:[5,5,6,4] },
+  '10+': { label:'10–12세', per:'쪽당 5~8문장 · 4챕터 · 대화 주고받기 허용', total:24, split:[6,6,6,6] }
+};
+
+/* ───────── 상태 ───────── */
+const state = { i:0, a:{}, done:false };
+QUESTIONS.forEach(q => {
+  if(q.type === 'two' || q.type === 'tags'){ q.fields.forEach(f => state.a[q.id + '.' + f.k] = f.v); }
+  else if(q.type === 'choice' || q.type === 'value'){ if(q.pre != null) state.a[q.id] = q.pre; }
+  else { state.a[q.id] = q.v || ''; }
+});
+
+const stage = document.getElementById('fl-stage');
+const bar = document.getElementById('fl-bar');
+const partEl = document.getElementById('fl-part');
+const countEl = document.getElementById('fl-count');
+const annotToggle = document.getElementById('annot-toggle');
+
+function applyAnnot(){ document.getElementById('view-demo').classList.toggle('annot-off', !annotToggle.checked); }
+annotToggle.addEventListener('change', applyAnnot);
+applyAnnot();
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function render(){
+  if(state.done){ renderResult(); return; }
+  const q = QUESTIONS[state.i];
+  const n = state.i + 1;
+  const part = PARTS.find(p => n <= p.upto);
+  partEl.textContent = part.name;
+  countEl.textContent = `${q.id} / 17`;
+  bar.style.width = Math.round(n / 17 * 100) + '%';
+
+  let field = '';
+  if(q.type === 'two'){
+    field = '<div class="qfield two">' + q.fields.map(f =>
+      `<label>${esc(f.label)}<input type="text" data-k="${q.id}.${f.k}" value="${esc(state.a[q.id+'.'+f.k] || '')}"></label>`).join('') + '</div>';
+  } else if(q.type === 'tags'){
+    field = '<div class="qfield two">' + q.fields.map((f,i) =>
+      `<label>${i+1}<input type="text" data-k="${q.id}.${f.k}" value="${esc(state.a[q.id+'.'+f.k] || '')}"></label>`).join('') + '</div>';
+  } else if(q.type === 'text'){
+    field = `<div class="qfield"><input type="text" data-k="${q.id}" value="${esc(state.a[q.id] || '')}">`
+      + (q.chips ? '<div class="chips">' + q.chips.map(c => `<button type="button" class="chip" data-fill="${esc(c)}">${esc(c)}</button>`).join('') + '</div>' : '')
+      + '</div>';
+  } else if(q.type === 'area'){
+    field = `<div class="qfield"><textarea data-k="${q.id}"${q.peak ? ' style="min-height:7rem; font-size:1.1rem"' : ''}>${esc(state.a[q.id] || '')}</textarea></div>`;
+  } else {
+    const marks = ['ⓐ','ⓑ','ⓒ','ⓓ','ⓔ','ⓕ','ⓖ'];
+    field = '<div class="opts">' + q.options.map((o,i) =>
+      `<button type="button" class="opt" data-opt="${i}" aria-pressed="${state.a[q.id] === i}">
+         <span class="mk">${marks[i]}</span><span>${esc(o.t)}</span>${o.tag ? `<span class="axis">${esc(o.tag)}</span>` : '<span></span>'}
+       </button>`).join('') + '</div>';
+  }
+
+  stage.innerHTML = `
+    <div class="qcard">
+      <span class="qnum">${q.id}</span>
+      <h2 class="qtext">${esc(q.text)}</h2>
+      ${q.hint ? `<p class="qhint">${esc(q.hint)}</p>` : ''}
+      ${field}
+      ${q.annot ? `<p class="annot"><b>설계 의도</b> — ${q.annot}</p>` : ''}
+    </div>
+    <div class="flow-nav">
+      <button class="btn btn-ghost btn-sm" id="prev"${state.i === 0 ? ' disabled' : ''}>이전</button>
+      ${q.skippable ? '<button class="btn btn-ghost btn-sm" id="skip">건너뛰기</button>' : ''}
+      <span class="spacer"></span>
+      ${n >= 5 ? '<span class="saved">자동 저장됨 · 이어하기 링크 발송</span>' : ''}
+      <button class="btn btn-primary btn-sm" id="next">${n === 17 ? '동화 만들기' : '다음'}</button>
+    </div>`;
+
+  stage.querySelectorAll('input[data-k], textarea[data-k]').forEach(el =>
+    el.addEventListener('input', () => { state.a[el.dataset.k] = el.value; }));
+  stage.querySelectorAll('.chip').forEach(c =>
+    c.addEventListener('click', () => {
+      const inp = stage.querySelector('input[data-k]');
+      inp.value = c.dataset.fill; state.a[inp.dataset.k] = c.dataset.fill;
+    }));
+  stage.querySelectorAll('.opt').forEach(b =>
+    b.addEventListener('click', () => {
+      state.a[q.id] = Number(b.dataset.opt);
+      stage.querySelectorAll('.opt').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      setTimeout(step, 180);
+    }));
+  const prev = stage.querySelector('#prev'); if(prev) prev.addEventListener('click', () => { state.i = Math.max(0, state.i - 1); render(); });
+  const skip = stage.querySelector('#skip'); if(skip) skip.addEventListener('click', () => { state.a[q.id] = ''; step(); });
+  stage.querySelector('#next').addEventListener('click', step);
+}
+
+function step(){
+  if(state.i === 16){ state.done = true; render(); }
+  else { state.i++; render(); }
+  document.querySelector('.flow').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block:'start' });
+}
+
+/* ───────── 스코어링 ───────── */
+function score(){
+  const s = { V1:0, V2:0, V3:0, V4:0, V5:0, V6:0 };
+  ['Q10','Q11','Q12','Q13'].forEach(id => {
+    const q = QUESTIONS.find(x => x.id === id);
+    const idx = state.a[id];
+    if(idx == null) return;
+    const d = q.options[idx].d || {};
+    Object.entries(d).forEach(([k,v]) => { s[k] += v; });
+  });
+  Object.keys(s).forEach(k => { s[k] = Math.max(-100, Math.min(100, s[k])); });
+  return s;
+}
+function pickSkeleton(s){
+  let best = null, bestScore = -Infinity;
+  SKELETONS.forEach(sk => {
+    let dot = 0, mag = 0;
+    Object.entries(sk.proto).forEach(([k,v]) => { dot += (s[k] || 0) * v; mag += v * v; });
+    const val = dot / Math.sqrt(mag);
+    if(val > bestScore){ bestScore = val; best = sk; }
+  });
+  return best;
+}
+
+function renderResult(){
+  partEl.textContent = '완료 · 미리보기';
+  countEl.textContent = '17 / 17';
+  bar.style.width = '100%';
+
+  const B = composeBook();
+  const { s, sk, st, fill, nick, title } = B;
+
+  const axesHtml = AXES.map(a => {
+    const v = s[a.id] || 0;
+    const pct = Math.abs(v) / 2;
+    const left = v >= 0 ? 50 : 50 - pct;
+    const cls = v === 0 ? 'null' : (v > 0 ? 'warm' : 'cool');
+    return `<div>
+      <div class="axis-row">
+        <span class="axis-id">${a.id}</span>
+        <span class="pole pole-l${v < 0 ? ' on' : ''}">${a.l}</span>
+        <div class="track"><span class="zero"></span><span class="fill ${cls}" style="left:${left}%; width:${Math.max(pct, v===0?1.2:2)}%"></span></div>
+        <span class="pole pole-r${v > 0 ? ' on' : ''}">${a.r}</span>
+        <span class="axis-val">${v > 0 ? '+' : ''}${v}</span>
+      </div>
+      <p class="axis-eff">${a.eff}</p>
+    </div>`;
+  }).join('');
+
+  const beatsHtml = sk.beats.map((b,i) =>
+    `<div class="beat"><span class="bn">${i+1}장</span><div class="bt">${esc(B.book.acts[i].name)}</div><div class="bp">${esc(b)} · ${st.split[i]}쪽</div></div>`).join('');
+
+  const slots = [
+    ['주인공', nick, 'Q1'], ['조력자 소재', fill.l, 'Q3'], ['1막 배경', fill.p, 'Q6'],
+    ['매개 사물', fill.t, 'Q7'], ['3막 시련', fill.f, 'Q5'], ['반복 구절', '“' + fill.r + '”', 'Q4'],
+    ['중심 갈등', QUESTIONS[8].options[state.a['Q9'] ?? 0].v, 'Q9'],
+    ['표지 부제', (state.a['Q15'] || '우리 집') + ', 우리 집 이야기', 'Q15'],
+    ['헌사', state.a['Q17'] || '—', 'Q17']
+  ].map(([k,v,src]) => `<div class="slot"><div class="sk">${k}</div><div class="sv">${esc(v)}</div><div class="src">${src}</div></div>`).join('');
+
+  const pageHtml = B.pages.slice(0, 2).map((lines,i) =>
+    `<div class="bookpage">
+       <div class="art">삽화 — 수채 프리셋 · 캐릭터 시트 고정</div>
+       <div class="txt">${lines.map(line => `<p>${esc(line)}</p>`).join('')}</div>
+       <span class="pno">${i+1}</span>
+     </div>`).join('');
+
+  stage.innerHTML = `
+    <div class="result" style="margin-top:1.8rem">
+
+      <div class="rblock">
+        <h3>② 가치 스코어링 — 우리 집의 좌표</h3>
+        <p class="rsub">Q10–Q13 네 문항만 점수화합니다. 소재 문항(Q1–Q9)은 점수에 관여하지 않고 슬롯을 채웁니다. 중앙선은 어느 쪽으로도 기울지 않은 상태입니다.</p>
+        <div class="axes">${axesHtml}</div>
+      </div>
+
+      <div class="rblock">
+        <h3>④ 서사 골격 판정</h3>
+        <p class="rsub">6축 좌표에서 가장 가까운 골격 1종을 고르고, 연령 구간에 맞춰 막별 쪽수를 배분합니다.</p>
+        <div class="skel">
+          <div class="skel-name">${esc(sk.key)}<small>대표 정서 — ${esc(sk.emo)}<br>모티프 — ${esc(sk.motif)}</small></div>
+          <div>
+            <div class="beats">${beatsHtml}</div>
+            <p style="font-size:.78rem; color:var(--ink-3); margin-top:.8rem">
+              ${st.label} 규칙 · 총 ${st.total}쪽 · ${st.per} · 반복 구절 “${esc(fill.r)}”
+              ${B.pages.length !== st.total ? `<br><span style="color:var(--seal)">이 초안에는 7–9세 ${B.pages.length}쪽 판본만 집필되어 있어 그대로 보여 드립니다.</span>` : ''}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="rblock">
+        <h3>③ 소재 슬롯</h3>
+        <p class="rsub">답변이 각각 어디에 쓰이는지 그대로 보여 줍니다. 실제 서비스에서는 사용자에게 보이지 않는 내부 표입니다.</p>
+        <div class="slots">${slots}</div>
+      </div>
+
+      <div class="rblock">
+        <h3>⑧ 미리보기 — 표지와 앞 2쪽</h3>
+        <p class="rsub" style="color:var(--seal)">이 미리보기는 데모용 템플릿 조판입니다. 실제 서비스에서는 이 자리에 생성 모델이 집필한 본문이 들어갑니다.</p>
+        <div class="spread">
+          <div class="bookcover">
+            <span class="imprint">이야기 서랍</span>
+            <div>
+              <h4>${esc(title)}</h4>
+              <p class="subtitle">${esc((state.a['Q15'] || '우리 집') + ', 우리 집 이야기')}</p>
+            </div>
+            <span class="imprint">${esc(state.a['Q17'] || '')}</span>
+          </div>
+          ${pageHtml}
+        </div>
+
+        <div class="paywall" style="margin-top:1.6rem">
+          <div>
+            <h4>실제 서비스는 여기서 결제 · 나머지 ${B.pages.length - 2}쪽</h4>
+            <p>
+              마지막 장에는 Q16에 쓰신 문장이 <b>고쳐 쓰지 않고 그대로</b> 들어갑니다 — “${esc(state.a['Q16'] || '')}”<br>
+              <span style="color:var(--seal)">이 초안에서는 결제 없이 전권을 엽니다.</span>
+            </p>
+          </div>
+          <button class="btn btn-seal" id="pay">전권 열람 · ${B.pages.length}쪽</button>
+        </div>
+      </div>
+
+      <div class="flow-nav">
+        <button class="btn btn-ghost btn-sm" id="back">답변 수정하기</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="restart">처음부터</button>
+      </div>
+    </div>`;
+
+  stage.querySelector('#back').addEventListener('click', () => { state.done = false; state.i = 16; render(); });
+  stage.querySelector('#restart').addEventListener('click', () => { state.done = false; state.i = 0; render(); });
+  stage.querySelector('#pay').addEventListener('click', () => openReader());
+}
+
+/* ───────── 책 조립 ───────── */
+function composeBook(){
+  const s = score();
+  const sk = pickSkeleton(s);
+  const nick = (state.a['Q1.nick'] || state.a['Q1.name'] || '아이').trim();
+  const age = QUESTIONS[1].options[state.a['Q2'] ?? 1].v;
+  const st = STYLE_BY_AGE[age];
+  const conflictName = QUESTIONS[8].options[state.a['Q9'] ?? 0].v;
+  const c = CONFLICT[conflictName] || CONFLICT['없음'];
+
+  const fill = {
+    n: nick,
+    t: (state.a['Q7'] || '아끼는 물건').trim(),
+    f: (state.a['Q5'] || '무서운 것').trim(),
+    p: (state.a['Q6'] || '자주 가는 곳').trim(),
+    r: (state.a['Q4'] || '내가 할래!').replace(/^[“"'\s]+|[”"'\s]+$/g, '').trim(),
+    l: (state.a['Q3.t1'] || '좋아하는 것').trim(),
+    cw: c.cw, cl: c.cl
+  };
+
+  const book = BOOKS[sk.key];
+  const pages = book.pages.map(lines => lines.map(l => put(l, fill)));
+  const actOf = i => (i < 6 ? 0 : i < 12 ? 1 : i < 18 ? 2 : 3);   /* 4챕터 × 6쪽 */
+
+  return {
+    s, sk, st, fill, nick, book, pages, actOf,
+    age, conflictName,
+    title: sk.title(nick).replace(/\{t\}/g, fill.t),
+    subtitle: (state.a['Q15'] || '우리 집') + ', 우리 집 이야기',
+    dedication: state.a['Q17'] || '',
+    lastLine: state.a['Q16'] || ''
+  };
+}
+
+/* ───────── 전권 뷰어 ───────── */
+let readerEl = null, readerState = { spread:0, mode:'flip', annot:true };
+
+function leafHtml(kind, data, actTag){
+  if(kind === 'cover'){
+    return `<div class="leaf leaf-cover">
+      <span class="ci">이야기 서랍</span>
+      <div><h4>${esc(data.title)}</h4><p class="cs">${esc(data.subtitle)}</p></div>
+      <span class="ci">${esc(data.dedication)}</span>
+    </div>`;
+  }
+  if(kind === 'ded'){
+    return `<div class="leaf leaf-plain">
+      <span class="pl-lbl">헌사</span>
+      <p class="pl-txt">${esc(data.dedication || '—')}</p>
+    </div>`;
+  }
+  if(kind === 'toc'){
+    return `<div class="leaf leaf-plain leaf-toc">
+      <span class="pl-lbl">차례</span>
+      <ol class="toc-list">${data.book.acts.map((a,i) =>
+        `<li><span class="tc-n">${i + 1}장</span><span class="tc-t">${esc(a.name)}</span><span class="tc-p">${i * 6 + 1}</span></li>`).join('')}</ol>
+    </div>`;
+  }
+  if(kind === 'last'){
+    return `<div class="leaf leaf-plain leaf-last">
+      <span class="pl-lbl">스무 살의 너에게</span>
+      <p class="pl-txt">${esc(data.lastLine)}</p>
+      <span class="pl-lbl" style="color:var(--seal)">Q16 · 원문 그대로</span>
+    </div>`;
+  }
+  if(kind === 'colophon'){
+    return `<div class="leaf leaf-plain leaf-colophon">
+      <span class="pl-lbl">이야기 서랍</span>
+      <p class="pl-txt">이 책은 ${esc(josa(data.nick, '이의/의'))} 부모가<br>17개의 질문에 답해서 만들어졌습니다.</p>
+      <p class="pl-cta">당신의 이야기도 만들어 보세요 →</p>
+    </div>`;
+  }
+  return `<div class="leaf">
+    ${actTag ? `<span class="lf-act">${esc(actTag)}</span>` : ''}
+    <div class="lf-art">삽화 — 수채 프리셋 · 캐릭터 시트 고정</div>
+    <div class="lf-txt">${data.lines.map(l => `<p>${esc(l)}</p>`).join('')}</div>
+    <span class="lf-no">${data.no}</span>
+  </div>`;
+}
+
+function buildLeaves(B){
+  const out = [
+    { kind:'cover', data:B },
+    { kind:'ded', data:B },
+    { kind:'toc', data:B }
+  ];
+  B.pages.forEach((lines, i) => {
+    const act = B.actOf(i);
+    const first = i === 0 || B.actOf(i - 1) !== act;
+    out.push({ kind:'body', data:{ lines, no:i + 1 }, act, actTag: first ? `${act + 1}장 · ${B.book.acts[act].name}` : '' });
+  });
+  out.push({ kind:'last', data:B });
+  out.push({ kind:'colophon', data:B });
+  return out;
+}
+
+function openReader(){
+  const B = composeBook();
+  const leaves = buildLeaves(B);
+  readerState.spread = 0;
+
+  if(!readerEl){
+    readerEl = document.createElement('div');
+    readerEl.className = 'reader';
+    document.body.appendChild(readerEl);
+  }
+  document.body.style.overflow = 'hidden';
+
+  const ageNote = B.age === '10+'
+    ? `10–12세 조판(24쪽 · 4챕터 · 쪽당 5~8문장). 모티프는 <b>‘${esc(B.sk.motif)}’</b>이고, 마지막 장은 1장의 이미지로 돌아옵니다. 답변은 문장 안에 녹아 있어 어느 단어가 어느 문항에서 왔는지 읽으면서는 보이지 않습니다.`
+    : `${B.st.label}는 ${B.st.total}쪽·문장 길이 규칙이 달라 같은 서사를 그 문체로 <b>다시 써야</b> 합니다. 이 초안에는 <b>10–12세 24쪽 판본만</b> 집필되어 있어 그대로 보여 드립니다.`;
+
+  function draw(){
+    readerEl.classList.toggle('noannot', !readerState.annot);
+    const total = Math.ceil(leaves.length / 2);
+    const i = readerState.spread;
+
+    let content;
+    if(readerState.mode === 'grid'){
+      content = `<div class="gridall">${leaves.map(l => leafHtml(l.kind, l.data, l.actTag)).join('')}</div>`;
+    } else {
+      const pair = leaves.slice(i * 2, i * 2 + 2);
+      const acts = pair.filter(l => l.actTag);
+      content = `<div class="spread2">
+        ${pair.map(l => leafHtml(l.kind, l.data, l.actTag)).join('')}
+        ${acts.map(l => `<p class="artnote"><b>${esc(l.actTag)} 아트디렉션</b> — ${esc(put(B.book.acts[l.act].art, B.fill))}</p>`).join('')}
+      </div>
+      <div class="reader-nav">
+        <button class="btn btn-ghost btn-sm" id="rd-prev"${i === 0 ? ' disabled' : ''}>‹ 이전</button>
+        <span class="pgn">${i + 1} / ${total}</span>
+        <button class="btn btn-ghost btn-sm" id="rd-next"${i >= total - 1 ? ' disabled' : ''}>다음 ›</button>
+      </div>`;
+    }
+
+    readerEl.innerHTML = `
+      <div class="reader-bar">
+        <div class="reader-bar-in">
+          <span class="reader-title">
+            <b>${esc(B.title)}</b>
+            <span>${esc(B.sk.key)} · ${B.pages.length}쪽 · ${esc(B.st.label)}</span>
+          </span>
+          <label class="toggle"><input type="checkbox" id="rd-annot"${readerState.annot ? ' checked' : ''}>제작 주석</label>
+          <div class="viewnav">
+            <button data-mode="flip" aria-selected="${readerState.mode === 'flip'}">넘겨보기</button>
+            <button data-mode="grid" aria-selected="${readerState.mode === 'grid'}">전체보기</button>
+          </div>
+          <button class="reader-close" id="rd-close">닫기 ✕</button>
+        </div>
+      </div>
+      <div class="reader-note"><p>${ageNote}</p></div>
+      <div class="reader-body">${content}</div>`;
+
+    readerEl.querySelector('#rd-close').addEventListener('click', closeReader);
+    readerEl.querySelector('#rd-annot').addEventListener('change', e => { readerState.annot = e.target.checked; draw(); });
+    readerEl.querySelectorAll('[data-mode]').forEach(b =>
+      b.addEventListener('click', () => { readerState.mode = b.dataset.mode; draw(); readerEl.scrollTo({ top:0 }); }));
+    const p = readerEl.querySelector('#rd-prev'), n = readerEl.querySelector('#rd-next');
+    if(p) p.addEventListener('click', () => { readerState.spread = Math.max(0, i - 1); draw(); });
+    if(n) n.addEventListener('click', () => { readerState.spread = Math.min(total - 1, i + 1); draw(); });
+  }
+
+  readerEl.__draw = draw;
+  readerEl.__total = () => Math.ceil(leaves.length / 2);
+  draw();
+  readerEl.scrollTo({ top:0 });
+}
+
+function closeReader(){
+  if(readerEl) readerEl.remove();
+  readerEl = null;
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if(!readerEl) return;
+  if(e.key === 'Escape') closeReader();
+  if(readerState.mode !== 'flip') return;
+  if(e.key === 'ArrowRight'){ readerState.spread = Math.min(readerEl.__total() - 1, readerState.spread + 1); readerEl.__draw(); }
+  if(e.key === 'ArrowLeft'){ readerState.spread = Math.max(0, readerState.spread - 1); readerEl.__draw(); }
+});
+
+document.getElementById('open-sample').addEventListener('click', () => openReader());
+
+render();
+</script>

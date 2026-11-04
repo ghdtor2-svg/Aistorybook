@@ -1,0 +1,1 @@
+﻿{"extends":"./tsconfig.json","compilerOptions":{"noEmit":false,"outDir":".live-test-build","rootDir":"src","module":"CommonJS","moduleResolution":"Node","incremental":false,"isolatedModules":false,"plugins":[]},"include":["src/lib/office/server/**/*.ts","src/app/api/office/**/*.ts"],"exclude":["node_modules"]}

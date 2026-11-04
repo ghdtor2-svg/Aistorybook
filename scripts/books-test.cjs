@@ -1,0 +1,5 @@
+const assert=require('assert/strict');const {parseBook,parseBooks,parseGeneratedBook}=require('../.live-test-build/lib/storybook/books');
+const book={id:'test',title:'동화',chapters:[{title:'장',text:'이야기'}],note:'',model:'mock',createdAt:''};
+assert.deepEqual(parseGeneratedBook(book,'test'),book);assert.throws(()=>parseGeneratedBook(book,'different'));for(const broken of [null,{}, {...book,chapters:[null]}, {...book,note:{}},{...book,chapters:[]}])assert.throws(()=>parseBook(broken));
+assert.throws(()=>parseBooks(JSON.stringify([book,book])));assert.throws(()=>parseBooks('bad json'));assert.deepEqual(parseBooks(null),[]);
+assert.equal(parseBook({id:'legacy',title:'',chapters:[{title:'',text:''}]}).model,'미확인');assert.throws(()=>parseGeneratedBook({...book,title:''},'test'));assert.equal(parseBook({...book,title:''}).title,'');console.log('PASS shared response validation, wrong ID, malformed chapters/metadata, duplicate IDs and legacy editable books');

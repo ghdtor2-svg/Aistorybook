@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko" data-mode="__MODE__">
+<head>
+<meta charset="utf-8">
+<title>이야기 서랍 · 첫 번째 책</title>
+<style>
+/* ══════════════════════════════════════════════════════════════
+   판면 규격  ·  참고자료(KB 창작동화 / 동화는 내 친구) 실측 기준
+     본문 11.8pt · 행간 25.4pt(2.15) · 판면 폭 121㎜ · 19행/쪽
+     판형 175×225㎜ · 무선제본 · 도련 3㎜
+   ══════════════════════════════════════════════════════════════ */
+@font-face{font-family:"BookSans";src:url("file:///C:/Windows/Fonts/NotoSansKR-VF.ttf");font-weight:100 900;font-display:block}
+@font-face{font-family:"BookSerif";src:url("file:///C:/Windows/Fonts/NotoSerifKR-VF.ttf");font-weight:100 900;font-display:block}
+
+@page{size:__PAGEW__ __PAGEH__;margin:0}
+
+:root{
+  --trim-w:175mm; --trim-h:225mm;
+  --bleed:__BLEED__;
+
+  /* 판면 — 안쪽(책등) 여백을 바깥보다 넓게 (무선제본 펼침 손실 보정) */
+  --m-in:28mm; --m-out:26mm; --m-top:27mm; --m-bot:27mm;
+  --lead:8.96mm;            /* 25.4pt */
+  --body-size:11.8pt;
+
+  /* 색 — 흰 종이 위에 수채 */
+  --ink:#3F342C;            /* 본문 글자 */
+  --ink-2:#6E6055;          /* 보조 글자 */
+  --ink-3:#9C8F82;          /* 쪽번호·캡션 */
+  --rule:#E2DAD0;
+  --tint-spring:#FCF0F2; --tint-mom:#F2F6F3;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#9A9A9A}
+body{font-family:"BookSans",sans-serif;font-weight:350;color:var(--ink);
+     -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+
+/* ── 낱장 ──────────────────────────────────────────────── */
+.sheet{position:relative;
+  width:calc(var(--trim-w) + 2*var(--bleed));
+  height:calc(var(--trim-h) + 2*var(--bleed));
+  background:#fff;overflow:hidden;
+  break-after:page;page-break-after:always;break-inside:avoid}
+.sheet:last-child{break-after:auto;page-break-after:auto}
+
+/* 재단선 안쪽 = 실제 책 지면 */
+.page{position:absolute;left:var(--bleed);top:var(--bleed);
+      width:var(--trim-w);height:var(--trim-h)}
+
+/* 도련까지 채우는 배경(전면 삽화·색지) */
+.bleedbg{position:absolute;inset:calc(-1*var(--bleed));display:block}
+.bleedbg svg,.bleedbg>div{width:100%;height:100%;display:block}
+
+/* ── 재단선(트림 마크) — 인쇄용에서만 ─────────────────── */
+.crop{display:none}
+html[data-mode="print"] .crop{display:block;position:absolute;background:#000}
+html[data-mode="print"] .crop.h{width:2.6mm;height:.12mm}
+html[data-mode="print"] .crop.v{width:.12mm;height:2.6mm}
+
+/* ══════════ 본문 판면 ══════════ */
+.tb{position:absolute;top:var(--m-top);height:calc(var(--trim-h) - var(--m-top) - var(--m-bot))}
+.recto .tb{left:var(--m-in);right:var(--m-out)}
+.verso .tb{left:var(--m-out);right:var(--m-in)}
+/* 판면을 잘라내지 않는다 — 조판이 어긋나면 눈에 보이게 두고 빌드 검사가 잡는다 */
+.tb .txt{position:relative}
+
+/* 한글 본문은 음절 단위로 줄을 바꾼다(국문 조판 관례).
+   keep-all 로 묶으면 양끝맞춤에서 어절 사이가 크게 벌어진다. */
+.tb p{margin:0;font-size:var(--body-size);line-height:var(--lead);
+      text-indent:1em;letter-spacing:-.012em;word-break:normal;line-break:normal;
+      overflow-wrap:break-word;text-align:justify}
+.tb p.first{text-indent:0}
+/* 대사는 들여쓰기를 유지하되 좌우 정렬은 풀어 준다 */
+.tb p.talk{text-align:left}
+/* 육아일기·인용 — 행간은 본문과 같게 두어 기준선 격자를 지킨다 */
+.tb p.dash{position:relative;text-indent:0;margin:0 0 0 12mm;
+      font-size:10.8pt;line-height:var(--lead);color:#6A5C50;text-align:left}
+.tb p.dash::before{content:"";position:absolute;left:-6mm;top:1.6mm;
+      width:1px;height:calc(100% - 3.2mm);background:#D9CEC1}
+/* 장면 전환 */
+.tb .orn{text-align:center;text-indent:0;color:#C8BBAC;letter-spacing:.5em;
+      font-size:8.5pt;line-height:var(--lead)}
+/* 행 맞춤용 빈 행 — 인용·장면전환 앞뒤에 한 행을 비운다 */
+.tb p.lead-gap{display:block;height:var(--lead);margin:0;line-height:var(--lead);font-size:1pt}
+
+/* ══════════ 본문 삽화 — 판면 폭 밴드(위/아래 고정) ══════════ */
+.band{position:absolute;left:0;right:0;text-indent:0}
+.band svg{display:block;width:100%;height:100%}
+.band.top{top:0}
+.band.bottom{bottom:0}
+
+/* ══════════ 전면 삽화 쪽 ══════════ */
+.plate .art{position:absolute;inset:calc(-1*var(--bleed))}
+.plate .art svg{width:100%;height:100%;display:block}
+.plate .cap{position:absolute;left:26mm;right:26mm;bottom:17mm;text-align:center;
+      font-size:9.4pt;line-height:1.9;color:var(--ink-2);word-break:keep-all}
+
+/* ══════════ 쪽번호 ══════════ */
+.folio{position:absolute;bottom:16mm;display:flex;gap:2.2mm;align-items:baseline;
+       font-size:8.6pt;font-weight:400;color:var(--ink-3);letter-spacing:.04em}
+.recto .folio{right:var(--m-out);flex-direction:row}
+.verso .folio{left:var(--m-out);flex-direction:row-reverse}
+.folio .num{font-weight:500;color:#7B6E62}
+.folio .sep{color:#C6BAAC}
+
+/* ══════════ 한 문장 쪽 (기획서 §8-7 가드레일 9) ══════════ */
+.solo .in{position:absolute;left:24mm;right:24mm;top:50%;transform:translateY(-50%);text-align:center}
+.solo .in p{font-size:15.5pt;line-height:2.0;text-indent:0;margin:0;font-weight:450;
+      word-break:keep-all;color:#33291F}
+.solo .in p .sm{display:block;margin-top:5mm;font-size:11pt;font-weight:350;color:#6E6058}
+.solo .in .mk{display:block;width:14mm;height:1px;background:#DCD2C6;margin:0 auto 8mm}
+.solo .in .mk.b{margin:8mm auto 0}
+.solo .deco{position:absolute;left:50%;transform:translateX(-50%);bottom:30mm;width:30mm}
+.solo .deco svg{width:100%;height:auto;display:block}
+
+/* ══════════ 장 표제 쪽 ══════════ */
+.chapter .art{position:absolute;left:16mm;right:16mm;top:21mm;height:117mm}
+.chapter .art svg{width:100%;height:100%;display:block}
+.chapter .meta{position:absolute;left:26mm;right:26mm;top:150mm;text-align:center}
+.chapter .n{display:block;font-size:8.4pt;letter-spacing:.34em;color:#A8998A;margin-bottom:6mm}
+.chapter h2{font-size:20pt;font-weight:600;margin:0 0 7mm;letter-spacing:-.02em;color:#35291F}
+.chapter .epi{font-size:10.2pt;line-height:1.95;color:#6E6055;margin:0;word-break:keep-all}
+.chapter .rule{position:absolute;left:50%;transform:translateX(-50%);bottom:26mm;
+      width:18mm;height:1px;background:#DED5C9}
+
+/* ══════════ 이야기 속표지 ══════════ */
+.storyhalf .panel{position:absolute;inset:calc(-1*var(--bleed))}
+.storyhalf .art{position:absolute;left:50%;transform:translateX(-50%);top:70mm;
+      width:132mm;height:98mm}
+.storyhalf .art svg{width:100%;height:100%;display:block}
+.storyhalf .lab{position:absolute;left:0;right:0;top:36mm;text-align:center;
+      font-size:8.6pt;letter-spacing:.36em;color:#9C8B79}
+.storyhalf h1{position:absolute;left:0;right:0;top:44mm;text-align:center;
+      font-size:28pt;font-weight:700;margin:0;letter-spacing:.01em;color:#35291F}
+.storyhalf .sub{position:absolute;left:20mm;right:20mm;top:178mm;text-align:center;
+      font-size:10pt;line-height:1.9;color:#6E6055;word-break:keep-all}
+.storyhalf .by{position:absolute;left:0;right:0;bottom:22mm;text-align:center;
+      font-size:8.6pt;letter-spacing:.12em;color:#A0907F}
+
+/* ══════════ 제사(장 앞 여백지) ══════════ */
+.epigraph .panel{position:absolute;inset:calc(-1*var(--bleed))}
+.epigraph .in{position:absolute;left:30mm;right:30mm;top:50%;transform:translateY(-50%);
+      text-align:center}
+.epigraph .in p{margin:0;font-size:11.5pt;line-height:2.15;color:#5C4F44;word-break:keep-all}
+.epigraph .in .src{display:block;margin-top:7mm;font-size:8.8pt;letter-spacing:.14em;color:#A2927F}
+
+/* ══════════ 앞부속 ══════════ */
+.halftitle .in{position:absolute;left:0;right:0;top:78mm;text-align:center}
+.halftitle h1{font-size:26pt;font-weight:700;margin:0;letter-spacing:.06em;color:#35291F}
+.halftitle .mk{width:26mm;margin:12mm auto 0}
+.halftitle .mk svg{width:100%;height:auto;display:block}
+
+/* 여백 간지 — 작은 모티프 하나 */
+.breather .deco svg{width:100%;height:auto;display:block;opacity:.55}
+
+.titlepage .in{position:absolute;left:0;right:0;top:40mm;text-align:center}
+.titlepage h1{font-size:36pt;font-weight:700;margin:0;letter-spacing:.06em;color:#35291F}
+.titlepage .sub{margin-top:7mm;font-size:9.6pt;letter-spacing:.24em;color:#8B7C6C}
+.titlepage .art{position:absolute;left:50%;transform:translateX(-50%);top:92mm;width:96mm;height:72mm}
+.titlepage .art svg{width:100%;height:100%;display:block}
+.titlepage .titles{position:absolute;left:0;right:0;bottom:42mm;text-align:center}
+.titlepage .titles .t{font-size:13pt;font-weight:600;color:#43372C;letter-spacing:.02em}
+.titlepage .titles .t+.t{margin-top:3.5mm}
+.titlepage .imp{position:absolute;left:0;right:0;bottom:22mm;text-align:center;
+      font-size:8pt;letter-spacing:.22em;color:#A0907F}
+
+.ded .in{position:absolute;left:32mm;right:32mm;top:50%;transform:translateY(-50%);text-align:center}
+.ded p{font-size:11.5pt;line-height:2.3;margin:0;word-break:keep-all;color:#4C4138}
+.ded .sig{margin-top:10mm;font-size:9.4pt;color:#8B7C6C;letter-spacing:.06em}
+
+.toc .in{position:absolute;left:30mm;right:30mm;top:38mm}
+.toc h2{font-size:9.6pt;letter-spacing:.34em;color:#9C8B79;font-weight:400;
+      margin:0 0 14mm;text-align:center}
+.toc .grp{margin-bottom:13mm}
+.toc .gt{font-size:13.5pt;font-weight:700;margin:0 0 6mm;letter-spacing:-.01em;color:#35291F}
+.toc .gt .sm{font-size:8pt;font-weight:400;color:#A2927F;letter-spacing:.2em;margin-right:3mm}
+.toc .row{display:flex;align-items:baseline;font-size:10.4pt;margin:0 0 4.2mm;color:#544940}
+.toc .row .n{font-size:8.4pt;color:#AE9E8B;width:7mm;flex:none}
+.toc .row .dots{flex:1;border-bottom:1px dotted #D8CDBF;margin:0 2.5mm 1.2mm}
+.toc .row .pg{font-size:9.2pt;color:#7B6E62}
+
+/* ══════════ 뒷부속 ══════════ */
+.colophon .in{position:absolute;left:28mm;right:28mm;top:34mm}
+.colophon h2{font-size:14pt;font-weight:600;margin:0 0 4mm;color:#35291F}
+.colophon .lead{font-size:10pt;line-height:1.95;color:#5E5348;margin:0 0 10mm;word-break:keep-all}
+.colophon table{width:100%;border-collapse:collapse;font-size:9.2pt}
+.colophon td{padding:2.6mm 0;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.75}
+.colophon td.k{width:30mm;color:#9C8B79;font-size:8.4pt;letter-spacing:.06em;padding-top:3.1mm}
+.colophon .fine{margin-top:10mm;font-size:8.4pt;line-height:1.85;color:#8E8073;word-break:keep-all}
+.colophon .stamp{position:absolute;left:28mm;right:28mm;bottom:22mm;text-align:center;
+      font-size:8.6pt;letter-spacing:.14em;color:#9C8B79;border-top:1px solid var(--rule);padding-top:7mm}
+
+/* ══════════ 표지(별쇄) ══════════ */
+.coversheet{position:relative;background:#fff;overflow:hidden;
+      break-after:page;page-break-after:always}
+.coversheet:last-child{break-after:auto;page-break-after:auto}
+.cv{position:absolute;top:var(--bleed);height:var(--trim-h)}
+/* 표지 그림은 바깥쪽으로만 도련을 문다.
+   안쪽(책등 방향)까지 늘이면 책등을 덮어 책등 글자가 가려진다. */
+.cv .art{position:absolute;top:calc(-1*var(--bleed));bottom:calc(-1*var(--bleed))}
+.cv-back .art{left:calc(-1*var(--bleed));right:0}
+.cv-front .art{right:calc(-1*var(--bleed));left:0}
+.cv .art svg{width:100%;height:100%;display:block}
+
+.cv-front .tag{position:absolute;top:15mm;left:0;right:0;text-align:center;
+      font-size:8pt;letter-spacing:.3em;color:#8E7C67}
+.cv-front .tt{position:absolute;top:26mm;left:0;right:0;text-align:center}
+.cv-front .tt h1{margin:0;font-size:40pt;font-weight:700;letter-spacing:.07em;color:#3B2E22}
+.cv-front .tt .sub{margin-top:6mm;font-size:9.6pt;letter-spacing:.24em;color:#7E6D59}
+.cv-front .titles{position:absolute;bottom:28mm;left:0;right:0;text-align:center}
+.cv-front .titles .t{font-size:13.5pt;font-weight:600;color:#3B2E22}
+.cv-front .titles .t+.t{margin-top:3.5mm}
+.cv-front .foot{position:absolute;bottom:14mm;left:0;right:0;text-align:center;
+      font-size:7.6pt;letter-spacing:.2em;color:#9A8974}
+
+.cv-back .msg{position:absolute;left:20mm;right:20mm;top:32mm;text-align:center}
+.cv-back .msg .big{font-size:15pt;font-weight:600;line-height:1.9;color:#3B2E22;word-break:keep-all}
+.cv-back .msg .small{margin-top:8mm;font-size:9.6pt;line-height:2;color:#6E6055;word-break:keep-all}
+.cv-back .cta{position:absolute;left:0;right:0;bottom:30mm;text-align:center;
+      font-size:9.6pt;letter-spacing:.1em;color:#5F5245}
+.cv-back .cta .arrow{color:#B08A5E}
+.cv-back .brand{position:absolute;left:0;right:0;bottom:16mm;text-align:center;
+      font-size:7.6pt;letter-spacing:.24em;color:#A08F7B}
+
+/* 책등 — 4㎜ 안팎으로 아주 좁다. 글자가 옆면으로 넘치지 않도록 가둔다. */
+.cv-spine{position:absolute;top:calc(-1*var(--bleed));height:calc(var(--trim-h) + 2*var(--bleed));
+      display:flex;align-items:center;justify-content:center;
+      writing-mode:vertical-rl;overflow:hidden;z-index:2}
+.cv-spine .s-title{font-size:7pt;font-weight:600;letter-spacing:.04em;color:#3B2E22;
+      line-height:1;white-space:nowrap}
+</style>
+</head>
+<body>

@@ -1,0 +1,9 @@
+
+const assert=require('assert/strict'),fs=require('fs'),os=require('os'),path=require('path');
+const auth=require('../.live-test-build/lib/office/server/auth');const api=require('../.live-test-build/app/api/office/story/route');
+(async()=>{const original=process.cwd(),secret=process.env.OFFICE_ADMIN_PASSWORD;const dir=fs.mkdtempSync(path.join(os.tmpdir(),'story-recovery-'));process.chdir(dir);process.env.OFFICE_ADMIN_PASSWORD='isolated-recovery-test-secret';
+try{const origin='http://127.0.0.1:3000',id='12345678-1234-1234-1234-123456789abc';const req=(id,authorized=true)=>new Request(origin+'/api/office/story?id='+id,{headers:authorized?{cookie:auth.sessionCookie(process.env.OFFICE_ADMIN_PASSWORD).split(';')[0]}:{}});
+assert.equal((await api.GET(req(id,false))).status,401);assert.equal((await api.GET(req('../escape'))).status,400);assert.equal((await (await api.GET(req(id))).json()).state,'missing');
+fs.mkdirSync('.office-data/stories',{recursive:true});const file='.office-data/stories/'+id+'.json';for(const state of ['running','unknown']){fs.writeFileSync(file,JSON.stringify({status:state}));assert.equal((await (await api.GET(req(id))).json()).state,state);}
+const result={id,title:'saved',chapters:[{title:'chapter',text:'saved story'}],note:'',model:'mock',createdAt:''};fs.writeFileSync(file,JSON.stringify({status:'completed',result}));assert.deepEqual((await (await api.GET(req(id))).json()).book,result);const before=fs.readFileSync(file,'utf8');await api.GET(req(id));assert.equal(fs.readFileSync(file,'utf8'),before);console.log('PASS authenticated read-only recovery, path validation, missing/running/unknown/completed states');
+}finally{process.chdir(original);if(secret===undefined)delete process.env.OFFICE_ADMIN_PASSWORD;else process.env.OFFICE_ADMIN_PASSWORD=secret;}})().catch(e=>{console.error(e);process.exitCode=1;});

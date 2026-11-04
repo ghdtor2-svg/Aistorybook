@@ -1,0 +1,38 @@
+{
+  "name": "ai-office-starter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "typecheck:browser": "tsc --noEmit --strict --skipLibCheck --target ES2017 --module esnext --moduleResolution bundler --types node,@playwright/test tests/*.spec.ts playwright.config.ts",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:engine": "tsc -p tsconfig.engine-tests.json && node scripts/storybook-test.cjs",
+    "test:browser": "playwright test",
+    "test:office": "tsc -p tsconfig.office-tests.json && node scripts/office-test.cjs",
+    "test:live": "tsc -p tsconfig.live-tests.json && node scripts/live-test.cjs",
+    "test:subscription": "tsc -p tsconfig.live-tests.json && node scripts/subscription-test.cjs"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "openai": "^5.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "three": "0.181.0",
+    "@react-three/fiber": "9.4.0",
+    "@react-three/drei": "10.7.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.0.0",
+    "@types/three": "0.181.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.32"
+  }
+}
