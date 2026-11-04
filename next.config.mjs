@@ -27,6 +27,18 @@ if (officeLocal && process.env.NETLIFY === 'true') {
  );
 }
 
+// 유료 결제는 공개 사이트에서 일어나면 안 됩니다 (대표 결정 2026-11-05).
+// 승인 플래그가 Netlify 빌드에 들어오면 빌드를 멈춥니다.
+// 3단계에서 온라인 생성을 열기로 하면 이 블록을 지우고 여는 것이 순서입니다.
+if (process.env.OFFICE_STORY_GENERATION_APPROVED && process.env.NETLIFY === 'true') {
+ throw new Error(
+  'OFFICE_STORY_GENERATION_APPROVED 가 Netlify 빌드에 설정되어 있습니다.\n' +
+  '이대로 배포하면 방문자가 동화 생성을 돌릴 수 있고 요금이 발생합니다.\n' +
+  'Netlify → Project configuration → Environment variables 에서 지우고 다시 배포하세요.\n' +
+  '의도적으로 온라인 생성을 여는 것이라면 next.config.mjs 의 이 검사를 먼저 지우세요.'
+ );
+}
+
 const base = ['tsx', 'ts', 'jsx', 'js'];
 
 /** @type {import('next').NextConfig} */

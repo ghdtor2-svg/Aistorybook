@@ -89,6 +89,16 @@
 > 바꿨습니다. 키가 환경에 떠다녀도 생성은 꺼진 상태로 남습니다.
 >
 > 배포 뒤에는 `GET /api/office/story` 로 **반드시 `available:false` 를 확인하세요.**
+>
+> 키의 출처는 **Netlify AI Gateway** 였습니다. Netlify 는 모든 실행 환경에
+> `OPENAI_API_KEY`·`ANTHROPIC_API_KEY`·`GEMINI_API_KEY` 와 각 base URL 을 자동으로
+> 넣어 주고, 사용량을 **Netlify 크레딧**으로 청구합니다(대표님 OpenAI 계정이 아닙니다).
+> 끄려면 Team settings → General → AI enablement 입니다. 이제 앱이 승인 플래그
+> 없이는 그 키를 쓰지 않으므로 꺼 두지 않아도 됩니다.
+>
+> 그리고 `OFFICE_STORY_GENERATION_APPROVED` 가 Netlify 빌드에 들어오면
+> `next.config.mjs` 가 **빌드를 실패시킵니다.** 3단계에서 온라인 생성을 열기로
+> 하면 그 검사를 먼저 지우는 것이 순서입니다.
 5. Deploy → 주소를 받으면 아래를 확인합니다.
 
 ## 배포 후 확인 목록
