@@ -39,7 +39,12 @@ export async function POST(request:Request){
    // 응답 본문에는 넣지 않습니다. 공개 사이트에 내부 사정을 알릴 이유가 없습니다.
    const detail=await response.text().catch(()=>'');
    console.error(`[story] OpenAI ${response.status}: ${detail.slice(0,500)}`);
-   return json({error:response.status===429?'AI 사용량 한도에 도달했습니다. 잠시 뒤 다시 시도하세요.':'동화 생성 서비스가 요청을 처리하지 못했습니다.'},response.status===429?429:502);
+   // 잔액 소진과 분당 제한이 둘 다 429 로 옵니다. 방문자에게 할 말이 서로 다릅니다.
+   // 잔액이 떨어졌으면 다시 눌러도 소용없으니 '잠시 뒤 다시'라고 하면 안 됩니다.
+   // 503 으로 돌려주면 화면이 대기 기록을 지워 버튼이 잠기지 않습니다.
+   const exhausted=response.status===429&&/insufficient_quota|credit_balance_exhausted/.test(detail);
+   if(exhausted)return json({error:'지금은 동화 만들기를 받을 수 없습니다. 준비가 되는 대로 다시 열립니다. 질문 답변과 책장은 그대로 사용할 수 있고, 저장한 내용은 사라지지 않습니다.'},503);
+   return json({error:response.status===429?'요청이 몰려 잠시 기다려야 합니다. 잠시 뒤 다시 시도해 주세요.':'동화 생성 서비스가 요청을 처리하지 못했습니다.'},response.status===429?429:502);
   }
   const payload=await response.json();const text=payload.output?.flatMap((item:any)=>item.content||[]).find((item:any)=>item.type==='output_text')?.text;
   if(typeof text!=='string')throw Error();const book=safeBook(JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/```\s*$/,'')),id);
