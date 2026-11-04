@@ -2,6 +2,9 @@
 import HomeLanding from './HomeLanding';
 import {useState} from 'react';
 import {agents,assignTask,type Assignment,type Result} from '../lib/agents';
+// 공개 배포에서는 사무실로 가는 길과 직원 배정 데모를 내보내지 않습니다.
+// next.config.mjs 가 같은 값으로 /office 라우트 자체를 빌드에서 뺍니다.
+const officeLocal=process.env.NEXT_PUBLIC_OFFICE_LOCAL==='1';
 export default function Home(){
  const [prompt,setPrompt]=useState('');const [busy,setBusy]=useState(false);
  const [results,setResults]=useState<Result[]>([]);const [error,setError]=useState('');
@@ -19,8 +22,8 @@ export default function Home(){
  }
  function editPrompt(value:string){setPrompt(value);setAssignment(null);setResults([]);setError('');}
  return <main>
-  <nav aria-label="고객 페이지"><a href="/office">직원 사무실 →</a>{" · "}<a href="/storybook">동화 서비스 →</a></nav><header><div><h1>AI OFFICE</h1><p className="muted">나의 이야기를 만드는 동화 플랫폼과 AI 직원 사무실</p></div><span className="pill">동화 만들기 · 내 책장</span></header>
-  <HomeLanding/><details><summary style={{cursor:'pointer',padding:16}}>직원 배정 데모 살펴보기</summary><section className="panel"><h2>AI 직원 조직</h2><p className="muted">시스템이 업무에 맞는 담당자를 자동 배정하고 필요한 직원에게 협업을 요청합니다.</p>
+  <nav aria-label="고객 페이지">{officeLocal&&<><a href="/office">직원 사무실 →</a>{" · "}</>}<a href="/storybook">동화 서비스 →</a></nav><header><div><h1>AI OFFICE</h1><p className="muted">{officeLocal?'나의 이야기를 만드는 동화 플랫폼과 AI 직원 사무실':'나의 이야기를 만드는 동화 플랫폼'}</p></div><span className="pill">동화 만들기 · 내 책장</span></header>
+  <HomeLanding/>{officeLocal&&<details><summary style={{cursor:'pointer',padding:16}}>직원 배정 데모 살펴보기</summary><section className="panel"><h2>AI 직원 조직</h2><p className="muted">시스템이 업무에 맞는 담당자를 자동 배정하고 필요한 직원에게 협업을 요청합니다.</p>
    <div className="grid">{agents.map(a=>{
     const selected=shown?.participants.includes(a.id);
     const result=results.find(r=>r.agentId===a.id);
@@ -38,7 +41,7 @@ export default function Home(){
    {error&&<p className="error" role="alert">{error}</p>}
   </section>
   {results.length>0&&<section className="panel" aria-live="polite"><h2>직원별 업무 결과</h2><p className="pill">데모 결과 · API 호출 없음</p>{results.map((r,i)=><article id={'result-'+r.agentId} key={r.agentId}><h3>{i+1}. {r.role} · {assignment?.lead===r.agentId?'주 담당':'협업'}</h3><div className="report">{r.content}</div></article>)}</section>}
- </details></main>;
+ </details>}</main>;
 }
 
 

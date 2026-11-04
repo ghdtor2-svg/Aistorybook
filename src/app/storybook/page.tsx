@@ -9,6 +9,8 @@ import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {coreQuestions,demoEngine,editSummary,fields,labels,newProfile,submitAnswer,type Field} from '../../lib/storybook/engine';
 import {restoreStory,type SavedStory} from '../../lib/storybook/storage';
 import {changeQuestion,QuestionConflictError,QUESTION_LOCK} from '../../lib/storybook/question-store';
+// 공개 배포에는 사무실로 가는 길을 넣지 않습니다. next.config.mjs 참고.
+const officeLocal=process.env.NEXT_PUBLIC_OFFICE_LOCAL==='1';
 export default function Storybook(){
  const [story,setStory]=useState<SavedStory|null>(null);const [ready,setReady]=useState(false);
  const [error,setError]=useState('');const [storageError,setStorageError]=useState('');const saveFailed=useRef(false);const storyRef=useRef(story);storyRef.current=story;const importedSave=useRef('');const expected=useRef<string|null>(null),frozen=useRef(false),conflict=useRef(false),epoch=useRef(0),pendingWrites=useRef(0);const [saving,setSaving]=useState(false);
@@ -34,7 +36,7 @@ export default function Storybook(){
  const progress=profile?Math.round(demoEngine.evaluate(profile.answers).resolvedGroups/5*100):0;
  const editingIndex=story?.editingId?profile?.answers.findIndex(a=>a.question.id===story.editingId):-1;
  return <main className="storybook">
-  <header><div><p className="eyebrow">나의 추억으로 만드는 동화</p><h1>이야기의 씨앗</h1></div><nav aria-label="서비스 이동" style={{display:'flex',gap:16,flexWrap:'wrap'}}><Link href="/">동화 홈</Link><Link href="/office">직원 사무실</Link></nav></header>
+  <header><div><p className="eyebrow">나의 추억으로 만드는 동화</p><h1>이야기의 씨앗</h1></div><nav aria-label="서비스 이동" style={{display:'flex',gap:16,flexWrap:'wrap'}}><Link href="/">동화 홈</Link>{officeLocal&&<Link href="/office">직원 사무실</Link>}</nav></header>
   <aside className="panel privacy"><b>이 브라우저에 임시 저장됩니다.</b><p>답변과 작성 중인 내용은 현재 브라우저의 저장소에 남습니다. 공용 기기에서는 작성 후 삭제해 주세요. 질문 답변은 브라우저에 저장됩니다. 아래에서 동화 생성을 선택하면 확인한 요약만 ChatGPT로 전달합니다.</p><p className="muted">질문 안내는 규칙 기반으로 진행합니다. 답변 길이·표지·누락 항목을 기준으로 질문을 선택하므로 의미를 정확히 이해하지 못할 수 있습니다. 원하지 않는 질문은 건너뛸 수 있습니다.</p></aside>
   {storageError&&<><p className="error" role="alert">{storageError}</p><StorageRescue keys={['ai-office:storybook:v1']} label="질문 저장 원문 내려받기"/>{story&&<section className="panel" aria-label="질문 화면 작성본 보관"><h2>저장하지 못한 작성 내용 보관</h2><p>아래 파일에는 현재 화면의 답변·작성 중인 내용·요약 수정이 들어갑니다. 저장 원문 파일과 다르며, 내려받아도 브라우저에 저장되는 것은 아닙니다.</p><button onClick={()=>downloadDraft('text')}>질문 화면 작성본 TXT 내려받기</button><button className="secondary" onClick={()=>downloadDraft('json')}>질문 화면 작성본 JSON 내려받기</button><p>JSON은 아래 질문 작성본 파일 불러오기에서 복원할 수 있습니다. 책장 백업 파일과는 다릅니다.</p><button className="secondary" disabled={saving||conflict.current} onClick={()=>void persist(true)}>현재 작성 내용 저장 다시 시도</button><button className="secondary" disabled={saving} onClick={()=>void reloadQuestions()}>최신 질문 저장본 불러오기</button></section>}</>}
   {saving&&<p role="status">질문 작성본 저장 중…</p>}<QuestionImport story={story} disabled={!ready||(!story&&!!storageError)} onBackup={()=>downloadDraft('json')} onApply={importDraft}/>{!ready?<p role="status">저장된 내용을 확인하고 있어요…</p>:!story?<section className="panel"><p>작성 내용이 없습니다.</p><button onClick={begin}>새로 시작하기</button><button className="secondary" onClick={()=>remove(false)}>저장 내용 삭제</button></section>:<>
