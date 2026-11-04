@@ -76,10 +76,17 @@
    [build.environment]
      NODE_VERSION = "20"
    ```
-4. **환경 변수는 아무것도 넣지 않습니다.**
-   - `NEXT_PUBLIC_OFFICE_LOCAL` 을 넣으면 **사무실이 인터넷에 공개됩니다.** 넣으면 빌드가 실패합니다.
-   - `OFFICE_STORY_GENERATION_APPROVED` 를 넣으면 동화 생성이 켜지고 **과금**됩니다.
+4. **환경 변수는 아래 둘만 넣습니다** (2026-11-05 온라인 생성을 연 뒤 기준).
+   - `OFFICE_STORY_GENERATION_APPROVED=1` — 동화 생성을 켭니다. 지우면 다시 꺼집니다.
+   - `OPENAI_API_KEY` — 내 OpenAI 키. **이걸 넣어야** Netlify AI Gateway 가 자동으로
+     넣는 키 대신 내 키를 씁니다. 그래야 지출이 내 선불 잔액 안에서 멈춥니다.
+   - `NEXT_PUBLIC_OFFICE_LOCAL` 은 **절대 넣지 마세요.** 사무실이 공개되고 빌드가 실패합니다.
    - `OFFICE_ADMIN_PASSWORD` 는 넣어도 소용없습니다 (`localOrigin()`이 먼저 막음).
+
+> **지출 상한이 성립하는 조건:** OpenAI 자동 충전(Auto recharge)이 꺼져 있어야 합니다.
+> 켜져 있으면 잔액이 떨어질 때마다 카드가 다시 결제되어 상한이 없습니다.
+> 방문자당 제한은 분당 8회(IP 기준)뿐이고, 이 숫자는 함수 인스턴스마다 따로 셉니다.
+> 전체 지출을 막는 것은 선불 잔액 하나뿐입니다.
 
 > **환경에는 내가 넣은 것만 들어 있지 않습니다 (2026-11-05 확인).**
 > 첫 배포에서 프로젝트 환경 변수를 **하나도 넣지 않았는데도** 런타임에
@@ -96,9 +103,10 @@
 > 끄려면 Team settings → General → AI enablement 입니다. 이제 앱이 승인 플래그
 > 없이는 그 키를 쓰지 않으므로 꺼 두지 않아도 됩니다.
 >
-> 그리고 `OFFICE_STORY_GENERATION_APPROVED` 가 Netlify 빌드에 들어오면
-> `next.config.mjs` 가 **빌드를 실패시킵니다.** 3단계에서 온라인 생성을 열기로
-> 하면 그 검사를 먼저 지우는 것이 순서입니다.
+> `OFFICE_STORY_GENERATION_APPROVED` 가 Netlify 빌드에 들어오면 빌드를 실패시키는
+> 검사가 있었습니다. **2026-11-05 대표 결정으로 그 검사를 지우고 온라인 생성을
+> 열었습니다** (친구들 시험용). 다시 닫으려면 Netlify 환경 변수에서 그 변수를
+> 지우고 재배포하면 됩니다.
 5. Deploy → 주소를 받으면 아래를 확인합니다.
 
 ## 배포 후 확인 목록

@@ -27,17 +27,16 @@ if (officeLocal && process.env.NETLIFY === 'true') {
  );
 }
 
-// 유료 결제는 공개 사이트에서 일어나면 안 됩니다 (대표 결정 2026-11-05).
-// 승인 플래그가 Netlify 빌드에 들어오면 빌드를 멈춥니다.
-// 3단계에서 온라인 생성을 열기로 하면 이 블록을 지우고 여는 것이 순서입니다.
-if (process.env.OFFICE_STORY_GENERATION_APPROVED && process.env.NETLIFY === 'true') {
- throw new Error(
-  'OFFICE_STORY_GENERATION_APPROVED 가 Netlify 빌드에 설정되어 있습니다.\n' +
-  '이대로 배포하면 방문자가 동화 생성을 돌릴 수 있고 요금이 발생합니다.\n' +
-  'Netlify → Project configuration → Environment variables 에서 지우고 다시 배포하세요.\n' +
-  '의도적으로 온라인 생성을 여는 것이라면 next.config.mjs 의 이 검사를 먼저 지우세요.'
- );
-}
+// 온라인 동화 생성은 2026-11-05 대표 결정으로 열었습니다. 친구들 시험용입니다.
+// 그 전까지는 승인 플래그가 Netlify 빌드에 들어오면 빌드를 멈추는 검사가 여기 있었고,
+// 그 검사를 지우는 행위 자체가 '의도적으로 연다'는 뜻이었습니다. 기록으로 남깁니다.
+//
+// 다시 닫으려면 Netlify 환경 변수에서 OFFICE_STORY_GENERATION_APPROVED 를 지우고
+// 재배포하면 됩니다. 코드는 그대로 두어도 됩니다.
+//
+// 지출 상한은 OpenAI 선불 잔액입니다. 자동 충전이 꺼져 있어야 상한이 성립합니다
+// (2026-11-05 확인). 잔액이 떨어지면 라우트가 503 으로 바꿔 돌려주고,
+// 화면은 대기 기록을 남기지 않습니다.
 
 const base = ['tsx', 'ts', 'jsx', 'js'];
 
