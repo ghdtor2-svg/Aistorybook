@@ -33,7 +33,14 @@ export async function POST(request:Request){
   if(!/^[a-f0-9-]{36}$/.test(body?.id)||typeof body?.brief!=='string'||!body.brief.trim()||body.brief.length>4000)throw Error();
   id=body.id;fingerprint=createHash('sha256').update(body.brief).digest('hex');
   const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(90_000),body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4.1-mini',store:false,max_output_tokens:3500,input:[{role:'system',content:'한국어 어린이 창작 동화를 작성합니다. 입력된 개인정보를 추정하거나 보충하지 마세요. 사용자의 소재만 사용하고 JSON 객체만 출력하세요. 형식: {"title":"제목","chapters":[{"title":"장 제목","text":"완성된 본문"}],"note":"창작 안내"}. 3~5장, 장마다 완결된 본문을 씁니다.'},{role:'user',content:body.brief}]})});
-  if(!response.ok)return json({error:response.status===429?'AI 사용량 한도에 도달했습니다. 잠시 뒤 다시 시도하세요.':'동화 생성 서비스가 요청을 처리하지 못했습니다.'},response.status===429?429:502);
+  if(!response.ok){
+   // 위쪽 오류를 서버 로그에만 남깁니다. 방문자 문구만으로는 분당 제한인지
+   // 잔액 부족(insufficient_quota)인지 가릴 수 없어 운영 중에 손을 쓸 수 없습니다.
+   // 응답 본문에는 넣지 않습니다. 공개 사이트에 내부 사정을 알릴 이유가 없습니다.
+   const detail=await response.text().catch(()=>'');
+   console.error(`[story] OpenAI ${response.status}: ${detail.slice(0,500)}`);
+   return json({error:response.status===429?'AI 사용량 한도에 도달했습니다. 잠시 뒤 다시 시도하세요.':'동화 생성 서비스가 요청을 처리하지 못했습니다.'},response.status===429?429:502);
+  }
   const payload=await response.json();const text=payload.output?.flatMap((item:any)=>item.content||[]).find((item:any)=>item.type==='output_text')?.text;
   if(typeof text!=='string')throw Error();const book=safeBook(JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/```\s*$/,'')),id);
   return json(book);
