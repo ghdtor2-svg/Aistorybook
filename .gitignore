@@ -10,8 +10,10 @@ node_modules
 .test-build
 playwright-report
 test-results
+test-results-office-deadline
 
 .office-test-build
+.snapshot-test-build
 
 .office-data
 .live-test-build

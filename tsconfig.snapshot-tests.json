@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","compilerOptions":{"noEmit":false,"outDir":".snapshot-test-build","rootDir":"src/lib","module":"CommonJS","moduleResolution":"Node","incremental":false,"isolatedModules":false,"plugins":[]},"include":["src/lib/storage-snapshot.ts"],"exclude":["node_modules"]}
