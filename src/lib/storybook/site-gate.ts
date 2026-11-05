@@ -4,6 +4,11 @@
  * 대표 결정(2026-11-05): 동화에 표지·내지 디자인을 입히는 동안 공개 주소를 닫는다.
  * 친구들이 시험하던 중이라 반쯤 바뀐 화면을 보여 주지 않기 위해서다.
  *
+ * 대표 결정(2026-11-05, 같은 날 저녁): 표지·내지 작업이 끝나 다시 연다.
+ * 닫은 사유가 해소되었는지 검사로 확인한 뒤 열었다 — typecheck 와
+ * test:book / test:engine / test:snapshot / test:office / test:subscription /
+ * test:live / test:smoke 가 모두 통과했다. 기록으로 남긴다.
+ *
  * ── 닫히는 범위 ────────────────────────────────────────────────
  * middleware.ts 가 **모든 주소**에 이 페이지를 돌려줍니다. /api/office/story 도
  * 함께 막히므로 닫혀 있는 동안에는 유료 생성이 한 번도 일어나지 않습니다.
@@ -24,8 +29,8 @@ import {COVER_ART, ART_DEFS} from './book-art';
 import {BOOK_CSS, coverVars, coverVarText} from './book-design';
 import {SITE_NAME} from '../brand';
 
-/** 코드로 닫아 둔 상태. 다시 열 때 false 로 바꿉니다. */
-export const CLOSED_BY_CODE = true;
+/** 코드로 닫아 둔 상태. 다시 닫을 때 true 로 바꿉니다. */
+export const CLOSED_BY_CODE = false;
 
 export type GateEnv = {officeLocal?: string; siteOpen?: string};
 
