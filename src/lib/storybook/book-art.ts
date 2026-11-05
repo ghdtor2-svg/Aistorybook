@@ -70,6 +70,13 @@ const cloud = (x: number, y: number, s: number) => `<g class="bk-w" transform="t
 <ellipse cx="0" cy="0" rx="30" ry="13"/><ellipse cx="20" cy="-8" rx="20" ry="12"/><ellipse cx="-18" cy="-4" rx="16" ry="9"/></g></g>`;
 const bird = (x: number, y: number, s: number) => `<g class="bk-ln bk-lnt" transform="translate(${x},${y}) scale(${s})"><path d="M-9,0 C-5,-6 -2,-6 0,-2 C2,-6 5,-6 9,0"/></g>`;
 const star = (x: number, y: number, r: number) => `<circle style="fill:#FFF8E3" cx="${x}" cy="${y}" r="${r}"/>`;
+/** 새싹 — 밑동을 땅선에 맞추고 잎은 위로만 올린다. 땅선이 잎을 가로지르면 풍선처럼 보인다. */
+const sprout = (x: number, y: number, s = 1) => `<g transform="translate(${x},${y}) scale(${s})">
+<g class="bk-w"><path style="fill:#8CB86E" d="M0,-2 C-6,-9 -11,-9 -12,-5 C-8,-1 -2,-1 0,-2 Z"/>
+<path style="fill:#9EC47C" d="M0,-6 C5,-13 10,-13 11,-9 C7,-5 2,-5 0,-6 Z"/></g>
+<g class="bk-ln bk-lnt"><path d="M0,1 L0,-11"/>
+<path d="M0,-2 C-6,-9 -11,-9 -12,-5 C-8,-1 -2,-1 0,-2 Z"/>
+<path d="M0,-6 C5,-13 10,-13 11,-9 C7,-5 2,-5 0,-6 Z"/></g></g>`;
 
 /**
  * 겉 표지 전면 그림. 364×464 는 판형 175×225㎜ 와 같은 비율이라
@@ -129,16 +136,12 @@ ${tree(44, 306, 1.6, '#7FA86A')}${tree(104, 286, 1.1, '#9EC47C')}${tree(332, 312
 
 /** 내지 장 머리 밴드. 판면 폭을 꽉 채우고 글 위로는 걸치지 않습니다. */
 export const BAND_ART: {id: string; art: string}[] = [
- {id: 'sprout', art: `<g class="bk-w2"><path style="fill:#EEF5E4" d="M0,24 C60,12 180,12 242,24 L242,60 C180,68 60,68 0,60 Z"/></g>
-<g class="bk-w"><path style="fill:#CFE0B4" d="M0,46 C60,36 180,36 242,46 L242,68 L0,68 Z"/>
-<g style="fill:#8CB86E"><path d="M40,46 C34,38 34,30 40,28 C46,30 46,38 40,46 Z"/><path d="M40,46 C46,40 54,40 56,44 C52,50 44,50 40,46 Z"/>
-<path d="M86,48 C80,40 80,32 86,30 C92,32 92,40 86,48 Z"/><path d="M154,48 C148,40 148,32 154,30 C160,32 160,40 154,48 Z"/>
-<path d="M154,48 C160,42 168,42 170,46 C166,52 158,52 154,48 Z"/><path d="M200,46 C194,38 194,30 200,28 C206,30 206,38 200,46 Z"/></g></g>
-<g class="bk-ln bk-lnt"><path d="M0,46 C60,36 180,36 242,46"/>
-<path d="M40,46 C34,38 34,30 40,28 C46,30 46,38 40,46 Z"/><path d="M86,48 C80,40 80,32 86,30 C92,32 92,40 86,48 Z"/>
-<path d="M154,48 C148,40 148,32 154,30 C160,32 160,40 154,48 Z"/><path d="M200,46 C194,38 194,30 200,28 C206,30 206,38 200,46 Z"/></g>
-<g class="bk-w"><g style="fill:#F4B6C8"><ellipse cx="62" cy="16" rx="4.4" ry="2.8" transform="rotate(22 62 16)"/>
-<ellipse cx="184" cy="12" rx="4" ry="2.6" transform="rotate(-16 184 12)"/><ellipse cx="216" cy="30" rx="3.6" ry="2.4" transform="rotate(34 216 30)"/></g></g>`},
+ {id: 'sprout', art: `<g class="bk-w2"><path style="fill:#EEF5E4" d="M0,20 C60,10 180,10 242,20 L242,54 C180,60 60,60 0,54 Z"/></g>
+<g class="bk-w"><path style="fill:#CFE0B4" d="M0,50 C60,40 180,40 242,50 L242,68 L0,68 Z"/></g>
+<g class="bk-ln bk-lnt"><path d="M0,50 C60,40 180,40 242,50"/></g>
+${sprout(44, 47)}${sprout(96, 43, 0.82)}${sprout(158, 43)}${sprout(206, 47, 0.76)}
+<g class="bk-w"><g style="fill:#F4B6C8"><ellipse cx="68" cy="20" rx="4.4" ry="2.8" transform="rotate(22 68 20)"/>
+<ellipse cx="184" cy="16" rx="4" ry="2.6" transform="rotate(-16 184 16)"/><ellipse cx="222" cy="30" rx="3.6" ry="2.4" transform="rotate(34 222 30)"/></g></g>`},
  {id: 'hill', art: `<g class="bk-w2"><path style="fill:#E7F0F5" d="M0,16 C60,6 180,6 242,16 L242,52 C180,60 60,60 0,52 Z"/></g>
 <g class="bk-w"><path style="fill:#D4E4B8" d="M0,44 C48,30 104,52 150,40 C186,30 216,40 242,36 L242,68 L0,68 Z"/></g>
 ${tree(44, 60, 0.42, '#9EC47C')}${tree(196, 58, 0.34, '#88B26C')}

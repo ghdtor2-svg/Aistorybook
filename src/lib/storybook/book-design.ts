@@ -134,8 +134,10 @@ export const BOOK_CSS = `
  .book{--bk-paper:#fff}
  .book-cover{display:block;min-height:0;padding:0;margin:0 auto;max-width:none;text-align:center;
   box-shadow:none;border-radius:0;background:none;break-inside:avoid;page-break-inside:avoid}
- .book-cover-art{position:static;height:105mm;margin-bottom:10mm}
- .book-cover-art svg{height:100%}
+ /* 판형(175×225㎜)과 같은 비율로 깔아 그림이 잘리지 않게 한다.
+    납작한 띠로 눌러 넣으면 나무 윗부분과 하늘이 잘려 나간다. */
+ .book-cover-art{position:static;width:min(94mm,100%);aspect-ratio:364/464;height:auto;margin:0 auto 9mm}
+ .book-cover-art svg{width:100%;height:100%}
  .book-cover::after,.book-cover-bind{display:none}
  .book-cover-plate{background:none;padding:.7em 0;margin-bottom:.8em}
  .book-pages{border:0;border-radius:0;padding:0;margin:0;box-shadow:none;background:#fff}
