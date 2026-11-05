@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {createHash} from 'node:crypto';
-import {parseGeneratedBook} from '../../../../lib/storybook/books';
+import {parseGeneratedBook,TALKING_POINT_LIMIT,TALKING_POINT_LENGTH} from '../../../../lib/storybook/books';
+import {DEFAULT_THEME,isTheme,themeGuidance} from '../../../../lib/storybook/themes';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -20,7 +21,15 @@ function rateLimit(request:Request){const ip=request.headers.get('x-nf-client-co
  * OFFICE_CODEX_FIRST_RUN_APPROVED)과 같은 방식입니다.
  */
 function generationApproved(){return process.env.OFFICE_STORY_GENERATION_APPROVED==='1'&&Boolean(process.env.OPENAI_API_KEY);}
-function safeBook(value:any,id:string){if(!value||typeof value.title!=='string'||!value.title.trim()||value.title.length>160||!Array.isArray(value.chapters)||value.chapters.length<1||value.chapters.length>8||!value.chapters.every((c:any)=>c&&typeof c.title==='string'&&c.title.length<=160&&typeof c.text==='string'&&c.text.trim()&&c.text.length<=10000))throw Error('invalid response');return parseGeneratedBook({id,title:value.title,chapters:value.chapters,note:typeof value.note==='string'?value.note.slice(0,500):'창작 동화입니다.',model:process.env.OPENAI_MODEL||'gpt-4.1-mini',createdAt:new Date().toISOString()},id);}
+/**
+ * 읽은 뒤 나눌 대화 질문을 추립니다. 모델이 안 주거나 형식이 어긋나면 빈 목록입니다.
+ * 이것 때문에 생성을 통째로 버리지 않습니다 — 동화 본문은 이미 돈을 쓴 결과입니다.
+ */
+function safeTalkingPoints(value:unknown):string[]{
+ if(!Array.isArray(value))return [];
+ return value.filter((item:unknown)=>typeof item==='string'&&item.trim()&&item.length<=TALKING_POINT_LENGTH).slice(0,TALKING_POINT_LIMIT);
+}
+function safeBook(value:any,id:string,theme:string){if(!value||typeof value.title!=='string'||!value.title.trim()||value.title.length>160||!Array.isArray(value.chapters)||value.chapters.length<1||value.chapters.length>8||!value.chapters.every((c:any)=>c&&typeof c.title==='string'&&c.title.length<=160&&typeof c.text==='string'&&c.text.trim()&&c.text.length<=10000))throw Error('invalid response');return parseGeneratedBook({id,title:value.title,chapters:value.chapters,note:typeof value.note==='string'?value.note.slice(0,500):'창작 동화입니다.',model:process.env.OPENAI_MODEL||'gpt-4.1-mini',createdAt:new Date().toISOString(),theme,talkingPoints:safeTalkingPoints(value.talkingPoints)},id);}
 export async function POST(request:Request){
  if(!sameOrigin(request))return json({error:'요청 출처를 확인할 수 없습니다.'},403);
  if(!rateLimit(request))return json({error:'요청이 많습니다. 잠시 후 다시 시도하세요.'},429);
@@ -31,8 +40,11 @@ export async function POST(request:Request){
  try{
   const raw=await request.text();if(raw.length>6000)throw Error();const body=JSON.parse(raw);
   if(!/^[a-f0-9-]{36}$/.test(body?.id)||typeof body?.brief!=='string'||!body.brief.trim()||body.brief.length>4000)throw Error();
+  // 모르는 결이 와도 생성을 거부하지 않습니다. 기본값으로 씁니다.
+  const theme=isTheme(body?.theme)?body.theme:DEFAULT_THEME;
+  const guidance=themeGuidance(theme);
   id=body.id;fingerprint=createHash('sha256').update(body.brief).digest('hex');
-  const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(90_000),body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4.1-mini',store:false,max_output_tokens:3500,input:[{role:'system',content:'한국어 어린이 창작 동화를 작성합니다. 입력된 개인정보를 추정하거나 보충하지 마세요. 사용자의 소재만 사용하고 JSON 객체만 출력하세요. 형식: {"title":"제목","chapters":[{"title":"장 제목","text":"완성된 본문"}],"note":"창작 안내"}. 3~5장, 장마다 완결된 본문을 씁니다.'},{role:'user',content:body.brief}]})});
+  const response=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},signal:AbortSignal.timeout(90_000),body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4.1-mini',store:false,max_output_tokens:4000,input:[{role:'system',content:'한국어 어린이 창작 동화를 작성합니다. 입력된 개인정보를 추정하거나 보충하지 마세요. 사용자의 소재만 사용하고 JSON 객체만 출력하세요. 형식: {"title":"제목","chapters":[{"title":"장 제목","text":"완성된 본문"}],"note":"창작 안내","talkingPoints":["질문1","질문2","질문3"]}. 3~5장, 장마다 완결된 본문을 씁니다. talkingPoints 는 동화를 함께 읽은 어른이 아이에게 물어볼 열린 질문 3개입니다. 정답이 있는 질문이나 교훈을 확인하는 질문은 쓰지 말고, 아이가 자기 생각과 마음을 말하게 하는 질문을 씁니다.'+(guidance?' '+guidance:'')},{role:'user',content:body.brief}]})});
   if(!response.ok){
    // 위쪽 오류를 서버 로그에만 남깁니다. 방문자 문구만으로는 분당 제한인지
    // 잔액 부족(insufficient_quota)인지 가릴 수 없어 운영 중에 손을 쓸 수 없습니다.
@@ -59,7 +71,7 @@ export async function POST(request:Request){
    console.log(`[story] usage model=${process.env.OPENAI_MODEL||'gpt-4.1-mini'} in=${usage.input_tokens} out=${usage.output_tokens}${cost}`);
   }
   const text=payload.output?.flatMap((item:any)=>item.content||[]).find((item:any)=>item.type==='output_text')?.text;
-  if(typeof text!=='string')throw Error();const book=safeBook(JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/```\s*$/,'')),id);
+  if(typeof text!=='string')throw Error();const book=safeBook(JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/```\s*$/,'')),id,theme);
   return json(book);
  }catch{return json({error:'동화를 생성하지 못했습니다. 입력 내용을 확인한 뒤 다시 시도하세요.'},400);}
 }
