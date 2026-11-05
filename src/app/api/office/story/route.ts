@@ -46,7 +46,19 @@ export async function POST(request:Request){
    if(exhausted)return json({error:'지금은 동화 만들기를 받을 수 없습니다. 준비가 되는 대로 다시 열립니다. 질문 답변과 책장은 그대로 사용할 수 있고, 저장한 내용은 사라지지 않습니다.'},503);
    return json({error:response.status===429?'요청이 몰려 잠시 기다려야 합니다. 잠시 뒤 다시 시도해 주세요.':'동화 생성 서비스가 요청을 처리하지 못했습니다.'},response.status===429?429:502);
   }
-  const payload=await response.json();const text=payload.output?.flatMap((item:any)=>item.content||[]).find((item:any)=>item.type==='output_text')?.text;
+  const payload=await response.json();
+  // 생성 1건이 실제로 얼마를 썼는지 서버 로그에 남깁니다. 이게 없으면 지출을
+  // 추정밖에 할 수 없고, 선불 잔액이 언제 바닥날지 가늠이 안 됩니다.
+  // 단가는 일부러 코드에 박지 않습니다. 모델마다 다르고 바뀝니다.
+  // 두 변수를 넣어 둔 경우에만 환산 금액까지 적습니다.
+  const usage=payload.usage;
+  if(usage){
+   const inPrice=Number(process.env.OFFICE_INPUT_USD_PER_MILLION),outPrice=Number(process.env.OFFICE_OUTPUT_USD_PER_MILLION);
+   const priced=Number.isFinite(inPrice)&&Number.isFinite(outPrice)&&inPrice>0&&outPrice>0;
+   const cost=priced?` usd=${((usage.input_tokens*inPrice+usage.output_tokens*outPrice)/1_000_000).toFixed(5)}`:'';
+   console.log(`[story] usage model=${process.env.OPENAI_MODEL||'gpt-4.1-mini'} in=${usage.input_tokens} out=${usage.output_tokens}${cost}`);
+  }
+  const text=payload.output?.flatMap((item:any)=>item.content||[]).find((item:any)=>item.type==='output_text')?.text;
   if(typeof text!=='string')throw Error();const book=safeBook(JSON.parse(text.replace(/^```(?:json)?\s*/,'').replace(/```\s*$/,'')),id);
   return json(book);
  }catch{return json({error:'동화를 생성하지 못했습니다. 입력 내용을 확인한 뒤 다시 시도하세요.'},400);}
