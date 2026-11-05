@@ -1,5 +1,5 @@
 ﻿{
  "extends":"./tsconfig.json",
- "compilerOptions":{"noEmit":false,"outDir":".test-build","rootDir":"src/lib/storybook","module":"CommonJS","moduleResolution":"Node","incremental":false,"isolatedModules":false,"plugins":[]},
+ "compilerOptions":{"noEmit":false,"outDir":".test-build","rootDir":"src/lib","module":"CommonJS","moduleResolution":"Node","incremental":false,"isolatedModules":false,"plugins":[]},
  "include":["src/lib/storybook/**/*.ts"],"exclude":["node_modules"]
 }
