@@ -1,11 +1,11 @@
 import {NextResponse} from 'next/server';
+import {sameOrigin} from '../../../../../lib/storybook/same-origin';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 // 그림 한 장에 10~20초가 걸립니다. 플랫폼 기본 제한(10초)으로는 늘 끊깁니다.
 export const maxDuration=60;
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store'}});
 const requests=new Map<string,{count:number;reset:number}>();
-function sameOrigin(request:Request){const origin=request.headers.get('origin');return !origin||origin===new URL(request.url).origin;}
 /**
  * 그림은 글보다 훨씬 비쌉니다. 글(분당 8회)보다 촘촘하게 막습니다.
  * 한 권에 장이 다섯이면 다섯 번 부르므로, 분당 6회면 한 권을 여유 있게 그립니다.

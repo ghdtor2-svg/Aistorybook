@@ -1,5 +1,6 @@
 import {NextResponse} from 'next/server';
 import {createHash} from 'node:crypto';
+import {sameOrigin} from '../../../../lib/storybook/same-origin';
 import {parseGeneratedBook,TALKING_POINT_LIMIT,TALKING_POINT_LENGTH} from '../../../../lib/storybook/books';
 import {DEFAULT_THEME,isTheme,themeGuidance} from '../../../../lib/storybook/themes';
 
@@ -7,7 +8,6 @@ export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'no-store'}});
 const requests=new Map<string,{count:number;reset:number}>();
-function sameOrigin(request:Request){const origin=request.headers.get('origin');return !origin||origin===new URL(request.url).origin;}
 function rateLimit(request:Request){const ip=request.headers.get('x-nf-client-connection-ip')||request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()||'unknown';const now=Date.now();const entry=requests.get(ip);if(entry&&entry.reset>now&&entry.count>=8)return false;if(!entry||entry.reset<=now)requests.set(ip,{count:1,reset:now+60_000});else entry.count++;return true;}
 /**
  * 유료 호출을 켜려면 승인 플래그와 키가 둘 다 있어야 합니다.

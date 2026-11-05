@@ -181,3 +181,27 @@ assert.ok(legacyDoc.startsWith('<!doctype html>'));
 assert.ok(!legacyDoc.includes('읽고 나서 함께 나눌 이야기'));
 assert.ok(bookDocument({...book,talkingPoints:undefined},[]).startsWith('<!doctype html>'));
 console.log('PASS downloaded file embeds only stored images, stays request-free, and escapes talking points');
+
+// ── 요청 출처 검사 ────────────────────────────────────────────────────
+const {sameOrigin}=require('../.test-build/storybook/same-origin');
+const req=(headers,url='http://localhost:3000/api/office/story')=>({url,headers:{get:name=>headers[name]??null}});
+// 2026-11-05 에 실제로 뒤집혀 있던 경우. 개발 서버를 127.0.0.1 로 띄우면
+// request.url 이 localhost 로 잡혀, 진짜 우리 화면이 막히고 남이 통과했다.
+assert.equal(sameOrigin(req({origin:'http://127.0.0.1:3000',host:'127.0.0.1:3000'})),true,'브라우저가 붙은 곳과 같으면 통과해야 한다');
+assert.equal(sameOrigin(req({origin:'http://localhost:3000',host:'127.0.0.1:3000'})),false,'붙은 곳과 다르면 막아야 한다');
+// 바깥 사이트는 어떤 경우에도 막는다.
+assert.equal(sameOrigin(req({origin:'https://evil.example',host:'nangman-hanjul.netlify.app'},'https://nangman-hanjul.netlify.app/api/office/story')),false);
+assert.equal(sameOrigin(req({origin:'https://nangman-hanjul.netlify.app.evil.example',host:'nangman-hanjul.netlify.app'})),false);
+// 공개 배포에서 정상 요청.
+assert.equal(sameOrigin(req({origin:'https://nangman-hanjul.netlify.app',host:'nangman-hanjul.netlify.app'},'https://nangman-hanjul.netlify.app/api/office/story')),true);
+// 프록시가 원래 호스트를 따로 넘겨 주는 경우.
+assert.equal(sameOrigin(req({origin:'https://nangman-hanjul.netlify.app','x-forwarded-host':'nangman-hanjul.netlify.app',host:'internal.local'})),true);
+// Host 가 없으면 예전 방식으로 떨어진다.
+assert.equal(sameOrigin(req({origin:'http://localhost:3000'})),true);
+assert.equal(sameOrigin(req({origin:'http://127.0.0.1:3000'})),false);
+// Origin 이 없는 요청은 예전처럼 통과시킨다(분당 제한과 승인 플래그가 막는다).
+assert.equal(sameOrigin(req({})),true);
+// 망가진 Origin 은 막는다.
+assert.equal(sameOrigin(req({origin:'아무거나'})),false);
+assert.equal(sameOrigin(req({origin:''})),true);
+console.log('PASS origin check follows the host the browser actually reached, not a rebuilt URL');
