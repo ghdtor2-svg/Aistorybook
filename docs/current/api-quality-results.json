@@ -1,0 +1,38 @@
+[
+  {
+    "style": "soft-clay",
+    "index": 0,
+    "kind": "cover",
+    "httpStatus": 200,
+    "elapsedMs": 82314,
+    "model": "gpt-image-2",
+    "quality": "high"
+  },
+  {
+    "style": "soft-clay",
+    "index": 1,
+    "kind": "panorama",
+    "httpStatus": 200,
+    "elapsedMs": 47041,
+    "model": "gpt-image-2",
+    "quality": "high"
+  },
+  {
+    "style": "watercolor",
+    "index": 0,
+    "kind": "cover",
+    "httpStatus": 200,
+    "elapsedMs": 88414,
+    "model": "gpt-image-2",
+    "quality": "high"
+  },
+  {
+    "style": "watercolor",
+    "index": 1,
+    "kind": "panorama",
+    "httpStatus": 200,
+    "elapsedMs": 52499,
+    "model": "gpt-image-2",
+    "quality": "high"
+  }
+]

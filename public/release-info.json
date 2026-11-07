@@ -1,0 +1,13 @@
+{
+  "version": "2026-11-07-quality-proof-v1",
+  "features": [
+    "distinct-style-examples",
+    "seasons-tower-home-preview",
+    "actual-api-quality-proof"
+  ],
+  "verifiedStyles": [
+    "soft-clay",
+    "watercolor"
+  ],
+  "publicGenerationReady": false
+}

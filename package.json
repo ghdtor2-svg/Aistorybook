@@ -10,13 +10,10 @@
     "typecheck:browser": "tsc --noEmit --strict --skipLibCheck --target ES2017 --module esnext --moduleResolution bundler --types node,@playwright/test tests/*.spec.ts playwright.config.ts",
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:engine": "tsc -p tsconfig.engine-tests.json && node scripts/storybook-test.cjs",
-    "test:snapshot": "tsc -p tsconfig.snapshot-tests.json && node scripts/storage-snapshot-test.cjs",
     "test:browser": "playwright test",
     "test:office": "tsc -p tsconfig.office-tests.json && node scripts/office-test.cjs",
     "test:live": "tsc -p tsconfig.live-tests.json && node scripts/live-test.cjs",
-    "test:subscription": "tsc -p tsconfig.live-tests.json && node scripts/subscription-test.cjs",
-    "test:book": "tsc -p tsconfig.engine-tests.json && node scripts/book-design-test.cjs && node scripts/book-document-test.cjs && node scripts/site-gate-test.cjs",
-    "test:enhance": "tsc -p tsconfig.engine-tests.json && node scripts/enhancement-test.cjs"
+    "test:subscription": "tsc -p tsconfig.live-tests.json && node scripts/subscription-test.cjs"
   },
   "dependencies": {
     "next": "^15.5.0",

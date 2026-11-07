@@ -1,0 +1,62 @@
+[
+  {
+    "id": "watercolor",
+    "prompt": "Use case: illustration-story. Create ONE finished premium children's-book illustration, landscape 3:2, no lettering or border. Style demonstration for traditional TRANSPARENT WATERCOLOR: luminous translucent pigment washes, visible cold-press paper, soft wet-on-wet blooms, feathered edges and reserved white paper, delicate painted contours. Subject chosen to reveal this medium: a little red fox sheltering under a large green leaf beside a rain-filled lily pond, pale lavender morning mist, airy white sky, pink lotus, reflected ripples. Intimate poetic composition, gentle expressive animal, whole fox in frame. Clearly watercolor by hand, not 3D, not vector, not oil or pastel. This is a distinct standalone example for a style gallery, polished and beautiful at thumbnail size.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "gouache",
+    "prompt": "Use case: illustration-story. Make ONE premium finished children's-story art-style example, landscape 3:2. An adventurous small badger in a mustard coat carrying a basket of apples through an autumn orchard. OPAQUE GOUACHE children's-book painting: flat matte pigment, bold simplified organic shapes, richly layered brush strokes, warm rust red and teal, graphic foliage, paper texture. Absolutely not transparent watercolor and not 3D. Whole important characters within the frame, clear readable composition at small size, no typography, no labels, no logos, no borders. Emphasize the named medium so it is immediately recognizable.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "lyrical-animation",
+    "prompt": "Use case: illustration-story. Make ONE premium finished children's-story art-style example, landscape 3:2. A young child in a red raincoat and a giant gentle forest spirit made of leaves standing at a tiny countryside train stop under a breathtaking summer sky. LYRICAL HAND-DRAWN ANIMATION: crisp expressive character linework, intricately hand-painted lush backgrounds, cinematic cloud lighting and atmospheric depth, vivid cel colors. Original characters, not existing movie characters. Clearly animation, not plush or watercolor. Whole important characters within the frame, clear readable composition at small size, no typography, no labels, no logos, no borders. Emphasize the named medium so it is immediately recognizable.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "hero-comics",
+    "prompt": "Use case: illustration-story. Make ONE premium finished children's-story art-style example, landscape 3:2. An original cheerful child superhero with a yellow scarf and cobalt suit leaps between friendly floating islands, rescuing a tiny lost robot. HERO COMIC illustration: powerful low camera angle, confident thick black ink contours, flat bold reds/yellows/blues, dramatic foreshortening, visible halftone dots, radial motion lines. One heroic scene, no panels, no violence, no letters. Obviously printed American comic aesthetic, not painterly or 3D. Whole important characters within the frame, clear readable composition at small size, no typography, no labels, no logos, no borders. Emphasize the named medium so it is immediately recognizable.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "soft-clay",
+    "prompt": "Use case: illustration-story. ONE beautiful children's-book style example, landscape 3:2. A friendly little round ochre dragon with tiny turquoise wings baking star-shaped cookies in a cozy miniature kitchen. SOFT SCULPTED CLAY: handcrafted rounded clay character, subtle fingerprints in clay, plump sculpted forms, tactile miniature props, cinematic warm lamp lighting, shallow depth of field. Clearly a dimensional clay diorama, no wool fur, no painted outlines. Keep whole subject safe inside frame. Gallery image, immediately identifiable medium, no text, labels, logos or border.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "colored-pencil",
+    "prompt": "Use case: illustration-story. ONE beautiful children's-book style example, landscape 3:2. A young rabbit in a little blue vest studying red berries and wildflowers with a magnifying glass in a woodland meadow. COLORED PENCIL illustration on warm cream paper: highly visible fine pencil hatching, layered colored strokes, grain showing through pigment, delicately drawn whiskers, rich green leaves and natural botanical details. Handmade dry pencil texture must be obvious, not watercolor. Keep whole subject safe inside frame. Gallery image, immediately identifiable medium, no text, labels, logos or border.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "pastel",
+    "prompt": "Use case: illustration-story. ONE beautiful children's-book style example, landscape 3:2. A sleepy baby polar bear curled up on a fluffy cloud above a mauve and peach twilight sea, tiny gold stars and a crescent moon. SOFT CHALK PASTEL on toothy paper: broad velvety dusty pigment, obvious chalk grain, softly smudged edges, luminous apricot lavender and powder blue color fields, dreamy storybook simplicity. Visibly chalk drawing, no sharp outlines, not 3D or watercolor. Keep whole subject safe inside frame. Gallery image, immediately identifiable medium, no text, labels, logos or border.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "ink-wash",
+    "prompt": "Use case: illustration-story. ONE premium children's storybook medium showcase, landscape 3:2. A graceful white crane and its small chick standing on a misty riverbank beneath a bent pine tree, distant mountains, one red sun. EAST ASIAN INK AND LIGHT COLOR WASH: expressive calligraphic black brushwork, large unpainted ivory paper areas, dry-brush pine needles, minimal muted mineral green and cinnabar touches, elegant breathing space. Authentic ink-painting medium is dominant, no writing or seals. Entire main subjects in frame, clear charming composition, no text, labels, logos, or frame.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "oil-painting",
+    "prompt": "Use case: illustration-story. ONE premium children's storybook medium showcase, landscape 3:2. A small wooden sailboat carrying a brave child and a friendly golden dog on a glowing sea at sunset. TRADITIONAL OIL PAINTING: sumptuous thick impasto strokes, visible canvas weave, luminous golden light on dark ultramarine waves, rich layered pigment and painterly edges. Romantic storybook warmth with fully visible boat, not photorealism, not digital smooth shading, no watercolor. Entire main subjects in frame, clear charming composition, no text, labels, logos, or frame.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  },
+  {
+    "id": "felt",
+    "prompt": "Use case: illustration-story. ONE premium children's storybook medium showcase, landscape 3:2. A tiny hedgehog wearing a moss-green scarf offering a red mushroom to a little mouse outside a pumpkin cottage. NEEDLE-FELTED WOOL MINIATURE: visibly fuzzy wool fibers and needle marks on every creature and prop, handcrafted soft felt scenery, earthy orange ochre and green, close diorama view, gentle diffuse light and depth of field. A real tactile wool craft world, not smooth clay, not painting. Entire main subjects in frame, clear charming composition, no text, labels, logos, or frame.",
+    "source": "built-in-image-generation",
+    "notAnApiBenchmark": true
+  }
+]

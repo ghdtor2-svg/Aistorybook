@@ -4,7 +4,7 @@ test('confirmed profile generates a readable editable saved book and downloads i
  await page.goto('/storybook');for(let i=0;i<15;i++){const skip=page.getByRole('button',{name:'이 질문 건너뛰기',exact:true});if(!await skip.count())break;await skip.click();}
  await page.getByRole('button',{name:'내용 최종 확인',exact:true}).click();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'확인한 내용으로 동화 만들기'}).click();await expect(page.getByRole('heading',{name:'하늘의 작은 모험'})).toBeVisible();
  await page.getByRole('button',{name:'동화 수정',exact:true}).click();await page.getByLabel('동화 본문 1').fill('수정된 이야기입니다.');await page.getByRole('button',{name:'수정 마치기 · 자동 저장됨'}).click();await page.reload();await expect(page.getByText('수정된 이야기입니다.',{exact:true})).toBeVisible();expect(calls).toBe(1);
- const download=page.waitForEvent('download');await page.getByRole('button',{name:'동화 내려받기'}).click();expect((await download).suggestedFilename()).toBe('my-story.txt');
+ await expect(page.getByRole('button',{name:'동화 내려받기'})).toHaveCount(0);await expect(page.getByText('선물용 PDF 안내',{exact:true})).toBeVisible();
 });
 test('chat command is persisted and can be handed to GPT without changing existing story data',async({page})=>{
  await page.goto('/office');await page.getByLabel('직원에게 세부 지시').fill('모바일 읽기 화면 개선');await page.getByRole('button',{name:'지시 저장',exact:true}).click();await expect(page.getByRole('log')).toContainText('모바일 읽기 화면 개선');await page.reload();await expect(page.getByRole('log')).toContainText('모바일 읽기 화면 개선');await expect(page.getByRole('button',{name:'저장한 지시로 GPT 협업 시작'})).toBeVisible();

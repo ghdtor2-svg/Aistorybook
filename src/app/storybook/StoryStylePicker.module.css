@@ -1,0 +1,44 @@
+.picker {
+  margin: 24px 0;
+  padding: clamp(14px, 3vw, 24px);
+  min-width: 0;
+  border: 1px solid #d9cdb7;
+  border-radius: 18px;
+  background: #fffaf2;
+  color: #3c3547;
+}
+
+.picker legend { padding: 0 8px; font-weight: 700; }
+.picker p { margin-top: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.card { display: block; margin: 0; border: 2px solid transparent; border-radius: 12px; overflow: hidden; background: #f1e9db; cursor: pointer; }
+.card[data-selected='true'] { border-color: #78613e; background: #f5e7cb; }
+.card:focus-within { outline: 3px solid #8872ac; outline-offset: 3px; }
+.card img { display: block; width: 100%; height: auto; }
+.card span { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; padding: 10px; }
+.card strong { font-size: .95rem; }
+.card small { color: #755530; font-size: .75rem; }
+.card input, .random input { width: 18px; height: 18px; accent-color: #78613e; }
+.random { display: flex; align-items: center; gap: 8px; margin: 18px 0 12px; min-height: 44px; }
+.picker:disabled .card { cursor: default; opacity: .7; }
+.option { min-width: 0; }
+.option .description { font-size: 13px; line-height: 1.6; margin: 10px 4px 0; color: #6e6259; }
+.option .previewButton { margin: 6px 0 0; padding: 8px 10px; background: transparent; color: #654b82; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.selection { margin: 16px 0 0; padding: 12px; background: #f2e9df; border-radius: 10px; font-size: 14px; line-height: 1.7; }
+.viewer { width: min(1000px,94vw); max-width: 94vw; max-height: 94dvh; padding: 20px; border: 1px solid #d9cdb7; border-radius: 18px; background: #fffaf2; color: #3c3547; }
+.viewer::backdrop { background: #201a2cbb; }
+.viewerHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.viewerHead h3 { margin: 0; }
+.viewerHead button { margin: 0; }
+.viewer img { display: block; width: 100%; height: auto; }
+.proof { margin-top: 24px; padding-top: 18px; border-top: 1px solid #d9cdb7; scroll-margin-top: 24px; }
+.proof h3 { font-size: 17px; margin: 0 0 10px; }
+.proof p { font-size: 13px; line-height: 1.8; }
+.proof summary { padding: 10px 0; cursor: pointer; font-weight: 700; }
+.proof figure { margin: 16px 0; }
+.proof img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.proof figcaption { font-size: 13px; line-height: 1.8; margin-top: 8px; }
+@media (max-width: 620px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .card span { padding: 8px; }
+}

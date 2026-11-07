@@ -1,6 +1,6 @@
 ﻿const assert=require('node:assert/strict');
-const {newProfile,submitAnswer,demoEngine,editSummary}=require('../.test-build/storybook/engine.js');
-const {saveStory,restoreStory,deleteStory,STORAGE_KEY}=require('../.test-build/storybook/storage.js');
+const {newProfile,submitAnswer,demoEngine,editSummary}=require('../.test-build/engine.js');
+const {saveStory,restoreStory,deleteStory,STORAGE_KEY}=require('../.test-build/storage.js');
 const answer=(p,text,skip=false)=>submitAnswer(p,p.currentQuestion,text,skip);
 let p=newProfile();const seen=[];
 while(p.currentQuestion){seen.push(p.currentQuestion);p=answer(p,'가');assert.ok(seen.length<=15);}

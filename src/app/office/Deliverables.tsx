@@ -19,7 +19,7 @@ function Social({file}:{file:OutputFile}){
  }
  return <><div className="social-art" style={{background:social.background,color:social.color}}><h4>{social.title}</h4><p>{social.body}</p><small>{social.footer}</small></div><button onClick={png}>게시 이미지 PNG 다운로드 · 1080×1080</button>{error&&<p role="alert">{error}</p>}</>;
 }
-function FileView({file}:{file:OutputFile}){
+export function FileView({file}:{file:OutputFile}){
  const [width,setWidth]=useState<'100%'|'390px'>('100%');
 
  const html=file.name.endsWith('.html');const doc=file.name.endsWith('.md');

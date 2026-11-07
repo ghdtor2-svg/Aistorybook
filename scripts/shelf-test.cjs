@@ -1,4 +1,4 @@
-const assert=require('assert/strict');const {changeBook,addBook}=require('../.test-build/storybook/shelf');
+const assert=require('assert/strict');const {changeBook,addBook}=require('../.test-build/shelf');
 const original={id:'one',title:'원본',chapters:[{title:'장',text:'내용'}],note:'',model:'mock',createdAt:''},other={...original,id:'two',title:'다른 책'};let raw=JSON.stringify([original,other]);const store={getItem(){return raw},setItem(key,value){raw=value}};
 changeBook(store,original,{...original,title:'수정'});assert.equal(JSON.parse(raw)[1].title,'다른 책');const before=raw;assert.throws(()=>changeBook(store,original,null));assert.equal(raw,before);
 const next=addBook(store,{...original,id:'three'});assert.equal(next.length,3);assert.equal(next[1].title,'수정');assert.equal(addBook(store,original).find(b=>b.id==='one').title,'수정');changeBook(store,other,null);assert.equal(JSON.parse(raw).length,2);assert.throws(()=>changeBook(store,other,other));console.log('PASS per-book compare-before-write, unrelated books preserved, conflict unchanged, add merges and deleted book not revived');

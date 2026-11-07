@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const {storyBrief,MAX_STORY_BRIEF_LENGTH}=require('../office-preview/.test-build/story-brief.js');
+const {fields,labels}=require('../office-preview/.test-build/engine.js');
+const profile=Object.fromEntries(fields.map(field=>[field,'사연🙂'.repeat(400)+'마지막 '+field]));
+profile.fictionalElements='창작 설정 '.repeat(300)+'마지막 각색';
+const brief=storyBrief(profile);
+for(const field of fields)assert.ok(brief.includes(labels[field]+': '+profile[field]));
+assert.ok(brief.endsWith(profile.fictionalElements));
+assert.ok(brief.length>4000);
+assert.throws(()=>storyBrief({...profile,message:'가'.repeat(MAX_STORY_BRIEF_LENGTH)}),/잘라 보내지 않았습니다/);
+console.log('PASS complete long summaries, Unicode, fiction additions, explicit oversize rejection');
