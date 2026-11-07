@@ -39,3 +39,5 @@ test-results-office-deadline
 
 # 별도 프로젝트 스냅샷(Next 16 + Tailwind). 이 저장소와 스택이 다르다.
 aioffice-ed-main/
+
+.cloud-test-build

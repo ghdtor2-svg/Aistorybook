@@ -40,7 +40,7 @@ export default function StoryReader({profile}:{profile:StoryProfile|null}){
  const [shelfBusy,setShelfBusy]=useState(false);
  useUnsavedBookGuard(()=>saves.current>0||conflictRef.current||generatedDraftRef.current);
  useEffect(()=>{try{const raw=parseBooks(localStorage.getItem(key));booksRef.current=raw;setBooks(raw);let selectedId=raw[0]?.id||'';try{selectedId=preferredBookId(raw.map(book=>book.id),localStorage.getItem(READING_KEY));}catch{}setSelected(selectedId);setReady(true);}catch{setError('보관함을 읽지 못했습니다. 원본은 보존합니다.');}},[]);
- const [pending,setPending]=useState('');const [recovering,setRecovering]=useState(false);
+ const [retryConfirmed,setRetryConfirmed]=useState(false);const [pending,setPending]=useState('');const [recovering,setRecovering]=useState(false);
  useEffect(()=>{
   function sync(){try{const id=localStorage.getItem(pendingKey)||'';if(id&&!/^[a-f0-9-]{36}$/.test(id)){setPending('invalid');setError('미완료 생성 기록이 올바르지 않습니다. 원본은 보존했습니다.');return;}setPending(id);}catch{setPending('invalid');setError('미완료 생성 기록을 확인하지 못했습니다.');}}
   sync();const changed=(event:StorageEvent)=>{if(event.key===pendingKey||event.key===null)sync();};window.addEventListener('storage',changed);return ()=>window.removeEventListener('storage',changed);
@@ -68,12 +68,12 @@ export default function StoryReader({profile}:{profile:StoryProfile|null}){
   catch(e){markGeneratedDraft(true);if(!booksRef.current.some(b=>b.id===data.id)){const next=[data,...booksRef.current];booksRef.current=next;setBooks(next);}setSelected(data.id);setError((e instanceof Error?e.message+' ':'')+'책장 저장에 실패했습니다. 현재 동화를 내려받아 보관하세요. 생성 기록은 유지했습니다.');}
  }
  async function clearPending(){
-  if(!window.confirm('대기 기록만 해제합니다. 서버에서 이미 생성됐을 수 있으며 새 동화를 만들면 구독 사용량을 다시 사용할 수 있습니다. 계속할까요?'))return;
+  if(!window.confirm('대기 기록만 해제합니다. 서버에서 이미 생성됐을 수 있으며 새 동화를 만들면 AI 생성 비용이 다시 발생할 수 있습니다. 계속할까요?'))return;
   if(!navigator.locks){setError('생성 중인지 확인할 수 없어 대기 기록을 유지했습니다. 최신 Edge 또는 Chrome에서 결과를 확인해 주세요.');return;}
   try{
    await navigator.locks.request(generationLock,{ifAvailable:true},lock=>{
     if(!lock){setError('다른 탭에서 동화를 생성하거나 결과를 확인 중입니다. 대기 기록을 유지했습니다.');return;}
-    finishPending(pending);setError('');
+    finishPending(pending);setRetryConfirmed(true);setError('');
    });
   }catch{setError('대기 기록을 해제하지 못했습니다.');}
  }
@@ -86,7 +86,7 @@ export default function StoryReader({profile}:{profile:StoryProfile|null}){
    if(current!==pending){setPending(current);return;}
    const {response:res,data}=await storyResponse('/api/office/story',{cache:'no-store',headers:codeHeaders});if(!res.ok)throw Error(data.error);
    if(data.state==='completed'){await acceptBook(data.book,pending);}else if(data.state==='ready'){finishPending(pending);setError('아직 만들어진 동화가 없어요. 같은 코드로 다시 시작할 수 있습니다.');}
-   else setError(data.state==='running'?'생성 중이거나 완료 여부를 확인하지 못했습니다. 잠시 후 결과 확인을 눌러 주세요. 새 생성은 실행하지 않습니다.':data.state==='missing'?'서버에 이 요청의 생성 기록이 없습니다. 연결 상태를 확인하세요. 새로 만들려면 아래에서 대기 기록을 해제하세요.':'이 요청의 완료 여부가 불명확합니다. 자동으로 다시 생성하지 않습니다.');
+   else setError(data.state==='paused'?(data.error||'이전 작업의 완료 여부를 확인해야 합니다. 대기 기록 해제 안내를 확인해 주세요.'):data.state==='running'?'생성 중이거나 완료 여부를 확인하지 못했습니다. 잠시 후 결과 확인을 눌러 주세요. 새 생성은 실행하지 않습니다.':data.state==='missing'?'서버에 이 요청의 생성 기록이 없습니다. 연결 상태를 확인하세요. 새로 만들려면 아래에서 대기 기록을 해제하세요.':'이 요청의 완료 여부가 불명확합니다. 자동으로 다시 생성하지 않습니다.');
   });}catch(e){setError(e instanceof Error?e.message:'결과를 확인하지 못했습니다.');}finally{setRecovering(false);setBusy(false);}
  }
  async function openByCode(){
@@ -111,7 +111,18 @@ export default function StoryReader({profile}:{profile:StoryProfile|null}){
    const existing=localStorage.getItem(pendingKey);if(existing){setPending(existing);setError('다른 탭에 미확인 생성 기록이 있습니다. 결과 확인·복구를 이용하세요.');return;}
    const brief=storyBrief(profile);
    const id=crypto.randomUUID();localStorage.setItem(pendingKey,id);setPending(id);
-   const {response:res,data}=await storyResponse('/api/office/story',{method:'POST',headers:{'Content-Type':'application/json',...codeHeaders},body:JSON.stringify({id,brief,styleId:artStyle})},STORY_GENERATE_WAIT_MS);if(!res.ok)throw Error(data.error);await acceptBook(data,id);
+   const {response:res,data}=await storyResponse('/api/office/story',{method:'POST',headers:{'Content-Type':'application/json',...codeHeaders},body:JSON.stringify({id,brief,styleId:artStyle,confirmUncertain:retryConfirmed})},STORY_GENERATE_WAIT_MS);if(!res.ok)throw Error(data.error);setRetryConfirmed(false);
+   if(res.status===202){
+    const requestId=typeof data.requestId==='string'&&/^[a-f0-9-]{36}$/.test(data.requestId)?data.requestId:id;localStorage.setItem(pendingKey,requestId);setPending(requestId);
+    for(let attempt=0;attempt<90;attempt++){
+     await new Promise(resolve=>setTimeout(resolve,3000));
+     const result=await storyResponse('/api/office/story',{cache:'no-store',headers:codeHeaders});if(!result.response.ok)throw Error(result.data.error);
+     if(result.data.state==='completed'){await acceptBook(result.data.book,requestId);return;}
+     if(result.data.state==='paused')throw Error(result.data.error||'작업의 완료 여부를 확인해야 해요. 자동 재시도하지 않습니다.');
+    }
+    throw Error('온라인 작업의 결과를 아직 확인하지 못했어요. 잠시 뒤 결과 확인·복구를 눌러 주세요.');
+   }
+   await acceptBook(data,id);
   });}catch(e){setError((e instanceof Error?e.message:'동화 생성을 완료하지 못했습니다.')+' 생성 기록이 남아 있다면 결과 확인·복구를 이용하세요. 자동 재시도하지 않습니다.');}finally{setBusy(false);}
  }
  function update(value:Book){
@@ -143,6 +154,3 @@ export default function StoryReader({profile}:{profile:StoryProfile|null}){
  ?<StoryIllustrations key={book.id+productionCode} book={book} code={productionCode.trim()} onWorking={setArtWorking}/>
  :<StoryPages book={book}/>}<p><button disabled={busy||artWorking} onClick={()=>setEditing(!editing)}>{editing?(shelfBusy?'수정 저장 중…':conflictRef.current?'수정 마치기 · 저장 충돌':generatedDraft?'수정 마치기 · 화면 보관본':'수정 마치기 · 자동 저장됨'):'동화 수정'}</button> <button className="secondary" disabled={artWorking||shelfBusy||conflictRef.current||generatedDraft} onClick={()=>{if(window.confirm('이 동화를 책장에서 삭제할까요?')){void removeBook(book);}}}>이 동화 삭제</button></p> {!editing&&!generatedDraft&&!conflictRef.current&&<details style={{margin:'24px 0',padding:16,border:'1px solid #d9cdb7',borderRadius:14}}><summary style={{cursor:'pointer',fontWeight:700}}>선물용 PDF 안내</summary><p>동화는 회원가입 없이 웹에서 끝까지 읽을 수 있어요. 선물하거나 인쇄할 때는 표지와 내지가 들어간 PDF를 이용할 수 있도록 준비 중이에요.</p><p><a href="/nangman-story-spread-preview.pdf?v=9" target="_blank" rel="noopener">예시 동화 펼침면 보기 (새 창)</a></p><button type="button" disabled>PDF 구매 준비 중</button></details>}<small>이 브라우저에 저장됩니다. 서버에는 생성 요청의 중복 방지 기록이 별도로 보존됩니다.</small></article>}</>}</section>;
 }
-
-
-

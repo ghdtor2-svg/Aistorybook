@@ -1,7 +1,9 @@
 import {createHash, randomBytes, randomUUID, timingSafeEqual} from 'node:crypto';
-import {mkdir, readFile, rename, unlink, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, readdir, rename, unlink, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import type {Book} from './books';
+import {cloudStorageEnabled} from './cloud-config';
+import {cloudCreateOrder,cloudReadOrder,cloudSaveOrder,cloudWithOrder,cloudOrderIds,StorageConflict} from './netlify-storage';
 
 export type Order = {
   id: string;
@@ -16,8 +18,8 @@ export type Order = {
   operatorNote?:string;
   adminEvents?:{action:string;at:number}[];
   book?: Book;
-  request?: {id:string; startedAt:number; styleId?:string};
-  art?: {base:string[]; book?:Book; styleId?:string; qualityProfile?:string; alternative?:{index:number; image:string}; active?:{kind:'base'|'revision'; startedAt:number}; job?:{status:'queued'|'running'|'paused'|'completed';updatedAt:number;origin?:string;inFlightIndex?:number;reason?:'failed'|'uncertain'}};
+  request?: {id:string; startedAt:number; styleId?:string;status?:'queued'|'running'|'paused';brief?:string};
+  art?: {base:string[]; book?:Book; styleId?:string; qualityProfile?:string; alternative?:{index:number; image:string}; active?:{kind:'base'|'revision'; startedAt:number}; job?:{status:'queued'|'running'|'paused'|'completed';updatedAt:number;origin?:string;token?:string;kind?:'base'|'revision';index?:number;direction?:string;dispatchedAt?:number;inFlightIndex?:number;reason?:'failed'|'uncertain'}};
 };
 
 export const checkoutDir = () => path.join(process.cwd(), '.office-data', 'storybook-orders');
@@ -38,22 +40,26 @@ export function sameSecret(a:string,b:string){
 }
 export async function getOrder(id:unknown):Promise<Order|null>{
   if(typeof id!=='string'||!orderIdPattern.test(id))return null;
+  if(cloudStorageEnabled())return cloudReadOrder(id);
   try{return JSON.parse(await readFile(orderFile(id),'utf8')) as Order;}
   catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return null;throw error;}
 }
 export async function saveOrder(order:Order){
+  if(cloudStorageEnabled())return cloudSaveOrder(order);
   const dest=orderFile(order.id), temporary=dest+'.'+randomUUID()+'.tmp';
   await writeFile(temporary,JSON.stringify(order),{mode:0o600,flag:'wx'});
   try{await rename(temporary,dest);}
   finally{await unlink(temporary).catch(()=>{});}
 }
 export async function createOrder(amount:number){
-  await mkdir(checkoutDir(),{recursive:true,mode:0o700});
   const order={id:randomUUID(),amount,checkoutProof:randomBytes(24).toString('base64url'),createdAt:Date.now()};
+  if(cloudStorageEnabled()){if(!await cloudCreateOrder(order))throw new OrderBusy();return order;}
+  await mkdir(checkoutDir(),{recursive:true,mode:0o700});
   await saveOrder(order);
   return order;
 }
-export class OrderBusy extends Error {}
+export {StorageConflict as OrderBusy};
+const OrderBusy=StorageConflict;
 export class OrderCodeChanged extends Error {}
 export function matchesOrderCode(order:Order,value:unknown){return typeof value==='string'&&!!order.code&&!order.codeDisabled&&sameSecret(order.code,value.trim());}
 // Checkout runs in one local Next server. In-memory locks release on process restart;
@@ -61,6 +67,7 @@ export function matchesOrderCode(order:Order,value:unknown){return typeof value=
 const lockScope=globalThis as typeof globalThis&{nangmanOrderLocks?:Set<string>};
 const locks=lockScope.nangmanOrderLocks??=new Set<string>();
 export async function withOrder<T>(id:string,work:(order:Order)=>Promise<T>):Promise<T>{
+  if(cloudStorageEnabled())return cloudWithOrder(id,work);
   if(locks.has(id))throw new OrderBusy();
   locks.add(id);
   try{
@@ -79,6 +86,12 @@ export function issueCode(id:string){return 'NG-'+id+'.'+randomBytes(24).toStrin
 
 export async function createManualOrder(id:string,amount:number,customer?:{label:string;note:string}){
   if(!orderIdPattern.test(id))return null;
+  if(cloudStorageEnabled()){
+    const existing=await getOrder(id);if(existing)return existing.transferConfirmedAt&&existing.amount===amount?existing:null;
+    const now=Date.now();const order:Order={id,amount,checkoutProof:'',createdAt:now,transferConfirmedAt:now,code:issueCode(id),customerLabel:customer?.label||'',operatorNote:customer?.note||'',adminEvents:[{action:'입금 확인 및 키 발급',at:now}]};
+    if(await cloudCreateOrder(order))return order;
+    const winner=await getOrder(id);return winner?.transferConfirmedAt&&winner.amount===amount?winner:null;
+  }
   await mkdir(checkoutDir(),{recursive:true,mode:0o700});
   if(locks.has(id))throw new OrderBusy();
   locks.add(id);
@@ -90,4 +103,8 @@ export async function createManualOrder(id:string,amount:number,customer?:{label
     await saveOrder(order);
     return order;
   }finally{locks.delete(id);}
+}
+export async function listOrderIds(){
+ if(cloudStorageEnabled())return cloudOrderIds();
+ try{return (await readdir(checkoutDir())).filter(name=>/^[a-f0-9-]{36}\.json$/.test(name)).map(name=>name.slice(0,-5));}catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT')return [];throw error;}
 }

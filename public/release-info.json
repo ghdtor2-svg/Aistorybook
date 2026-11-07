@@ -1,13 +1,12 @@
 {
-  "version": "2026-11-07-quality-proof-v1",
+  "version": "2026-11-07-cloud-connection-v1",
   "features": [
-    "distinct-style-examples",
-    "seasons-tower-home-preview",
-    "actual-api-quality-proof"
+    "signed-admin-bridge",
+    "conditional-shared-orders",
+    "background-image-tasks",
+    "availability-gate"
   ],
-  "verifiedStyles": [
-    "soft-clay",
-    "watercolor"
-  ],
-  "publicGenerationReady": false
+  "publicGenerationReady": false,
+  "readinessEndpoint": "/api/storybook/availability",
+  "qualityVerificationUnchanged": true
 }

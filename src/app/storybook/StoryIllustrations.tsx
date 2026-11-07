@@ -95,7 +95,9 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     setMessage('');
     try{
       if(revise){
-        setArt(await request(code,{action:'revise',book,index:target,direction:direction.trim()}));
+        const current=await request(code);const uncertain=current.job?.reason==='uncertain';
+        if(uncertain&&!window.confirm('이전 수정의 완료 여부를 확인하지 못했어요. 다시 요청하면 AI 비용이 추가될 수 있습니다. 계속할까요?'))return;
+        setArt(await request(code,{action:'revise',book,index:target,direction:direction.trim(),confirmUncertain:uncertain}));
         setDirection('');
         setShowAlternative(true);
       }else{

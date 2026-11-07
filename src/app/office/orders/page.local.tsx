@@ -10,7 +10,7 @@ const pendingKey='nangman:backoffice-issue-pending:v1';
 export default function OrderBackoffice(){
  const [orders,setOrders]=useState<AdminOrder[]>([]),[authenticated,setAuthenticated]=useState(false),[checking,setChecking]=useState(true);
  const [password,setPassword]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[query,setQuery]=useState('');
- const [selected,setSelected]=useState(''),[revealed,setRevealed]=useState('');
+ const [source,setSource]=useState('');const [selected,setSelected]=useState(''),[revealed,setRevealed]=useState('');
  const [newLabel,setNewLabel]=useState(''),[newNote,setNewNote]=useState(''),[confirmed,setConfirmed]=useState(false);
  const [label,setLabel]=useState(''),[note,setNote]=useState('');
  const locked=useRef(false),issueId=useRef('');
@@ -20,7 +20,7 @@ export default function OrderBackoffice(){
  async function load(){
   const response=await fetch(endpoint,{cache:'no-store',signal:AbortSignal.timeout(10000)});const data=await response.json();
   if(response.status===403){setAuthenticated(false);setOrders([]);setSelected('');setRevealed('');return;}
-  if(!response.ok)throw Error(data.error);setAuthenticated(true);setOrders(data.orders);
+  if(!response.ok){setOrders([]);setSelected('');setRevealed('');throw Error(data.error);}setAuthenticated(true);setSource(data.source==='cloud'?'고객 사이트와 공유 중':'이 컴퓨터에만 저장 중');setOrders(data.orders);
   if(data.unreadable||data.limited)setMessage(data.unreadable?'일부 주문을 읽지 못했어요. 원본 기록을 확인해 주세요.':'최근 500건을 표시합니다.');
  }
  useEffect(()=>{void load().catch(()=>setMessage('서버에 연결하지 못했어요. 로컬 제작 서버가 켜져 있는지 확인해 주세요.')).finally(()=>setChecking(false));},[]);
@@ -45,7 +45,7 @@ export default function OrderBackoffice(){
  const visible=orders.filter(item=>[item.id,item.customerLabel,item.bookTitle,item.status,item.keyStatus].join(' ').toLowerCase().includes(query.trim().toLowerCase()));
  return <main className={styles.root}>
   <header className={styles.header}><div><p className={styles.eyebrow}>낭만한줄 · 대표 전용</p><h1>주문과 제작 키 관리</h1><p>입금 확인부터 동화 완성까지 한곳에서 확인하세요.</p></div><nav><Link href="/office">사무실</Link>{authenticated&&<button type="button" className={styles.secondary} disabled={busy} onClick={()=>void logout()}>로그아웃</button>}</nav></header>
-  <p className={styles.notice}>내 컴퓨터에서만 사용하는 관리 화면입니다. 고객 정보와 발급 키는 깃허브에 저장하지 않습니다.</p>
+  <p className={styles.notice}>내 컴퓨터에서만 사용하는 관리 화면입니다. 고객 정보와 발급 키는 깃허브에 저장하지 않습니다.</p>{source&&<p role="status">저장 위치: {source}</p>}
   {message&&<p role="status" className={styles.message}>{message}</p>}
   {checking?<p>관리자 인증을 확인하고 있어요…</p>:!authenticated?<form className={styles.login} onSubmit={login}><h2>관리자 로그인</h2><label>관리자 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} required/></label><button disabled={busy} type="submit">로그인</button><p>기존 사무실 관리자 비밀번호를 사용합니다.</p></form>:<>
    <section className={styles.stats} aria-label="주문 현황">{[['전체 주문',orders.length],['키 미사용',orders.filter(item=>item.status==='키 미사용').length],['제작 중',orders.filter(item=>item.busy).length],['확인 필요',orders.filter(item=>['제작 중단','요청 확인 필요'].includes(item.status)).length]].map(([name,count])=><div key={name}><span>{name}</span><strong>{count}</strong></div>)}</section>
@@ -60,4 +60,3 @@ export default function OrderBackoffice(){
   </>}
  </main>;
 }
-

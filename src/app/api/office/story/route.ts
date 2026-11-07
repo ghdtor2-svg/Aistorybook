@@ -4,6 +4,9 @@ import {defaultStoryArtStyle,isStoryArtStyleId,storyArtStyle,type StoryArtStyleI
 import {storyQualityProfile} from '../../../../lib/storybook/quality';
 import {MAX_STORY_BRIEF_LENGTH,MAX_STORY_REQUEST_LENGTH} from '../../../../lib/storybook/story-brief';
 import {loopback,matchesOrderCode,orderForCode,OrderBusy,OrderCodeChanged,saveOrder,withOrder} from '../../../../lib/storybook/story-orders';
+import {cloudCustomerRequest,cloudStorageEnabled} from '../../../../lib/storybook/cloud-config';
+import {trustedCloudWorker} from '../../../../lib/storybook/cloud-signing';
+import {kickCloudText} from '../../../../lib/storybook/cloud-tasks';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -13,16 +16,19 @@ const requestIdPattern=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 const runningWindow=270_000;
 
 export async function GET(request:Request){
-  if(!loopback(request))return json({error:'동화 제작을 이용할 수 없습니다.'},403);
+  if(!loopback(request)&&!cloudCustomerRequest(request))return json({error:'동화 제작을 이용할 수 없습니다.'},403);
   const order=await orderForCode(codeFrom(request));
   if(!order)return json({error:'결제 후 받은 제작 코드를 입력해 주세요.'},401);
   if(order.book)return json({state:'completed',book:order.book});
+  if(order.request?.status==='queued'){await kickCloudText(order);return json({state:'running',requestId:order.request?.id});}
+  if(order.request?.status==='paused')return json({state:'paused',requestId:order.request?.id,error:'완료 여부를 확인해야 하는 요청이 있어요. 자동 재시도하지 않습니다.'});
+  if(cloudStorageEnabled()&&order.request&&Date.now()-order.request.startedAt>=runningWindow)return json({state:'paused',requestId:order.request?.id,error:'이전 작업의 완료 여부를 먼저 확인해 주세요.'});
   const running=order.request&&Date.now()-order.request.startedAt<runningWindow;
-  return json({state:running?'running':'ready'});
+  return json({state:running?'running':'ready',requestId:order.request?.id});
 }
 
 export async function POST(request:Request){
-  if(!loopback(request))return json({error:'동화 제작을 이용할 수 없습니다.'},403);
+  if(!loopback(request)&&!cloudCustomerRequest(request))return json({error:'동화 제작을 이용할 수 없습니다.'},403);
   if(!process.env.OPENAI_API_KEY)return json({error:'동화 생성 연결을 준비 중입니다.'},503);
   const order=await orderForCode(codeFrom(request));
   if(!order)return json({error:'결제 후 받은 제작 코드를 입력해 주세요.'},401);
@@ -30,6 +36,7 @@ export async function POST(request:Request){
   let id:string;
   let brief:string;
   let styleId:StoryArtStyleId;
+  let confirmedRetry=false;
   try{
     const raw=await request.text();
     if(raw.length>MAX_STORY_REQUEST_LENGTH)throw Error();
@@ -37,17 +44,33 @@ export async function POST(request:Request){
     if(typeof body.id!=='string'||!requestIdPattern.test(body.id)||typeof body.brief!=='string'||!body.brief.trim()||body.brief.length>MAX_STORY_BRIEF_LENGTH)throw Error();
     id=body.id;
     brief=body.brief;
+    confirmedRetry=body.confirmUncertain===true;
     if(body.styleId!==undefined&&body.styleId!=='random'&&!isStoryArtStyleId(body.styleId))throw Error();
     styleId=body.styleId==='random'?storyArtStyle(id).id:body.styleId||defaultStoryArtStyle;
   }catch{return json({error:'동화에 담을 내용을 확인해 주세요.'},400);}
 
   let claimed=false;
   try{
+    const cloud=cloudStorageEnabled(),worker=cloud&&trustedCloudWorker(request);
+    if(cloud&&!worker){
+      const queued=await withOrder(order.id,async current=>{
+        if(!matchesOrderCode(current,codeFrom(request)))throw new OrderCodeChanged();
+        if(current.book)return {book:current.book};
+        if(current.request&&(current.request.status==='queued'||Date.now()-current.request.startedAt<runningWindow&&current.request.status!=='paused'))return {pending:current};
+        if(current.request&&!confirmedRetry)return {uncertain:true};
+        const next={...current,request:{id,brief,styleId,startedAt:Date.now(),status:'queued' as const}};await saveOrder(next);return {pending:next};
+      });
+      if(queued.book)return json(queued.book);
+      if(queued.uncertain)return json({error:'이전 요청의 완료 여부가 불확실합니다. 대기 기록 해제 안내를 확인한 뒤 재시작해 주세요.'},409);
+      if(queued.pending)await kickCloudText(queued.pending);
+      return json({state:'running',requestId:queued.pending?.request?.id},202);
+    }
     const decision=await withOrder(order.id,async current=>{
       if(!matchesOrderCode(current,codeFrom(request)))throw new OrderCodeChanged();
       if(current.book)return {book:current.book};
-      if(current.request&&Date.now()-current.request.startedAt<runningWindow)return {running:true};
-      await saveOrder({...current,request:{id,startedAt:Date.now(),styleId}});
+      if(current.request&&Date.now()-current.request.startedAt<runningWindow&&!(worker&&current.request.id===id&&current.request.status==='queued'))return {running:true};
+      if(worker&&(current.request?.id!==id||current.request.status!=='queued'))return {running:true};
+      await saveOrder({...current,request:{...current.request,id,startedAt:Date.now(),styleId,...(cloud?{status:'running' as const}: {})}});
       claimed=true;
       return null;
     });
@@ -86,7 +109,7 @@ export async function POST(request:Request){
     if(error instanceof OrderCodeChanged)return json({error:'제작 키가 변경되었거나 중지되었어요. 새 키를 확인해 주세요.'},403);
     if(claimed){
       await withOrder(order.id,async current=>{
-        if(current.request?.id===id)await saveOrder({...current,request:undefined});
+        if(current.request?.id===id)await saveOrder({...current,request:cloudStorageEnabled()?{...current.request,status:'paused'}:undefined});
       }).catch(()=>{});
     }
     return json({error:error instanceof OrderBusy?'이 주문을 확인 중입니다. 잠시 뒤 결과를 확인해 주세요.':'동화를 완성하지 못했어요. 제작 코드를 다시 사용할 수 있습니다.'},error instanceof OrderBusy?409:502);

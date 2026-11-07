@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".cloud-test-build",
+    "rootDir": ".",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "incremental": false,
+    "isolatedModules": false,
+    "plugins": []
+  },
+  "include": [
+    "src/lib/storybook/**/*.ts",
+    "src/app/api/office/story/route.ts",
+    "src/app/api/storybook/illustrations/route.ts",
+    "src/app/api/storybook/admin-bridge/route.ts",
+    "src/app/api/storybook/availability/route.ts",
+    "netlify/functions/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
