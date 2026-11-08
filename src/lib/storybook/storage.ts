@@ -1,4 +1,5 @@
-﻿import {fields,newProfile,rebuild,submitAnswer,type StoryProfile} from './engine';
+import {fields,newProfile,rebuild,submitAnswer,type StoryProfile} from './engine';
+import {parseStoryDesign} from './story-design';
 export const STORAGE_KEY='ai-office:storybook:v1';
 export type SavedStory={profile:StoryProfile;draft:string;editingId:string|null};
 export interface StoryStorage {getItem(key:string):string|null;setItem(key:string,value:string):void;removeItem(key:string):void}
@@ -18,6 +19,7 @@ export function restoreStory(storage:StoryStorage):SavedStory|null {
  if(p.summaryEdits&&typeof p.summaryEdits==='object'&&!profile.currentQuestion){
   for(const field of fields)if(typeof p.summaryEdits[field]==='string'&&p.summaryEdits[field].length<=4000)profile.summaryEdits[field]=p.summaryEdits[field];
  }
+ profile.storyDesign=parseStoryDesign(p.storyDesign);
  profile.fictionalElements=typeof p.fictionalElements==='string'?p.fictionalElements.slice(0,4000):'';
  profile.updatedAt=typeof p.updatedAt==='string'&&Number.isFinite(Date.parse(p.updatedAt))?p.updatedAt:profile.updatedAt;
  if(p.completionStatus==='confirmed'&&!profile.currentQuestion)profile.completionStatus='confirmed';

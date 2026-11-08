@@ -1,4 +1,5 @@
-﻿export const fields = ['recipient','protagonist','relationship','memorableEvent','emotions','specialDetails','message'] as const;
+export const fields = ['recipient','protagonist','relationship','memorableEvent','emotions','specialDetails','message'] as const;
+import type {StoryDesign} from './story-design';
 export type Field = typeof fields[number];
 export type Group = 'recipient'|'event'|'emotion'|'details'|'message';
 export type Question = {id:string;group:Group;kind:'core'|'followup';text:string;target:Field;number:number};
@@ -7,7 +8,7 @@ export type StoryProfile = Record<Field,string> & {
  storyId:string;answers:Answer[];currentQuestion:Question|null;
  completionStatus:'in_progress'|'review'|'confirmed';createdAt:string;updatedAt:string;
  facts:Partial<Record<Field,{value:string;sourceAnswerIds:string[];source:'answer'|'summary_edit'}>>;
- fictionalElements:string;summaryEdits:Partial<Record<Field,string>>;
+ fictionalElements:string;summaryEdits:Partial<Record<Field,string>>;storyDesign?:StoryDesign;
 };
 export const labels:Record<Field,string>={recipient:'선물 대상',protagonist:'주인공',relationship:'관계',memorableEvent:'기억에 남는 순간',emotions:'그때의 감정',specialDetails:'특별한 모습이나 이야기',message:'전하고 싶은 마음'};
 export const coreQuestions = [

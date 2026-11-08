@@ -4,6 +4,8 @@ import styles from './QuestionWorkshop.module.css';
 import StorageRescue from '../../components/StorageRescue';
 import StoryReader from './StoryReader';
 import QuestionImport from './QuestionImport';
+import StoryDesignWorkshop from './StoryDesignWorkshop';
+import {coreQuestionHint} from '../../lib/storybook/story-design';
 import {useUnsavedBookGuard} from './useUnsavedBookGuard';
 import {questionDraftJSON,questionDraftText} from '../../lib/storybook/question-draft';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
@@ -81,7 +83,7 @@ export default function Storybook(){
     {question?<section className={`panel ${styles.card}`} aria-labelledby="current-question">
      <p className={styles.questionTag}>{groupNumber}/5 · {question.kind==='core'?'핵심 질문':'맞춤 후속 질문 '+question.number+'/2'}</p>
      <h2 id="current-question">{question.text}</h2>
-     <p className={styles.promptNote}>{story.editingId?'이전 답변을 수정 중입니다. 저장하거나 건너뛰면 이후 답변과 요약 수정 내용이 삭제되고 질문을 다시 평가합니다.':'짧게 적어도 괜찮아요. 떠오르는 만큼만 들려주세요.'}</p>
+     <p className={styles.promptNote}>{story.editingId?'이전 답변을 수정 중입니다. 저장하거나 건너뛰면 이후 답변과 요약 수정 내용이 삭제되고 질문을 다시 평가합니다.':coreQuestionHint(question.group)}</p>
      <form onSubmit={event=>submit(event)}>
       <label htmlFor="story-answer">답변</label>
       <textarea id="story-answer" value={story.draft} maxLength={4000} onChange={e=>setStory({...story,draft:e.target.value})} placeholder="기억나는 장면이나 마음을 적어 보세요. 이름 대신 별칭을 써도 좋아요."/>
@@ -107,6 +109,7 @@ export default function Storybook(){
        <textarea id={'summary-'+field} value={profile![field]} maxLength={4000} placeholder="원하면 추가해 주세요" onChange={e=>summary(field,e.target.value)}/>
       </div>)}
      </div>
+     <StoryDesignWorkshop profile={profile!} onChange={design=>setStory({...story,profile:{...profile!,storyDesign:design,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
      <label htmlFor="fictional-elements">동화적으로 각색해도 좋은 요소 (선택)</label>
      <textarea id="fictional-elements" maxLength={4000} placeholder="예: 숲속 배경이나 말하는 동물. 실제 추억과 구분해 저장합니다." value={profile!.fictionalElements} onChange={e=>setStory({...story,profile:{...profile!,fictionalElements:e.target.value,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
      <button disabled={profile!.completionStatus==='confirmed'} onClick={()=>setStory({...story,profile:{...profile!,completionStatus:'confirmed',updatedAt:new Date().toISOString()}})}>내용 최종 확인</button>
