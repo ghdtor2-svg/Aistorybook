@@ -10,4 +10,8 @@ GitHub main을 기존 Netlify production에 배포했다. 운영 공개 사이�
 
 `npm run test:cloud` (모의 API), `npm run typecheck`, `NETLIFY=true CONTEXT=production npm run build`를 통과했다. 공개 빌드에 로컬 사무실과 로컬 관리자 API는 포함되지 않았다.
 
-최신 저장소 진단 변경은 운영에서 별도 확인해야 한다. 실제 AI 생성, 저장소 쓰기, 관리 연결, 기존 PC 연결, 고객 주문 복구와 유료 API 품질 시험은 이 검사로 완료됐다고 보고하지 않는다. API 키의 존재 검사는 키 유효성·잔액·API 권한 검사가 아니다.
+## 운영 확인
+
+`d254c6c` 자동 배포 후 운영 availability가 `{"ready":true}`를 반환했다. 캐시를 우회한 재확인도 HTTP 200, 약 0.19초로 완료했다. `/office`, `/office/orders`, `/api/office/development`는 모두 404였다. 저장소 요청에 no-store를 명시한 변경 이후 준비 상태 검사가 정상화되었다. 저장소 내부에서 지연을 일으킨 정확한 원인을 플랫폼 로그만으로 확정한 것은 아니다.
+
+실제 AI 생성, 저장소 쓰기, 관리 연결, 기존 PC 연결, 고객 주문 복구와 유료 API 품질 시험은 이 검사로 완료됐다고 보고하지 않는다. API 키의 존재 검사는 키 유효성·잔액·API 권한 검사가 아니다.
