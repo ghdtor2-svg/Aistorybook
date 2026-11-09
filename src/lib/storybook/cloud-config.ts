@@ -18,6 +18,14 @@ export function cloudConfigurationIssue(){
 }
 export function cloudCustomerRequest(request:Request){
  if(!cloudEnabled())return false;
- const origin=cloudOrigin(),url=new URL(request.url),sent=request.headers.get('origin');
- return url.origin===origin&&(!sent||sent===origin);
+ const origin=cloudOrigin(),sent=request.headers.get('origin');
+ return cloudRequestHost(request)&&(!sent||sent===origin);
+}
+export function cloudRequestHost(request:Request){
+ if(!cloudEnabled())return false;
+ // Netlify's Next.js adapter may reconstruct request.url with an internal origin.
+ // Match the actual Host exactly, never a client-supplied forwarded host.
+ const expected=new URL(cloudOrigin());
+ const host=request.headers.get('host')||new URL(request.url).host;
+ return host===expected.host;
 }
