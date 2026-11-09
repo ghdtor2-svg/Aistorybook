@@ -14,7 +14,7 @@
     "test:office": "tsc -p tsconfig.office-tests.json && node scripts/office-test.cjs",
     "test:live": "tsc -p tsconfig.live-tests.json && node scripts/live-test.cjs",
     "test:subscription": "tsc -p tsconfig.live-tests.json && node scripts/subscription-test.cjs",
-    "test:cloud": "tsc -p tsconfig.cloud-tests.json && node scripts/cloud-test.cjs"
+    "test:cloud": "tsc -p tsconfig.cloud-tests.json && node scripts/cloud-test.cjs && node scripts/storage-readiness-test.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.8",

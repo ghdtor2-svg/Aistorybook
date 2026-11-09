@@ -4,8 +4,11 @@ import type {Order} from './story-orders';
 
 export class StorageConflict extends Error {}
 const transactions=new AsyncLocalStorage<{id:string;etag:string;written:boolean}>();
-export const orderStore=()=>getStore({name:'nangman-orders-v1',consistency:'strong'});
-const assets=()=>getStore({name:'nangman-art-v1',consistency:'strong'});
+// Private Blobs requests must bypass Next.js's fetch/data cache. This also
+// avoids routing the storage client's own requests through Netlify's cache store.
+export const storageFetch:typeof fetch=(input,init)=>fetch(input,{...init,cache:'no-store'});
+export const orderStore=(fetchClient:typeof fetch=storageFetch)=>getStore({name:'nangman-orders-v1',consistency:'strong',fetch:fetchClient});
+const assets=()=>getStore({name:'nangman-art-v1',consistency:'strong',fetch:storageFetch});
 const key=(id:string)=>'orders/'+id;
 export async function cloudReadOrder(id:string):Promise<Order|null>{return await orderStore().get(key(id),{type:'json'}) as Order|null;}
 export async function cloudCreateOrder(order:Order){return (await orderStore().setJSON(key(order.id),order,{onlyIfNew:true})).modified;}
