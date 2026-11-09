@@ -37,7 +37,13 @@ const nextConfig = {
  pageExtensions: officeLocal ? ['local.tsx', 'local.ts', ...base] : base,
  // 값을 못 박아야 번들러가 사무실 분기를 죽은 코드로 보고 지웁니다.
  // 변수를 아예 비워 두면 치환이 일어나지 않아 사무실 문구가 공개 번들에 남습니다.
- env: {NEXT_PUBLIC_OFFICE_LOCAL: officeLocal ? '1' : '0'},
+ env: {
+  NEXT_PUBLIC_OFFICE_LOCAL: officeLocal ? '1' : '0',
+  // Netlify build metadata is not automatically available in Next.js Functions.
+  // Capture only these non-secret markers; previews retain their own context.
+  NETLIFY: process.env.NETLIFY === 'true' ? 'true' : 'false',
+  CONTEXT: process.env.CONTEXT || '',
+ },
 };
 
 export default nextConfig;
