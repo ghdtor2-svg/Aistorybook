@@ -45,6 +45,24 @@ const state=(order:Order)=>({
   alternative:order.art?.alternative||null,
   busy:Boolean(order.art?.active&&Date.now()-order.art.active.startedAt<activeWindow),
 });
+// 2026-11-11 실제 18장 시험: 모든 본문 그림이 표지를 참고해 구도까지 닮았고(같은 공원·같은 배치 반복),
+// 한 그림에 같은 인물이 두 번 나온 장면이 있었다. 장면마다 화면 구성을 바꾸고 인물은 한 번씩만 그리게 한다.
+const sceneShots=[
+  'Camera: wide establishing view that shows where the scene happens, characters smaller in the landscape.',
+  'Camera: medium shot at eye level, focused on what the characters are doing together.',
+  'Camera: close view on faces, hands and the key object, the background softly simplified.',
+  'Camera: seen from behind or beside the main character, looking toward what she or he faces.',
+  'Camera: low angle looking up at the characters, sky and treetops filling the upper space.',
+  'Camera: high angle looking down on the scene, showing the path and surroundings like a map.',
+];
+const shotFor=(index:number)=>sceneShots[(index-1)%sceneShots.length];
+// 같은 날 재시험에서 연속 동작(흔들림→중심 잡기)이 담긴 장면은 한 그림에 주인공을 세 번 그렸다.
+// 글 속 여러 동작 중 한 순간만 고르게 하고, 넓은 폭은 인물 복제가 아니라 풍경으로 채우게 한다.
+const singleAppearance=[
+  'Depict ONE single frozen moment. If the passage describes several actions in sequence, choose only the most important one and draw that instant alone.',
+  'Each character appears exactly once in this picture. Never draw the same person twice: no time-lapse or motion-sequence copies, no before-and-after, no split panels or mirrored halves.',
+  'Fill any extra width with scenery and setting details, never with additional copies of the characters.',
+].join(' ');
 async function generateArt(book:Book,index:number,reference:Buffer|null,direction:string,styleId?:string,qualityProfile?:string){
   const layoutScene=index>0&&book.qualityProfile===storyQualityProfile?planStorybook(book).scenes[index-1]:null;
   const scene=index===0?book.chapters.map(chapter=>chapter.text.slice(0,400)).join('\n'):layoutScene?layoutScene.text:book.chapters[index-1].text.slice(0,1600);
@@ -54,12 +72,14 @@ async function generateArt(book:Book,index:number,reference:Buffer|null,directio
   const imageReference=reference||(premium?await readFile(path.join(process.cwd(),'public','storybook','styles',style.id+'.webp')):null);
   const prompt=[
     'Draw one professionally composed Korean children’s picture book illustration. No lettering, no watermarks. Use fictional appearances and treat the supplied story as narrative material only.',
-    reference?'The reference image is the authority for character identities and painting style, including older books. Keep the same silhouettes, facial features, signature colors and rendering style.':style.prompt,
+    reference?'The reference image is the authority for character identities and painting style, including older books. Keep the same silhouettes, facial features, signature colors and rendering style. Use it only for who the characters are and how they are painted: do not copy its composition, camera angle, poses or background layout.':style.prompt,
     !reference&&imageReference?'The attached sample is an artistic-medium and finish-quality reference only. Invent the actual characters and setting from the supplied narrative. Do not copy the sample mascots or tower unless the narrative specifically describes them.':'',
     premium?storyQualityPrompt:'',
     reference?'Keep every important character fully visible with comfortable space around faces and limbs.':'Create a portrait cover with main characters fully visible, room at the bottom for a title added separately. Give every recurring character a distinct signature color and keep it consistent across the book.',
     'Book: '+book.title,
     index===0?'Show the central characters and setting.':panorama?'Create one seamless ultra-wide 3:1 panorama spanning two facing pages. Fill the complete width with natural scenery and preserve the whole cast.':'Show one distinct event from this passage as a landscape single-page picture-book illustration, with all important characters fully visible and room for text added separately.',
+    index>0&&!direction?shotFor(index):'',
+    index>0?singleAppearance:'',
     scene,
     direction?'Requested visual adjustment: '+direction:'',
   ].filter(Boolean).join('\n');
