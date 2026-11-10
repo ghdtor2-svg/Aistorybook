@@ -9,10 +9,10 @@ Module._load=function(name,...args){if(name==='@netlify/blobs')return {getStore(
  return {get:async(k,{type}={})=>{const row=rows.get(k);if(!row)return null;if(type==='arrayBuffer')return row.data;if(type==='stream')return new Blob([row.data]).stream();return clone(row.data);},getWithMetadata:async(k)=>{const row=rows.get(k);return row?clone(row):null;},setJSON:(k,v,o)=>set(k,clone(v),o),set,list:async function*({prefix}){yield {blobs:[...rows.keys()].filter(k=>k.startsWith(prefix)).map(key=>({key}))};}};}};return nativeLoad.call(this,name,...args);};
 Object.assign(process.env,{NANGMAN_STORAGE:'netlify',NANGMAN_CLOUD_ENABLED:'1',NETLIFY:'true',CONTEXT:'production',NANGMAN_PUBLIC_URL:'https://example.test',NANGMAN_ADMIN_BRIDGE_SECRET:'fixture-admin-connection-secret-123456789',NANGMAN_WORKER_SECRET:'fixture-background-secret-123456789',OPENAI_API_KEY:'fixture-not-a-real-key'});
 const root='../.cloud-test-build/',orders=require(root+'src/lib/storybook/story-orders'),sign=require(root+'src/lib/storybook/cloud-signing'),bridge=require(root+'src/app/api/storybook/admin-bridge/route'),story=require(root+'src/app/api/office/story/route'),art=require(root+'src/app/api/storybook/illustrations/route'),worker=require(root+'netlify/functions/storybook-task-background').default;
-const jobs=[];let textCalls=0,imageCalls=0,failImage=false;
+const jobs=[];let textCalls=0,imageCalls=0,failImage=false,shortTexts=0;
 global.fetch=async(url,init)=>{
  if(String(url).includes('/.netlify/functions/')){jobs.push(new Request(url,init));return new Response(null,{status:202});}
- if(String(url).endsWith('/v1/responses')){textCalls++;await new Promise(r=>setTimeout(r,15));const chapters=Array.from({length:5},(_,i)=>({title:'장면 '+i,text:'친구들과 함께 사계절 숲을 걸으며 서로의 마음을 나누었어요. '.repeat(50).slice(0,500)}));return Response.json({output:[{content:[{type:'output_text',text:JSON.stringify({title:'공유 저장소 시험',chapters,note:'가상 데이터'})}]}]});}
+ if(String(url).endsWith('/v1/responses')){textCalls++;await new Promise(r=>setTimeout(r,15));const size=shortTexts>0&&shortTexts--?200:500;const chapters=Array.from({length:5},(_,i)=>({title:'장면 '+i,text:'친구들과 함께 사계절 숲을 걸으며 서로의 마음을 나누었어요. '.repeat(50).slice(0,size)}));return Response.json({output:[{content:[{type:'output_text',text:JSON.stringify({title:'공유 저장소 시험',chapters,note:'가상 데이터'})}]}]});}
  if(String(url).includes('/v1/images/')){imageCalls++;if(failImage)throw Error('Simulated unknown upstream outcome');return Response.json({data:[{b64_json:Buffer.from([255,216,255,217]).toString('base64')}]});}
  throw Error('Unexpected network: '+url);
 };
@@ -53,6 +53,17 @@ async function run(){
  assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:randomUUID()}))).status,409);
  const retryId=randomUUID();assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:retryId,confirmUncertain:true}))).status,202);
  const textBefore=textCalls;while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,textBefore+1);assert.equal((await (await story.GET(customer('/api/office/story',lost.code))).json()).book.id,retryId);
+ // A too-short first draft is expanded once in the same task. A draft still short after that is a definite
+ // failure: it reports the measured length and can be restarted without the uncertain-retry confirmation.
+ const shortId=randomUUID(),shortOrder=await (await bridge.POST(signed({action:'issue',id:shortId,transferConfirmed:true}))).json();
+ shortTexts=1;let before=textCalls;assert.equal((await story.POST(customer('/api/office/story',shortOrder.code,{...lostBody,id:randomUUID()}))).status,202);
+ while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,before+2);assert.equal((await (await story.GET(customer('/api/office/story',shortOrder.code))).json()).state,'completed');
+ const stuckId=randomUUID(),stuck=await (await bridge.POST(signed({action:'issue',id:stuckId,transferConfirmed:true}))).json();
+ shortTexts=2;before=textCalls;assert.equal((await story.POST(customer('/api/office/story',stuck.code,{...lostBody,id:randomUUID()}))).status,202);
+ while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,before+2);
+ const stuckState=await (await story.GET(customer('/api/office/story',stuck.code))).json();assert.equal(stuckState.state,'paused');assert.match(stuckState.error,/story_short, 1000자/);
+ assert.equal((await story.POST(customer('/api/office/story',stuck.code,{...lostBody,id:randomUUID()}))).status,202);while(jobs.length)await worker(jobs.shift());
+ assert.equal((await (await story.GET(customer('/api/office/story',stuck.code))).json()).state,'completed');
  process.env.CONTEXT='deploy-preview';assert.equal((await story.GET(customer('/api/office/story',rotated.code))).status,403);assert.equal((await bridge.POST(signed({action:'list'}))).status,503);
  console.log('PASS cloud: signed admin bridge, replay/expiry, atomic claims, one text + 18 images, private assets, uncertain retry, rotate/revoke, preview isolation (all APIs mocked)');
 }
