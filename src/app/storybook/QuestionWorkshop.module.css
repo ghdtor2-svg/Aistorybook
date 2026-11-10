@@ -214,3 +214,5 @@ main.workshop {
   .card .reviewGrid { grid-template-columns: minmax(0,1fr); }
   .card .controls button[type=submit] { flex-basis: 100%; }
 }
+
+.choiceLead { margin: 0 0 12px; color: var(--muted); font-size: .85rem; line-height: 1.65; }

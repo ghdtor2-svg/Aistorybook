@@ -6,7 +6,9 @@ import PurchaseGuide from '../../components/PurchaseGuide';
 import StoryReader from './StoryReader';
 import QuestionImport from './QuestionImport';
 import StoryDesignWorkshop from './StoryDesignWorkshop';
+import ChoiceChips from './ChoiceChips';
 import {coreQuestionHint} from '../../lib/storybook/story-design';
+import {coreQuestionChoices} from '../../lib/storybook/story-choices';
 import {useUnsavedBookGuard} from './useUnsavedBookGuard';
 import {questionDraftJSON,questionDraftText} from '../../lib/storybook/question-draft';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
@@ -39,6 +41,7 @@ export default function Storybook(){
  const editingIndex=story?.editingId?profile?.answers.findIndex(a=>a.question.id===story.editingId):-1;
  const currentStage=question?'write':profile?.completionStatus==='confirmed'?'create':'review';
  const groupNumber=question?coreQuestions.findIndex(item=>item.group===question.group)+1:5;
+ const choiceGroups=question?coreQuestionChoices(question):[];
  return <main className={`storybook ${styles.workshop}`}>
   <header className={styles.banner}>
    <div>
@@ -86,6 +89,8 @@ export default function Storybook(){
      <h2 id="current-question">{question.text}</h2>
      <p className={styles.promptNote}>{story.editingId?'이전 답변을 수정 중입니다. 저장하거나 건너뛰면 이후 답변과 요약 수정 내용이 삭제되고 질문을 다시 평가합니다.':coreQuestionHint(question.group)}</p>
      <form onSubmit={event=>submit(event)}>
+      {choiceGroups.length>0&&<p className={styles.choiceLead}>보기를 눌러 고르면 아래 답변에 담겨요. 보기에 없으면 직접 적어도 괜찮고, 여러 개 골라도 돼요.</p>}
+      <ChoiceChips key={question.id} groups={choiceGroups} value={story.draft} onChange={text=>setStory({...story,draft:text})} idPrefix={'core-'+question.id}/>
       <label htmlFor="story-answer">답변</label>
       <textarea id="story-answer" value={story.draft} maxLength={4000} onChange={e=>setStory({...story,draft:e.target.value})} placeholder="기억나는 장면이나 마음을 적어 보세요. 이름 대신 별칭을 써도 좋아요."/>
       <p className={styles.answerMeta}>

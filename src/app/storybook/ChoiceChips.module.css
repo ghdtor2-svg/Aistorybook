@@ -1,0 +1,73 @@
+.wrap { display: grid; gap: 14px; margin: 4px 0 16px; }
+.group { min-width: 0; }
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: #4a3763;
+  font-size: .89rem;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.hint { color: #8b7fa0; font-size: .72rem; font-weight: 400; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.chips .chip, .chips .picked, .chips .direct {
+  margin: 0;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: .86rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: normal;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+
+.chips .chip { border: 1px solid #ded2ea; background: #fffdfa; color: #4a3763; }
+.chips .chip:hover { border-color: #a98bca; background: #f6eefc; color: #3d2b57; }
+.chips .picked { border: 1px solid #503979; background: #503979; color: #fff8ef; font-weight: 700; }
+.chips .picked::before { content: '✓ '; }
+.chips .picked:hover { background: #3f2c63; }
+.chips .direct { border: 1px dashed #a98bca; background: #f6f0fa; color: #503979; font-weight: 600; }
+.chips .direct:hover { border-style: solid; background: #ece0f6; }
+
+.directBox {
+  margin-top: 10px;
+  padding: 12px 13px;
+  border: 1px solid #ded2ea;
+  border-radius: 14px;
+  background: #faf6fd;
+}
+
+.directBox > label { display: block; margin-bottom: 7px; color: #4a3763; font-size: .78rem; font-weight: 700; }
+.directRow { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.directBox .directRow input {
+  flex: 1 1 190px;
+  min-width: 0;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 13px;
+  border: 1px solid #d7cae4;
+  border-radius: 12px;
+  background: #fffdfa;
+  color: #302344;
+  font: inherit;
+}
+
+.directBox .directRow input:focus { border-color: #8b6dab; outline: 2px solid #8b6dab40; }
+.directBox .directRow button { margin: 0; min-height: 42px; padding: 9px 16px; border-radius: 12px; font-size: .85rem; background: #503979; color: #fff8ef; }
+.directBox .directRow button:disabled { background: #cbbcdb; color: #fffdfa; }
+.directBox .directRow .close { background: #efe7f5; color: #503979; }
+
+@media (max-width: 500px) {
+  .chips .chip, .chips .picked, .chips .direct { padding: 8px 12px; font-size: .81rem; }
+  .directBox .directRow button { flex: 1 1 auto; }
+}
