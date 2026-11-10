@@ -18,7 +18,7 @@ export type Order = {
   operatorNote?:string;
   adminEvents?:{action:string;at:number}[];
   book?: Book;
-  request?: {id:string; startedAt:number; styleId?:string;status?:'queued'|'running'|'paused';brief?:string};
+  request?: {id:string; startedAt:number; styleId?:string;status?:'queued'|'running'|'paused';brief?:string;reason?:string};
   art?: {base:string[]; book?:Book; styleId?:string; qualityProfile?:string; alternative?:{index:number; image:string}; active?:{kind:'base'|'revision'; startedAt:number}; job?:{status:'queued'|'running'|'paused'|'completed';updatedAt:number;origin?:string;token?:string;kind?:'base'|'revision';index?:number;direction?:string;dispatchedAt?:number;inFlightIndex?:number;reason?:'failed'|'uncertain'}};
 };
 
@@ -30,7 +30,9 @@ export const loopback = (request:Request) => {
   return /^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d{1,5})?$/.test(host)
     && (!origin || origin === url.protocol+'//'+host)
     && !request.headers.has('x-nf-request-id')
-    && !process.env.NETLIFY;
+    // next.config.mjs 가 이 값을 문자열 'true' 또는 'false' 로 못 박는다.
+    // 'false' 도 참으로 읽히므로 값 자체를 비교해야 내 PC 에서 막히지 않는다.
+    && process.env.NETLIFY!=='true';
 };
 const orderIdPattern = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 const orderFile = (id:string) => path.join(checkoutDir(), id+'.json');

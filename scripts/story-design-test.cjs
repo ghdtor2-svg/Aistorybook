@@ -18,7 +18,7 @@ const memory=new Map();const storage={getItem:k=>memory.get(k)||null,setItem:(k,
 saveStory(storage,{profile:p,draft:'',editingId:null});assert.deepEqual(restoreStory(storage).profile.storyDesign,p.storyDesign);
 for(const bad of [null,[],{unknown:'x'},{characters:123},{worldRules:'x'.repeat(4001)}])assert.throws(()=>parseStoryDesign(bad));
 const malicious=JSON.parse(raw);malicious.story.profile.storyDesign={accessToken:'not-allowed'};assert.throws(()=>importQuestionDraft(JSON.stringify(malicious)));
-const brief=storyBrief(recovered.profile);for(const value of Object.values(p.storyDesign))assert(brief.includes(value));assert(brief.includes('주인공의 선택'));assert(brief.includes('본문 삽화 17장'));assert(brief.includes('4500~6500자'));assert(brief.length<MAX_STORY_BRIEF_LENGTH);
+const brief=storyBrief(recovered.profile);for(const value of Object.values(p.storyDesign))assert(brief.includes(value));assert(brief.includes('주인공의 선택'));assert(brief.includes('본문 삽화 17장'));assert(brief.includes('약 2500자'));assert(brief.length<MAX_STORY_BRIEF_LENGTH);
 const school=storyDesignQuestions({memorableEvent:'학교에 처음 간 날',emotions:''});const farewell=storyDesignQuestions({memorableEvent:'친구와 헤어진 날',emotions:''});
 assert.notEqual(school.find(q=>q.id==='goalAndObstacle').question,farewell.find(q=>q.id==='goalAndObstacle').question);
 assert.equal(school.length,9);assert.equal(new Set(school.map(q=>q.id)).size,9);assert.deepEqual(designProgress(p.storyDesign),{answered:4,total:9});

@@ -12,7 +12,7 @@ const root='../.cloud-test-build/',orders=require(root+'src/lib/storybook/story-
 const jobs=[];let textCalls=0,imageCalls=0,failImage=false;
 global.fetch=async(url,init)=>{
  if(String(url).includes('/.netlify/functions/')){jobs.push(new Request(url,init));return new Response(null,{status:202});}
- if(String(url).endsWith('/v1/responses')){textCalls++;await new Promise(r=>setTimeout(r,15));const chapters=Array.from({length:5},(_,i)=>({title:'장면 '+i,text:'친구들과 함께 사계절 숲을 걸으며 서로의 마음을 나누었어요. '.repeat(50).slice(0,1000)}));return Response.json({output:[{content:[{type:'output_text',text:JSON.stringify({title:'공유 저장소 시험',chapters,note:'가상 데이터'})}]}]});}
+ if(String(url).endsWith('/v1/responses')){textCalls++;await new Promise(r=>setTimeout(r,15));const chapters=Array.from({length:5},(_,i)=>({title:'장면 '+i,text:'친구들과 함께 사계절 숲을 걸으며 서로의 마음을 나누었어요. '.repeat(50).slice(0,500)}));return Response.json({output:[{content:[{type:'output_text',text:JSON.stringify({title:'공유 저장소 시험',chapters,note:'가상 데이터'})}]}]});}
  if(String(url).includes('/v1/images/')){imageCalls++;if(failImage)throw Error('Simulated unknown upstream outcome');return Response.json({data:[{b64_json:Buffer.from([255,216,255,217]).toString('base64')}]});}
  throw Error('Unexpected network: '+url);
 };

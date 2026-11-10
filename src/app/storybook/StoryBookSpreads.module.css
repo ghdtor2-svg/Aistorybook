@@ -2,7 +2,8 @@
 .edition { color: #8b7250; font-size: .8em; }
 .spread { margin: 0; background: #fff9ee; overflow: hidden; }
 .texts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 4vw, 52px); padding: clamp(20px, 4vw, 42px); }
-.copy { min-width: 0; overflow-wrap: anywhere; }
+/* 본문이 약 2,500자로 줄어 쪽당 글이 적다. 읽기 도구에서 고른 크기보다 1.3배 크게 보여 준다. */
+.copy { min-width: 0; overflow-wrap: anywhere; font-size: 1.3em; line-height: 1.8; }
 .copy p { margin: 0 0 .7em; white-space: pre-wrap; word-break: keep-all; scroll-margin-top: 24px; }
 .copy p:last-child { margin-bottom: 0; }
 .panorama img, .individual img { display: block; width: 100%; height: auto; }
