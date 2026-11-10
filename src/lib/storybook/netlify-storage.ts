@@ -6,9 +6,16 @@ export class StorageConflict extends Error {}
 const transactions=new AsyncLocalStorage<{id:string;etag:string;written:boolean}>();
 // Private Blobs requests must bypass Next.js's fetch/data cache. This also
 // avoids routing the storage client's own requests through Netlify's cache store.
-export const storageFetch:typeof fetch=(input,init)=>fetch(input,{...init,cache:'no-store'});
+// 저장소가 응답하지 않으면 함수가 플랫폼 제한에 걸려 통째로 죽고 502 가 나간다.
+// 요청마다 기한을 두어, 멈추는 대신 어떤 실패인지 알 수 있는 오류로 끝나게 한다.
+// 호출자가 이미 중단 신호를 주면 그쪽을 따른다.
+export const STORAGE_TIMEOUT_MS=15000;
+export const ASSET_TIMEOUT_MS=60000;
+const bounded=(ms:number):typeof fetch=>(input,init)=>fetch(input,{...init,cache:'no-store',signal:init?.signal??AbortSignal.timeout(ms)});
+export const storageFetch:typeof fetch=bounded(STORAGE_TIMEOUT_MS);
+const assetFetch:typeof fetch=bounded(ASSET_TIMEOUT_MS);
 export const orderStore=(fetchClient:typeof fetch=storageFetch)=>getStore({name:'nangman-orders-v1',consistency:'strong',fetch:fetchClient});
-const assets=()=>getStore({name:'nangman-art-v1',consistency:'strong',fetch:storageFetch});
+const assets=()=>getStore({name:'nangman-art-v1',consistency:'strong',fetch:assetFetch});
 const key=(id:string)=>'orders/'+id;
 export async function cloudReadOrder(id:string):Promise<Order|null>{return await orderStore().get(key(id),{type:'json'}) as Order|null;}
 export async function cloudCreateOrder(order:Order){return (await orderStore().setJSON(key(order.id),order,{onlyIfNew:true})).modified;}

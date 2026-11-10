@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {adminConfigured,adminOrigin,adminSecret,authenticated,clearedCookie,secureRequest,sessionCookie,validPassword,MIN_ADMIN_SECRET} from '../../../lib/storybook/admin-auth';
 import {blockedFor,clearFailures,recordFailure} from '../../../lib/storybook/admin-guard';
+import {storageWriteCheck} from '../../../lib/storybook/storage-readiness';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const json=(value:unknown,status=200)=>NextResponse.json(value,{status,headers:{'Cache-Control':'no-store'}});
@@ -20,6 +21,11 @@ export async function POST(request:Request){
   const response=json({authenticated:false});
   response.headers.set('Set-Cookie',clearedCookie(secure));
   return response;
+ }
+ // 저장소 쓰기가 되는지 확인한다. 로그인한 뒤에만 쓴다.
+ if(body.action==='storage-check'){
+  if(!secret||!authenticated(request,secret))return json({error:'관리자 로그인이 필요해요.'},401);
+  return json({write:await storageWriteCheck()});
  }
  if(body.action!=='login')return json({error:'알 수 없는 요청입니다.'},400);
  if(!secret)return json({error:'관리자 비밀번호가 설정되지 않았습니다. 배포 환경에 '+MIN_ADMIN_SECRET+'자 이상으로 넣어 주세요.'},503);
