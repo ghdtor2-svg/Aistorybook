@@ -4,7 +4,7 @@ const book={id,title:'복구한 동화',chapters:[{title:'첫 장',text:'서버�
 test('lost generation response survives reload and recovers without another POST',async({page})=>{
  let posts=0,reads=0;
  await page.route('**/api/office/story*',route=>{if(route.request().method()==='POST'){posts++;return route.abort('failed');}reads++;return route.fulfill({json:{state:'completed',book:{...book,id: new URL(route.request().url()).searchParams.get('id')}}});});
- await page.goto('/storybook');for(let i=0;i<15;i++){const skip=page.getByRole('button',{name:'이 질문 건너뛰기',exact:true});if(!await skip.count())break;await skip.click();}
+ await page.goto('/storybook');await page.getByRole('button',{name:'이 질문 건너뛰기',exact:true}).waitFor();for(let i=0;i<15;i++){const skip=page.getByRole('button',{name:'이 질문 건너뛰기',exact:true});if(!await skip.count())break;await skip.click();}
  await page.getByRole('button',{name:'내용 최종 확인',exact:true}).click();await page.getByRole('checkbox').check();await page.getByRole('button',{name:'확인한 내용으로 동화 만들기'}).click();
  await expect(page.getByRole('button',{name:'생성 결과 확인·복구 · 새 생성 없음'})).toBeVisible();expect(posts).toBe(1);
  await page.reload();await expect(page.getByRole('button',{name:'확인한 내용으로 동화 만들기'})).toBeDisabled();

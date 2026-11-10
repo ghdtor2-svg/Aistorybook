@@ -1,1 +1,0 @@
-﻿{"extends":"./tsconfig.json","compilerOptions":{"noEmit":false,"outDir":".office-test-build","rootDir":"src/lib","module":"CommonJS","moduleResolution":"Node","incremental":false,"isolatedModules":false,"plugins":[]},"include":["src/lib/office/**/*.ts","src/lib/agents.ts"],"exclude":["node_modules"]}

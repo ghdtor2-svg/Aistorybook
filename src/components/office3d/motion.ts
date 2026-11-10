@@ -1,2 +1,0 @@
-import type {AgentStatus} from './design';
-export function mascotPose(status:AgentStatus,time:number,enabled:boolean){const working=status==='working'&&enabled,t=Number.isFinite(time)?time:0;return {y:1.25+(working?Math.sin(t*4)*0.07:0),lean:working?-0.12+Math.sin(t*2)*0.04:0,turn:0.32+(working?Math.sin(t*1.7)*0.07:0),tilt:status==='error'?0.12:working?Math.sin(t*3)*0.045:0,leftHand:working?Math.sin(t*11)*0.1:0,rightHand:working?Math.sin(t*11+Math.PI)*0.1:0};}

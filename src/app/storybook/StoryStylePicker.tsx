@@ -18,9 +18,9 @@ export default function StoryStylePicker({value,onChange,disabled}:{value:StyleC
     <div className={styles.grid}>
       {storyArtStyles.map(style=><div key={style.id} className={styles.option}>
         <label className={styles.card} data-selected={value===style.id}>
-        {/* These are fixed local examples, shown uncropped for comparison. */}
+        {/* 고정된 예시 그림이다. 격자에는 줄인 미리보기를 쓰고 원본은 크게 보기에서만 받는다. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={'/storybook/styles/'+style.id+'.webp?v=2'} alt={style.name+' 화풍 예시 · '+artStyleDescriptions[style.id]} loading="lazy" width={1200} height={800}/>
+        <img src={'/storybook/styles/thumb/'+style.id+'.webp?v=3'} alt={style.name+' 화풍 예시 · '+artStyleDescriptions[style.id]} loading="lazy" decoding="async" fetchPriority="low" width={520} height={347}/>
         <span><input type="radio" name={group} value={style.id} checked={value===style.id} onChange={()=>onChange(style.id)} aria-label={style.name}/><strong>{style.name}</strong>{value===style.id&&<small>선택됨</small>}</span>
         </label>
         <p className={styles.description}>{artStyleDescriptions[style.id]}</p>
