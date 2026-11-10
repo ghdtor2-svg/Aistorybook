@@ -45,7 +45,7 @@ export default function Storybook(){
     <h1>이야기의 씨앗</h1>
     <p className={styles.bannerText}>기억에 남는 순간을 하나씩 들려주세요. 작은 기억도 이야기의 시작이 돼요.</p>
    </div>
-   <nav aria-label="서비스 이동"><Link className={styles.homeLink} href="/">동화 홈</Link></nav>
+   <nav aria-label="서비스 이동"><a className={styles.homeLink} href="#purchase-guide">구매 문의 · 입금 안내</a>{' '}<Link className={styles.homeLink} href="/">동화 홈</Link></nav>
   </header>
 
   {storageError&&<>
