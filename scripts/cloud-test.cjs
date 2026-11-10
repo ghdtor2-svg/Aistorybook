@@ -29,7 +29,10 @@ async function run(){
  const requestId=randomUUID(),body={id:requestId,brief:'가족과 계절 여행',styleId:'watercolor'};
  assert.equal((await story.POST(customer('/api/office/story',code,body))).status,202);
  const duplicate=await story.POST(customer('/api/office/story',code,{...body,id:randomUUID()}));assert.equal((await duplicate.json()).requestId,requestId);
- const textTask=jobs.shift();await Promise.all([worker(textTask.clone()),worker(textTask.clone())]);while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,1);
+ // The function runtime has no NETLIFY/CONTEXT variables: the invocation context must supply them, and a preview stays closed.
+ delete process.env.NETLIFY;delete process.env.CONTEXT;const textTask=jobs.shift();
+ await worker(textTask.clone(),{deploy:{context:'deploy-preview'}});assert.equal(textCalls,0);
+ const production={deploy:{context:'production'}};await Promise.all([worker(textTask.clone(),production),worker(textTask.clone(),production)]);assert.equal(process.env.CONTEXT,'production');while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,1);
  const restored=await (await story.GET(customer('/api/office/story',code))).json();assert.equal(restored.state,'completed');assert.equal(restored.book.id,requestId);
  const book=restored.book;assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'next',book}))).status,403);
  assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'start',book}))).status,200);
@@ -42,6 +45,14 @@ async function run(){
  const remote=require(root+'src/lib/storybook/remote-admin');process.env.NANGMAN_REMOTE_URL='https://example.test';const earlierFetch=global.fetch;
  global.fetch=async(url,init)=>{assert.equal(url,'https://example.test/api/storybook/admin-bridge');assert.equal(new Headers(init.headers).has('x-nangman-signature'),true);assert.equal(JSON.stringify(init).includes('OFFICE_ADMIN_PASSWORD'),false);return new Response('Unavailable',{status:503});};
  await assert.rejects(()=>remote.remoteAdmin({action:'list'}));global.fetch=earlierFetch;
+ // A queued request no worker claimed becomes recoverable instead of 'running' forever; only a confirmed retry replaces it.
+ const lostId=randomUUID(),lost=await (await bridge.POST(signed({action:'issue',id:lostId,transferConfirmed:true}))).json(),lostBody={brief:'시작되지 않은 작업',styleId:'watercolor'};
+ assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:randomUUID()}))).status,202);jobs.length=0;
+ await orders.withOrder(lostId,async order=>orders.saveOrder({...order,request:{...order.request,startedAt:Date.now()-300000}}));
+ assert.equal((await (await story.GET(customer('/api/office/story',lost.code))).json()).state,'paused');assert.equal(jobs.length,0);
+ assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:randomUUID()}))).status,409);
+ const retryId=randomUUID();assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:retryId,confirmUncertain:true}))).status,202);
+ const textBefore=textCalls;while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,textBefore+1);assert.equal((await (await story.GET(customer('/api/office/story',lost.code))).json()).book.id,retryId);
  process.env.CONTEXT='deploy-preview';assert.equal((await story.GET(customer('/api/office/story',rotated.code))).status,403);assert.equal((await bridge.POST(signed({action:'list'}))).status,503);
  console.log('PASS cloud: signed admin bridge, replay/expiry, atomic claims, one text + 18 images, private assets, uncertain retry, rotate/revoke, preview isolation (all APIs mocked)');
 }

@@ -20,6 +20,8 @@ export async function GET(request:Request){
   const order=await orderForCode(codeFrom(request));
   if(!order)return json({error:'결제 후 받은 제작 코드를 입력해 주세요.'},401);
   if(order.book)return json({state:'completed',book:order.book});
+  // A queued request that no worker picked up must not look like it is running forever.
+  if(order.request?.status==='queued'&&Date.now()-order.request.startedAt>=runningWindow)return json({state:'paused',requestId:order.request.id,error:'온라인 작업이 시작되지 않았어요. 대기 기록 해제 안내를 확인한 뒤 다시 시작할 수 있습니다.'});
   if(order.request?.status==='queued'){await kickCloudText(order);return json({state:'running',requestId:order.request?.id});}
   if(order.request?.status==='paused')return json({state:'paused',requestId:order.request?.id,error:'완료 여부를 확인해야 하는 요청이 있어요. 자동 재시도하지 않습니다.'});
   if(cloudStorageEnabled()&&order.request&&Date.now()-order.request.startedAt>=runningWindow)return json({state:'paused',requestId:order.request?.id,error:'이전 작업의 완료 여부를 먼저 확인해 주세요.'});
@@ -56,7 +58,7 @@ export async function POST(request:Request){
       const queued=await withOrder(order.id,async current=>{
         if(!matchesOrderCode(current,codeFrom(request)))throw new OrderCodeChanged();
         if(current.book)return {book:current.book};
-        if(current.request&&(current.request.status==='queued'||Date.now()-current.request.startedAt<runningWindow&&current.request.status!=='paused'))return {pending:current};
+        if(current.request&&Date.now()-current.request.startedAt<runningWindow&&current.request.status!=='paused')return {pending:current};
         if(current.request&&!confirmedRetry)return {uncertain:true};
         const next={...current,request:{id,brief,styleId,startedAt:Date.now(),status:'queued' as const}};await saveOrder(next);return {pending:next};
       });

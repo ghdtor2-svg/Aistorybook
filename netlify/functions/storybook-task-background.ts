@@ -1,4 +1,4 @@
-import type {Config} from '@netlify/functions';
+import type {Config,Context} from '@netlify/functions';
 import {cloudEnabled,cloudOrigin} from '../../src/lib/storybook/cloud-config';
 import {verifySigned} from '../../src/lib/storybook/cloud-signing';
 import {taskOrder,kickCloudArt,type CloudTask} from '../../src/lib/storybook/cloud-tasks';
@@ -6,7 +6,12 @@ import {getOrder} from '../../src/lib/storybook/story-orders';
 import {POST as writeStory} from '../../src/app/api/office/story/route';
 import {POST as drawPicture} from '../../src/app/api/storybook/illustrations/route';
 
-export default async function handler(request:Request){
+export default async function handler(request:Request,context?:Context){
+ // Netlify does not expose the build-time NETLIFY/CONTEXT variables to functions at runtime,
+ // and next.config.mjs only inlines them into Next.js code. Take them from the invocation
+ // context so the production check works here while previews and branch deploys stay closed.
+ const deployContext=context?.deploy?.context;
+ if(deployContext){process.env.NETLIFY='true';process.env.CONTEXT=deployContext;}
  if(!cloudEnabled())return new Response(null,{status:503});
  try{
   const raw=await request.text();if(raw.length>1024||!await verifySigned(request,raw,'worker'))return new Response(null,{status:403});

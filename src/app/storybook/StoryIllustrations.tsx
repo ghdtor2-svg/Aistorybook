@@ -6,6 +6,8 @@ import StoryPages from './StoryPages';
 import styles from './StoryPages.module.css';
 
 const endpoint='/api/storybook/illustrations';
+// Online customers have no local production server; only the owner's PC shows the local wording.
+const onLocalPc=()=>typeof window!=='undefined'&&['localhost','127.0.0.1','[::1]','::1'].includes(window.location.hostname);
 type Art={bookId:string;style?:string|null;labels?:string[]|null;base:string[];alternative:{index:number;image:string}|null;busy:boolean;total:number;job?:{status:'queued'|'running'|'paused'|'completed';reason?:'failed'|'uncertain'}|null};
 
 async function request(code:string,body?:object):Promise<Art>{
@@ -70,7 +72,7 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     const timer=setInterval(()=>{
       if(checking)return;checking=true;
       void request(code).then(result=>{if(current&&result.bookId===book.id){setArt(result);failures=0;}}).catch(()=>{
-        if(current&&++failures>=3){clearInterval(timer);setMessage('진행 상태를 확인하지 못했어요. 컴퓨터에서 제작은 계속될 수 있어요. 잠시 뒤 그림 상태를 다시 확인해 주세요.');}
+        if(current&&++failures>=3){clearInterval(timer);setMessage('진행 상태를 확인하지 못했어요. '+(onLocalPc()?'컴퓨터에서 제작은':'제작은')+' 계속될 수 있어요. 잠시 뒤 그림 상태를 다시 확인해 주세요.');}
       }).finally(()=>{checking=false;});
     },2000);
     return ()=>{current=false;clearInterval(timer);};
@@ -116,7 +118,7 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     {art?.style&&<p>이 동화의 화풍 · {art.style}</p>}
     {!art?<button type="button" onClick={()=>void refresh()}>삽화 제작 상태 확인</button>:<>
       <p role="status">완료 {art.base.length}/{art.total}장</p>
-      {art.job&&['queued','running'].includes(art.job.status)&&<p role="status">컴퓨터에서 그림을 이어 만들고 있어요. 이 화면을 닫아도 제작은 계속됩니다. 컴퓨터와 로컬 제작 서버는 켜 두세요.</p>}
+      {art.job&&['queued','running'].includes(art.job.status)&&<p role="status">{onLocalPc()?'컴퓨터에서 그림을 이어 만들고 있어요. 이 화면을 닫아도 제작은 계속됩니다. 컴퓨터와 로컬 제작 서버는 켜 두세요.':'그림을 이어 만들고 있어요. 이 화면을 닫아도 제작은 계속됩니다. 나중에 같은 제작 코드로 다시 열어 확인할 수 있어요.'}</p>}
       {art.job?.status==='paused'&&<p role="status">{art.job.reason==='uncertain'?'이전 요청의 완료 여부를 확인해야 해서 자동 제작을 멈췄어요. 중복 제작을 막기 위해 자동 재시도하지 않습니다.':'제작 중 문제가 생겨 멈췄어요. 완성된 그림은 보관되어 있고, 남은 그림만 다시 시작할 수 있어요.'}</p>}
       {art.base.length<art.total&&<button type="button" disabled={busy||art.busy||!!art.job&&['queued','running'].includes(art.job.status)} onClick={()=>void draw(false)}>{art.base.length?'남은 그림 이어서 만들기':'표지와 삽화 만들기'}</button>}
       <button type="button" className="secondary" disabled={busy} onClick={()=>void refresh()}>그림 상태 다시 확인</button>
