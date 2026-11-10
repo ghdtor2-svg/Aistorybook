@@ -1,6 +1,8 @@
 {
-  "version": "2026-11-07-cloud-connection-v1",
+  "version": "2026-11-11-story-length-v2",
   "features": [
+    "story-2500-chars-expand-once",
+    "story-diagnostic-codes",
     "signed-admin-bridge",
     "conditional-shared-orders",
     "background-image-tasks",
