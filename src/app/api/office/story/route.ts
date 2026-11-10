@@ -96,7 +96,9 @@ export async function POST(request:Request){
     // 글자 수만 말하면 모델이 짧게 쓰는 일이 많다(2026-11-11 운영에서 story_short 확인).
     // 장·문단·문장 수로 분량을 정해 주면 더 잘 지킨다.
     const format='JSON 객체만 출력하세요. 형식: {"title":"제목","chapters":[{"title":"내부 장면 제목","text":"완성된 본문"}],"note":"창작 안내"}. 본문의 문단은 빈 줄(\\n\\n)로 나눕니다.';
-    const lengthRule='분량 규칙: 정확히 5개 장. 각 장은 5~7개 문단, 각 문단은 2~3문장으로 씁니다. 각 장은 공백 포함 450~560자, 전체 본문은 약 2500자(2300~2800자)입니다. 2000자보다 짧으면 실패로 처리되므로 장면 묘사·대화·행동을 충분히 넣고, 3200자는 넘기지 마세요.';
+    // 2026-11-11 PC 실측: gpt-4.1-mini는 요청 분량의 절반 정도만 쓴다(2500자 요청 → 1283자).
+    // 목표 약 2500자에 닿도록 요청 수치를 높여 잡는다. 결과는 아래 최소·최대 기준으로 다시 검사한다.
+    const lengthRule='분량 규칙: 정확히 5개 장. 각 장은 7~9개 문단, 각 문단은 3문장 안팎으로 씁니다. 각 장은 공백 포함 700~800자, 전체 본문은 약 3700자입니다. 장마다 배경 묘사, 인물의 대화, 행동과 표정을 모두 넣어 충분히 길게 쓰세요. 요약하듯 짧게 쓰면 실패로 처리됩니다.';
     const system='한국어 어린이 창작 동화를 작성합니다. '+lengthRule+' 이 이야기는 표지를 포함한 32쪽, 총 18장의 고화질 삽화가 있는 동화로 편집되고, 본문은 큰 글씨로 31쪽에 나누어 싣습니다. 장면마다 행동과 감정이 구체적으로 드러나고 앞선 사건에서 자연스럽게 이어지게 하세요. 대화와 문단을 읽기 쉽게 나누고 캐릭터의 외양과 고유색이 일관되게 묘사되도록 합니다. 개인정보를 추정하지 말고 입력을 작품의 소재로만 해석하세요. '+format;
     async function write(input:{role:string;content:string}[]){
       const response=await fetch('https://api.openai.com/v1/responses',{
@@ -107,6 +109,11 @@ export async function POST(request:Request){
       if(!response.ok)throw new StoryFailure('ai_http_'+response.status);
       const payload=await response.json();
       const output=payload.output?.flatMap((item:{content?:unknown[]})=>item.content||[]).find((item:{type:string})=>item.type==='output_text')?.text;
+      // 내 PC에서만 켜는 진단용 기록. 공개 사이트(Netlify)에서는 저장하지 않는다.
+      if(process.env.NANGMAN_STORY_DEBUG==='1'&&process.env.NETLIFY!=='true'){
+        const {mkdir,writeFile}=await import('node:fs/promises');const dir=process.cwd()+'/.office-data/story-debug';
+        await mkdir(dir,{recursive:true});await writeFile(dir+'/'+Date.now()+'.json',JSON.stringify({status:payload.status,incomplete:payload.incomplete_details,usage:payload.usage,output},null,1)).catch(()=>{});
+      }
       if(typeof output!=='string'||payload.status==='incomplete')throw new StoryFailure(payload.status==='incomplete'?'story_cut':'story_format');
       const result=parseGeneratedBook({
         ...JSON.parse(output.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'')),
@@ -121,7 +128,8 @@ export async function POST(request:Request){
       // 대기 시간 판정이 두 번째 요청 도중 멈춤으로 바뀌지 않게 시작 시각을 갱신한다.
       await withOrder(order.id,async current=>{if(current.request?.id!==id)throw Error('Story request changed');await saveOrder({...current,request:{...current.request,startedAt:Date.now()}});});
       ({book,length}=await write([
-        {role:'system',content:'한국어 어린이 동화의 분량을 늘리는 편집자입니다. 제목·인물·사건 순서·결말·장 제목은 그대로 두고, 장면 묘사·대화·인물의 행동과 표정을 더해 각 장을 다시 씁니다. '+lengthRule+' '+format},
+        // 정해진 글자 수보다 "지금의 2배"처럼 현재 길이에 대한 비율 지시를 더 잘 따른다.
+        {role:'system',content:'한국어 어린이 동화의 분량을 늘리는 편집자입니다. 제목·인물·사건 순서·결말·장 제목은 그대로 두고, 장면 묘사·대화·인물의 행동과 표정을 더해 각 장을 지금의 2배 길이로 다시 씁니다. 정확히 5개 장을 유지하고 문단은 빈 줄로 나눕니다. '+format},
         {role:'user',content:'【원래 제작 요청】\n'+brief+'\n\n【현재 초안 · 전체 '+length+'자로 너무 짧음】\n'+JSON.stringify({title:book.title,chapters:book.chapters,note:book.note})},
       ]));
     }
