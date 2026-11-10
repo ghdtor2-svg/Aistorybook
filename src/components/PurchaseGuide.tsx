@@ -9,7 +9,7 @@ export default function PurchaseGuide(){
  const [copyMessage,setCopyMessage]=useState('');
  async function copyAccount(){
   try{await navigator.clipboard.writeText(PURCHASE_CONTACT.account);setCopyMessage('계좌번호를 복사했어요.');}
-  catch{setCopyMessage('자동 복사가 되지 않았어요. 아래 계좌번호를 길게 누르거나 선택해 복사해 주세요.');}
+  catch{setCopyMessage('자동 복사가 되지 않았어요. 표시된 계좌번호를 길게 누르거나 선택해 복사해 주세요.');}
  }
  return <section id="purchase-guide" tabIndex={-1} className={styles.guide} aria-labelledby="purchase-guide-title">
   <div className={styles.intro}>

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import styles from './QuestionWorkshop.module.css';
 import StorageRescue from '../../components/StorageRescue';
+import PurchaseGuide from '../../components/PurchaseGuide';
 import StoryReader from './StoryReader';
 import QuestionImport from './QuestionImport';
 import StoryDesignWorkshop from './StoryDesignWorkshop';
@@ -136,5 +137,6 @@ export default function Storybook(){
   </div>}
   <QuestionImport story={story} disabled={!ready||(!story&&!!storageError)} onBackup={()=>downloadDraft('json')} onApply={importDraft}/>
   {ready&&<StoryReader profile={profile??null}/>}
+  <PurchaseGuide/>
  </main>;
 }
