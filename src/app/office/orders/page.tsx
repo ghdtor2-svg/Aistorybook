@@ -45,7 +45,7 @@ export default function OrderBackoffice(){
  const visible=orders.filter(item=>[item.id,item.customerLabel,item.bookTitle,item.status,item.keyStatus].join(' ').toLowerCase().includes(query.trim().toLowerCase()));
  return <main className={styles.root}>
   <header className={styles.header}><div><p className={styles.eyebrow}>낭만한줄 · 대표 전용</p><h1>주문과 제작 키 관리</h1><p>입금 확인부터 동화 완성까지 한곳에서 확인하세요.</p></div><nav><Link href="/storybook">동화 화면</Link>{authenticated&&<button type="button" className={styles.secondary} disabled={busy} onClick={()=>void logout()}>로그아웃</button>}</nav></header>
-  <p className={styles.notice}>내 컴퓨터에서만 사용하는 관리 화면입니다. 고객 정보와 발급 키는 깃허브에 저장하지 않습니다.</p>{source&&<p role="status">저장 위치: {source}</p>}
+  <p className={styles.notice}>대표 전용 관리 화면입니다. 관리자 비밀번호로만 열리고, 검색에는 올라가지 않습니다. 공용 기기에서는 보신 뒤 로그아웃해 주세요. 고객 정보와 발급 키는 깃허브에 저장하지 않습니다.</p>{source&&<p role="status">저장 위치: {source}</p>}
   {message&&<p role="status" className={styles.message}>{message}</p>}
   {checking?<p>관리자 인증을 확인하고 있어요…</p>:!authenticated?<form className={styles.login} onSubmit={login}><h2>관리자 로그인</h2><label>관리자 비밀번호<input type="password" autoComplete="current-password" value={password} onChange={event=>setPassword(event.target.value)} required/></label><button disabled={busy} type="submit">로그인</button><p>기존 사무실 관리자 비밀번호를 사용합니다.</p></form>:<>
    <section className={styles.stats} aria-label="주문 현황">{[['전체 주문',orders.length],['키 미사용',orders.filter(item=>item.status==='키 미사용').length],['제작 중',orders.filter(item=>item.busy).length],['확인 필요',orders.filter(item=>['제작 중단','요청 확인 필요'].includes(item.status)).length]].map(([name,count])=><div key={name}><span>{name}</span><strong>{count}</strong></div>)}</section>

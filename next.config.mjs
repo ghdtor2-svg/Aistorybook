@@ -1,42 +1,30 @@
 /**
- * 공개 배포와 내 PC 작업장을 같은 소스에서 갈라냅니다.
+ * 공개 배포와 내 PC 작업장의 차이를 정합니다.
  *
- * AI 동화(/, /storybook, /api/office/story)만 인터넷에 공개합니다.
- * 주문 백오피스(/office/orders)와 그 API는 내 PC 작업장 전용입니다.
+ * 관리 화면(/office/orders)과 관리 API 는 2026-11-10 부터 공개 사이트에도 올라갑니다.
+ * 빌드에서 빼는 방식 대신 관리자 비밀번호·출처 검사·로그인 시도 제한으로 지킵니다.
+ * 판단 기준은 src/lib/storybook/admin-auth.ts 와 admin-guard.ts 에 적어 두었습니다.
  *
- * 가르는 방법: 백오피스 라우트 파일 이름을 page.local.tsx / route.local.ts 로 두고,
- * pageExtensions 에 local 확장자를 넣을 때만 라우트로 인식되게 합니다.
- * 넣지 않으면 Next 가 그 파일들을 라우트로 보지 않으므로 빌드 결과물에
- * 아예 들어가지 않습니다. 숨기는 것이 아니라 존재하지 않습니다.
- *
- * 켜는 조건: NEXT_PUBLIC_OFFICE_LOCAL=1
- *   내 PC … .env.local 에 들어 있습니다(.gitignore 대상이라 저장소에 올라가지 않음).
- *   Netlify … 이 변수를 넣지 마세요. 넣는 순간 백오피스가 인터넷에 공개됩니다.
- *
- * 서버의 localOrigin() 403 검사는 그대로 둡니다. 두 겹으로 막습니다.
+ * NEXT_PUBLIC_OFFICE_LOCAL 은 이제 사이트 개폐(site-gate)에만 씁니다.
+ *   내 PC … .env.local 에 1 을 두면 SITE_OPEN 과 무관하게 늘 열립니다.
+ *   Netlify … 이 변수를 넣지 마세요. 넣는 순간 공개 사이트의 개폐 장치가 무력해집니다.
  */
 const officeLocal = process.env.NEXT_PUBLIC_OFFICE_LOCAL === '1';
 
-// 실수로 Netlify 환경 변수에 스위치를 넣으면 주문 백오피스가 공개됩니다.
-// 조용히 공개되느니 빌드를 실패시킵니다. Netlify 는 NETLIFY=true 를 넣어 줍니다.
+// 실수로 Netlify 환경 변수에 스위치를 넣으면 닫아 둔 사이트가 열립니다.
+// 조용히 열리느니 빌드를 실패시킵니다. Netlify 는 NETLIFY=true 를 넣어 줍니다.
 if (officeLocal && process.env.NETLIFY === 'true') {
  throw new Error(
   'NEXT_PUBLIC_OFFICE_LOCAL 이 Netlify 빌드에 설정되어 있습니다.\n' +
-  '이대로 배포하면 주문 백오피스(/office/orders)가 인터넷에 공개됩니다.\n' +
+  '이대로 배포하면 SITE_OPEN 과 무관하게 공개 사이트가 열립니다.\n' +
   'Netlify → Site configuration → Environment variables 에서 이 변수를 지우고 다시 배포하세요.'
  );
 }
 
-// 온라인 생성은 cloud-config의 production 설정과 공유 저장소 연결 확인 후에만 열립니다.
-// 기존 OFFICE_STORY_GENERATION_APPROVED 플래그는 온라인 접근 권한으로 사용하지 않습니다.
-
-const base = ['tsx', 'ts', 'jsx', 'js'];
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
- pageExtensions: officeLocal ? ['local.tsx', 'local.ts', ...base] : base,
- // 값을 못 박아야 번들러가 백오피스 분기를 죽은 코드로 보고 지웁니다.
- // 변수를 아예 비워 두면 치환이 일어나지 않아 백오피스 문구가 공개 번들에 남습니다.
+ // 값을 못 박아야 번들러가 작업장 분기를 죽은 코드로 보고 지웁니다.
+ // 변수를 아예 비워 두면 치환이 일어나지 않습니다.
  env: {
   NEXT_PUBLIC_OFFICE_LOCAL: officeLocal ? '1' : '0',
   // Netlify build metadata is not automatically available in Next.js Functions.

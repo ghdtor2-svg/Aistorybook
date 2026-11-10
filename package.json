@@ -11,7 +11,9 @@
     "test:smoke": "node scripts/smoke-test.mjs",
     "test:engine": "tsc -p tsconfig.engine-tests.json && node scripts/storybook-test.cjs",
     "test:browser": "playwright test",
-    "test:cloud": "tsc -p tsconfig.cloud-tests.json && node scripts/cloud-test.cjs && node scripts/storage-readiness-test.cjs"
+    "test:cloud": "tsc -p tsconfig.cloud-tests.json && node scripts/cloud-test.cjs && node scripts/storage-readiness-test.cjs",
+    "test:admin": "tsc -p tsconfig.admin-tests.json && node scripts/admin-auth-test.cjs",
+    "test:gate": "tsc -p tsconfig.lib-tests.json && node scripts/site-gate-test.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.8",

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".admin-test-build",
+    "rootDir": "src/lib/storybook",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "incremental": false,
+    "isolatedModules": false,
+    "plugins": []
+  },
+  "include": ["src/lib/storybook/admin-auth.ts", "src/lib/storybook/admin-guard.ts"],
+  "exclude": ["node_modules"]
+}
