@@ -14,7 +14,10 @@ export type Guard={hosts:Record<string,Counter>;total:Counter};
 const blank=():Counter=>({n:0,until:0,at:0});
 const empty=():Guard=>({hosts:{},total:blank()});
 let memory:Guard=empty();
-const store=()=>getStore({name:'nangman-admin-guard-v1',consistency:'strong',fetch:storageFetch});
+// 저장소가 늦으면 함수가 통째로 멈춘다. 요청에 시간 제한을 걸어 로그인이 기다리지 않게 한다.
+export const GUARD_TIMEOUT_MS=2500;
+const guardFetch:typeof fetch=(input,init)=>storageFetch(input,{...init,signal:AbortSignal.timeout(GUARD_TIMEOUT_MS)});
+const store=()=>getStore({name:'nangman-admin-guard-v1',consistency:'strong',fetch:guardFetch});
 export function clientKey(request:Request){
  const direct=request.headers.get('x-nf-client-connection-ip');
  if(direct)return direct.trim();

@@ -81,5 +81,8 @@ assert.equal(auth.secureRequest(req('https://nangman-hanjul.netlify.app/x')),tru
  // 전체 한도: 여러 곳에서 나눠 시도해도 결국 막힌다
  for(let i=0;i<guard.MAX_TOTAL_FAILURES;i++)await guard.recordFailure(from('10.0.0.'+(i%200)));
  assert((await guard.blockedFor(from('9.9.9.9')))>0,'전체 한도를 넘으면 모두 막아야 합니다.');
+ // 저장소가 늦어도 로그인이 멈추지 않도록 시간 제한이 걸려 있다
+ assert.equal(typeof guard.GUARD_TIMEOUT_MS,'number');
+ assert(guard.GUARD_TIMEOUT_MS>0&&guard.GUARD_TIMEOUT_MS<=5000,'저장소 대기는 함수 제한시간보다 짧아야 합니다.');
  console.log('PASS admin secret length floor, host and origin checks, password comparison, signed session cookie with Secure, expiry and cross-host rejection, forwarded protocol, per-host and total lockout.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
