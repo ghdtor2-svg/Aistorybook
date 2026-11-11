@@ -1,6 +1,7 @@
 {
-  "version": "2026-11-11-story-length-v2",
+  "version": "2026-11-11-pdf-download-v1",
   "features": [
+    "story-pdf-download",
     "story-2500-chars-expand-once",
     "story-diagnostic-codes",
     "signed-admin-bridge",

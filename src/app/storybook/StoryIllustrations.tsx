@@ -4,6 +4,8 @@ import {useEffect,useRef,useState} from 'react';
 import type {Book} from '../../lib/storybook/books';
 import StoryPages from './StoryPages';
 import styles from './StoryPages.module.css';
+import {storyPdf} from './storyPdf';
+import {pdfFileName} from '../../lib/storybook/book-pdf';
 
 const endpoint='/api/storybook/illustrations';
 // Online customers have no local production server; only the owner's PC shows the local wording.
@@ -57,6 +59,7 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
   const [target,setTarget]=useState(0);
   const [direction,setDirection]=useState('');
   const [showAlternative,setShowAlternative]=useState(true);
+  const [pdf,setPdf]=useState<{done:number;total:number}|null>(null);
   const working=busy||!!art?.busy||!!art?.job&&['queued','running'].includes(art.job.status);
   useEffect(()=>{onWorking?.(working);return ()=>onWorking?.(false);},[working,onWorking]);
   useEffect(()=>{
@@ -82,6 +85,29 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     const alternative=art?.alternative?.index===index?art.alternative.image:null;
     const asset=alternative&&showAlternative?alternative:original;
     return asset?<Drawing key={asset} code={code} asset={asset} label={index===0?'표지':book.qualityProfile?'장면 '+index+' 삽화':'제 '+index+'장 삽화'} onRatio={onRatio}/>:null;
+  }
+  // 이미 만든 그림만 내려받아 이 브라우저에서 PDF로 묶는다. 새 그림을 만들지 않으므로 AI 비용이 없다.
+  async function downloadPdf(){
+    if(!art||pdf)return;
+    setMessage('');
+    setPdf({done:0,total:1});
+    try{
+      const current=art;
+      const blob=await storyPdf(book,async index=>{
+        const alternative=current.alternative?.index===index&&showAlternative?current.alternative.image:null;
+        const asset=alternative||current.base[index];
+        if(!asset)return null;
+        const response=await fetch(endpoint+'?asset='+encodeURIComponent(asset),{headers:{Authorization:'Bearer '+code},cache:'no-store'});
+        if(!response.ok)throw Error('그림을 불러오지 못해 PDF를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+        return response.blob();
+      },(done,total)=>setPdf({done,total}));
+      const url=URL.createObjectURL(blob);
+      const anchor=document.createElement('a');
+      anchor.href=url;anchor.download=pdfFileName(book.title);
+      document.body.appendChild(anchor);anchor.click();anchor.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),60_000);
+    }catch(error){setMessage(error instanceof Error&&error.message?error.message:'PDF를 만들지 못했어요. 다시 시도해 주세요.');}
+    finally{setPdf(null);}
   }
   async function refresh(){
     setMessage('');
@@ -118,6 +144,10 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     {art?.style&&<p>이 동화의 화풍 · {art.style}</p>}
     {!art?<button type="button" onClick={()=>void refresh()}>삽화 제작 상태 확인</button>:<>
       <p role="status">완료 {art.base.length}/{art.total}장</p>
+      {art.base.length===art.total&&<div className={styles.pdfDownload}>
+        <button type="button" disabled={!!pdf||busy||art.busy} onClick={()=>void downloadPdf()}>{pdf?'PDF 만드는 중… '+pdf.done+'/'+pdf.total+'쪽':'PDF로 내려받기'}</button>
+        <small>표지와 펼침면 그대로 한 파일로 받아요. 이미 만든 그림만 쓰므로 추가 비용이 없어요.{art.alternative?' 수정 그림은 지금 화면에 표시한 그림으로 들어가요.':''}</small>
+      </div>}
       {art.job&&['queued','running'].includes(art.job.status)&&<p role="status">{onLocalPc()?'컴퓨터에서 그림을 이어 만들고 있어요. 이 화면을 닫아도 제작은 계속됩니다. 컴퓨터와 로컬 제작 서버는 켜 두세요.':'그림을 이어 만들고 있어요. 이 화면을 닫아도 제작은 계속됩니다. 나중에 같은 제작 코드로 다시 열어 확인할 수 있어요.'}</p>}
       {art.job?.status==='paused'&&<p role="status">{art.job.reason==='uncertain'?'이전 요청의 완료 여부를 확인해야 해서 자동 제작을 멈췄어요. 중복 제작을 막기 위해 자동 재시도하지 않습니다.':'제작 중 문제가 생겨 멈췄어요. 완성된 그림은 보관되어 있고, 남은 그림만 다시 시작할 수 있어요.'}</p>}
       {art.base.length<art.total&&<button type="button" disabled={busy||art.busy||!!art.job&&['queued','running'].includes(art.job.status)} onClick={()=>void draw(false)}>{art.base.length?'남은 그림 이어서 만들기':'표지와 삽화 만들기'}</button>}
