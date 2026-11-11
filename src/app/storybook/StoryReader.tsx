@@ -12,7 +12,7 @@ import StoryCheckout,{productionCodeKey} from './StoryCheckout';
 import StoryIllustrations from './StoryIllustrations';
 import StoryPages from './StoryPages';
 import StoryStylePicker,{type StyleChoice} from './StoryStylePicker';
-import {defaultStoryArtStyle,isStoryArtStyleId} from '../../lib/storybook/art-styles';
+import {defaultStoryArtStyle,isOfferedStoryArtStyle} from '../../lib/storybook/art-styles';
 import {useReadingPreferences} from './useReadingPreferences';
 import {useUnsavedBookGuard} from './useUnsavedBookGuard';
 import {bookDocument} from '../../lib/storybook/book-document';
@@ -24,7 +24,7 @@ export default function StoryReader({profile}:{profile:StoryProfile|null}){
  const local=useLocalStoryWorkspace();
  const [artWorking,setArtWorking]=useState(false);
  const [artStyle,setArtStyle]=useState<StyleChoice>(defaultStoryArtStyle);
- useEffect(()=>{try{const saved=localStorage.getItem('nangman:art-style:v1');if(saved==='random'||isStoryArtStyleId(saved))setArtStyle(saved);}catch{}},[]);
+ useEffect(()=>{try{const saved=localStorage.getItem('nangman:art-style:v1');if(saved==='random'||isOfferedStoryArtStyle(saved))setArtStyle(saved);}catch{}},[]);
  function chooseArtStyle(value:StyleChoice){setArtStyle(value);try{localStorage.setItem('nangman:art-style:v1',value);}catch{}}
  const [productionCode,setProductionCode]=useState('');
  useEffect(()=>{try{setProductionCode(sessionStorage.getItem(productionCodeKey)||'');}catch{}},[]);

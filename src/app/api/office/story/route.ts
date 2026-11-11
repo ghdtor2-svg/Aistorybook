@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {parseGeneratedBook} from '../../../../lib/storybook/books';
-import {defaultStoryArtStyle,isStoryArtStyleId,storyArtStyle,type StoryArtStyleId} from '../../../../lib/storybook/art-styles';
+import {defaultStoryArtStyle,isOfferedStoryArtStyle,storyArtStyle,type StoryArtStyleId} from '../../../../lib/storybook/art-styles';
 import {storyQualityProfile,storyTextMax,storyTextMin} from '../../../../lib/storybook/quality';
 import {MAX_STORY_BRIEF_LENGTH,MAX_STORY_REQUEST_LENGTH} from '../../../../lib/storybook/story-brief';
 import {loopback,matchesOrderCode,orderForCode,OrderBusy,OrderCodeChanged,saveOrder,withOrder} from '../../../../lib/storybook/story-orders';
@@ -60,7 +60,7 @@ export async function POST(request:Request){
     id=body.id;
     brief=body.brief;
     confirmedRetry=body.confirmUncertain===true;
-    if(body.styleId!==undefined&&body.styleId!=='random'&&!isStoryArtStyleId(body.styleId))throw Error();
+    if(body.styleId!==undefined&&body.styleId!=='random'&&!isOfferedStoryArtStyle(body.styleId))throw Error();
     styleId=body.styleId==='random'?storyArtStyle(id).id:body.styleId||defaultStoryArtStyle;
   }catch{return json({error:'동화에 담을 내용을 확인해 주세요.'},400);}
 

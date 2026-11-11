@@ -17,10 +17,18 @@ export function isStoryArtStyleId(value:unknown):value is StoryArtStyleId{
   return typeof value==='string'&&storyArtStyles.some(style=>style.id===value);
 }
 
+// 대표 결정(2026-11-11): 실제 생성 시험에서 화풍이 드러나지 않은 히어로 코믹스·수묵 담채·양모 펠트는
+// 새 동화에서 고를 수 없게 뺀다. 이미 그 화풍으로 만든 동화는 그대로 열고 이어 그릴 수 있도록 목록에는 남긴다.
+export const retiredStoryArtStyles:readonly StoryArtStyleId[]=['hero-comics','ink-wash','felt'];
+export const offeredStoryArtStyles=storyArtStyles.filter(style=>!retiredStoryArtStyles.includes(style.id));
+export function isOfferedStoryArtStyle(value:unknown):value is StoryArtStyleId{
+  return isStoryArtStyleId(value)&&!retiredStoryArtStyles.includes(value);
+}
+
 export function storyArtStyle(bookId:string,existingId?:string){
   const existing=storyArtStyles.find(style=>style.id===existingId);
   if(existing)return existing;
   let seed=2166136261;
   for(const character of bookId)seed=Math.imul(seed^character.charCodeAt(0),16777619);
-  return storyArtStyles[(seed>>>0)%storyArtStyles.length];
+  return offeredStoryArtStyles[(seed>>>0)%offeredStoryArtStyles.length];
 }
