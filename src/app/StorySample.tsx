@@ -21,7 +21,7 @@ export default function StorySample(){
       </a>
     </div>
     <div className={styles.caption}><div aria-live="polite"><strong>{sample.title}</strong><p>“{sample.excerpt}”</p></div><nav className={styles.pages} aria-label="샘플 장면 선택">{spreads.map((spread,i)=><button type="button" key={spread.image} aria-label={'샘플 장면 '+(i+1)} aria-pressed={index===i} onClick={()=>setIndex(i)}>{String(i+1).padStart(2,'0')}</button>)}</nav></div>
-    <div className={styles.actions}><a href="/nangman-story-spread-preview.pdf?v=9" target="_blank" rel="noopener">전체 샘플 읽기 ↗</a><Link href="/storybook#my-books">일곱 가지 화풍 살펴보기 →</Link></div>
+    <div className={styles.actions}><a href="/nangman-story-spread-preview.pdf?v=9" target="_blank" rel="noopener">전체 샘플 읽기 ↗</a><Link href="/storybook#my-books">여섯 가지 화풍 살펴보기 →</Link></div>
     <p className={styles.note}>별도로 편집·검수한 기준 샘플입니다. 실제 작품은 입력한 이야기와 선택한 화풍에 따라 달라집니다. <Link href="/storybook#art-quality-proof">실제 자동 제작 예시도 확인해 보세요.</Link></p>
   </section>;
 }
