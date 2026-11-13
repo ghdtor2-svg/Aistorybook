@@ -1,6 +1,7 @@
 {
-  "version": "2026-11-13-seo-aeo-v2",
+  "version": "2026-11-13-scene-cast-v1",
   "features": [
+    "scene-cast-only",
     "seo-aeo-structure",
     "book-restore-by-code",
     "admin-book-pdf",
