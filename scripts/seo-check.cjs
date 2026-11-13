@@ -11,7 +11,11 @@ const decode=text=>text.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&
   assert.equal(home.status,200);
   const html=home.text;
   assert.match(html,/<html lang="ko"/);
-  assert.match(html,/<title>낭만한줄 · 우리 아이 이야기로 만드는 AI 맞춤 동화<\/title>/);
+  assert.match(html,/<title>AI 맞춤 동화 만들기 \| 우리 아이 이야기로 만드는 동화 - 낭만한줄<\/title>/);
+  assert.equal((html.match(/<h1[\s>]/g)||[]).length,1,'exactly one h1');
+  assert.match(html,/<h2 id="how-title">우리 아이 맞춤 동화는 이렇게 만들어져요<\/h2>/);
+  assert.match(html,/<meta name="viewport" content="width=device-width, initial-scale=1"/);
+  assert.match(html,/<img src="\/storybook\/sample\/cover.webp"[^>]*height="933"/);
   assert.match(meta(html,'name','description'),/9,900원/);
   assert.ok(meta(html,'name','keywords').includes('AI 동화'));
   assert.equal(html.match(/<link rel="canonical" href="([^"]+)"/)?.[1],site);
@@ -30,6 +34,7 @@ const decode=text=>text.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&
   assert.ok(faq.length>=5);
   for(const item of faq){assert.ok(decode(html).includes(item.name),'question not visible: '+item.name);assert.ok(decode(html).includes(item.acceptedAnswer.text),'answer not visible: '+item.name);}
   assert.equal(ld['@graph'][2].offers.price,'9900');
+  assert.equal(ld['@graph'][2].audience.audienceType,'아이를 키우는 부모와 가족');
   assert.ok(!/인쇄|배송/.test(JSON.stringify(ld)),'public text must not mention printing or delivery');
   // 동화 만들기 화면
   const book=await get('/storybook');

@@ -1,6 +1,7 @@
 {
-  "version": "2026-11-13-book-restore-v1",
+  "version": "2026-11-13-seo-aeo-v2",
   "features": [
+    "seo-aeo-structure",
     "book-restore-by-code",
     "admin-book-pdf",
     "seo-aeo-metadata",

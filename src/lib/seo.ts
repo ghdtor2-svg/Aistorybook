@@ -16,8 +16,8 @@ import {offeredStoryArtStyles} from './storybook/art-styles';
 import {storyIllustrationCount,storyPageCount} from './storybook/quality';
 
 export const SITE_URL=(process.env.NEXT_PUBLIC_SITE_URL||'https://nangman-hanjul.netlify.app').replace(/\/+$/,'');
-export const SEO_TITLE=SITE_NAME+' · 우리 아이 이야기로 만드는 AI 맞춤 동화';
-export const SEO_DESCRIPTION='아이의 이름과 가족의 추억을 몇 가지 질문에 답하면 AI가 '+storyPageCount+'쪽 맞춤형 디지털 동화로 만들어 드려요. 그림 '+storyIllustrationCount+'장, '+offeredStoryArtStyles.length+'가지 화풍, 1편 '+STORY_PRICE.toLocaleString('ko-KR')+'원.';
+export const SEO_TITLE='AI 맞춤 동화 만들기 | 우리 아이 이야기로 만드는 동화 - '+SITE_NAME;
+export const SEO_DESCRIPTION='우리 아이의 일상과 가족의 추억으로 만드는 AI 맞춤 동화. 몇 가지 질문에 답하면 글과 그림 '+storyIllustrationCount+'장이 담긴 '+storyPageCount+'쪽 동화를 만들어 드려요. '+offeredStoryArtStyles.length+'가지 화풍, 1편 '+STORY_PRICE.toLocaleString('ko-KR')+'원.';
 export const SEO_KEYWORDS=['AI 동화','맞춤 동화','맞춤형 동화','개인화 동화','아이 이름 동화','우리 아이 동화 만들기','AI 동화 만들기','디지털 동화','가족 추억 동화','아이 선물','그림 동화',SITE_NAME];
 export const OG_IMAGE={url:'/og-image.jpg',width:1200,height:630,alt:SITE_NAME+' 샘플 동화 펼침면'};
 export const styleNames=offeredStoryArtStyles.map(style=>style.name);
@@ -41,7 +41,8 @@ export function homeJsonLd(){
     '@graph':[
       {'@type':'Organization','@id':id('organization'),name:SITE_NAME,url:SITE_URL,logo:SITE_URL+'/icon.png',sameAs:[PURCHASE_CONTACT.instagramUrl]},
       {'@type':'WebSite','@id':id('website'),name:SITE_NAME,alternateName:'낭만 한줄',url:SITE_URL,inLanguage:'ko-KR',description:SEO_DESCRIPTION,publisher:{'@id':id('organization')}},
-      {'@type':'Service','@id':id('service'),name:'AI 맞춤형 디지털 동화 제작',serviceType:'개인화 동화 제작',provider:{'@id':id('organization')},areaServed:'KR',availableLanguage:'ko',
+      {'@type':'Service','@id':id('service'),name:'AI 맞춤형 디지털 동화 제작',serviceType:'AI 기반 개인 맞춤 디지털 동화 제작',category:'어린이 동화',provider:{'@id':id('organization')},areaServed:'KR',availableLanguage:'ko',url:SITE_URL+'/storybook',
+        audience:{'@type':'PeopleAudience',audienceType:'아이를 키우는 부모와 가족'},
         description:SEO_DESCRIPTION,
         offers:{'@type':'Offer',price:String(STORY_PRICE),priceCurrency:'KRW',url:SITE_URL+'/#purchase-guide',description:'맞춤형 디지털 동화 1편 ('+storyPageCount+'쪽, 그림 '+storyIllustrationCount+'장)'}},
       {'@type':'FAQPage','@id':id('faq'),mainEntity:FAQ.map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))},
