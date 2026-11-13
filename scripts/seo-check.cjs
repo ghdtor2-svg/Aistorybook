@@ -20,6 +20,8 @@ const decode=text=>text.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&
   assert.equal(meta(html,'name','twitter:card'),'summary_large_image');
   assert.doesNotMatch(meta(html,'name','robots')||'',/noindex/);
   assert.match(html,/<link rel="icon" href="\/icon.png/);
+  assert.equal(meta(html,'name','google-site-verification'),'A9zoQ46J2GSimSzWOo96HFrlrCxOW-smBpY-tzGH7UI');
+  assert.equal(meta(html,'name','naver-site-verification'),'7b109a4931cdb0215a2c7c5f4c577b6e13e4bd91');
   // 구조화 데이터: 화면의 질문·답과 FAQPage 가 같은 내용이어야 한다.
   const ld=JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
   const types=ld['@graph'].map(node=>node['@type']);
