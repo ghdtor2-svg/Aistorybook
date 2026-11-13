@@ -2,6 +2,7 @@ import {STORY_PRICE} from './product';
 import {adminOrder,orderIsBusy} from './order-admin';
 import {createManualOrder,getOrder,issueCode,listOrderIds,saveOrder,withOrder} from './story-orders';
 import {cloudStorageEnabled} from './cloud-config';
+import {isAssetName,readOrderAsset,storedBook} from './order-assets';
 
 export async function performAdminOperation(body:Record<string,unknown>):Promise<{data:Record<string,unknown>;status:number}>{
  const fail=(error:string,status=400)=>({data:{error},status});
@@ -15,6 +16,17 @@ export async function performAdminOperation(body:Record<string,unknown>):Promise
   if(body.transferConfirmed!==true||body.customerLabel!==undefined&&(typeof body.customerLabel!=='string'||body.customerLabel.length>80)||body.operatorNote!==undefined&&(typeof body.operatorNote!=='string'||body.operatorNote.length>500))return fail('입금 확인과 고객 별칭·메모를 확인해 주세요.');
   const order=await createManualOrder(body.id,STORY_PRICE,{label:String(body.customerLabel||'').trim(),note:String(body.operatorNote||'').trim()});
   return order?{data:{code:order.code,amount:order.amount,id:order.id},status:200}:fail('이 발급 요청을 사용할 수 없어요.',409);
+ }
+ // 고객이 책장을 잃었을 때 대표가 서버 보관본으로 PDF를 만들어 보내 줄 수 있게 글과 그림 목록·그림 한 장씩을 돌려준다(AI 호출 없음).
+ if(body.action==='book'){
+  const order=await getOrder(body.id);if(!order)return fail('주문을 찾을 수 없어요.',404);
+  const book=storedBook(order);if(!book)return fail('아직 만든 동화가 없어요.',409);
+  return {data:{book,base:order.art?.base||[],alternative:order.art?.alternative||null},status:200};
+ }
+ if(body.action==='asset'){
+  if(!isAssetName(body.asset))return fail('그림을 확인해 주세요.');
+  const order=await getOrder(body.id);if(!order)return fail('주문을 찾을 수 없어요.',404);
+  try{return {data:{image:(await readOrderAsset(order,body.asset)).toString('base64')},status:200};}catch{return fail('그림을 찾을 수 없어요.',404);}
  }
  if(!['metadata','reveal','rotate','revoke'].includes(String(body.action)))return fail('작업을 확인해 주세요.');
  if(body.action==='metadata'&&(typeof body.customerLabel!=='string'||body.customerLabel.length>80||typeof body.operatorNote!=='string'||body.operatorNote.length>500))return fail('별칭은 80자, 메모는 500자까지 입력해 주세요.');

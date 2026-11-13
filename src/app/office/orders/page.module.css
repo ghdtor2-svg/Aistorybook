@@ -2,3 +2,4 @@
 @media(max-width:760px){.layout{grid-template-columns:1fr}.fields{grid-template-columns:1fr;gap:0}.stats{grid-template-columns:repeat(2,1fr)}.header{flex-direction:column}.root{padding:24px 14px}.list,.detail,.issue{padding:18px}.summary{grid-template-columns:1fr}.header h1{font-size:24px}.actions button{flex:1 1 150px}}
 .layout{align-items:start}.list{max-height:80vh;overflow:auto;position:sticky;top:16px}
 @media(max-width:760px){.list{position:static;max-height:420px}}
+.bookCopy{margin:20px 0;padding:16px;border:1px solid #e5eaf2;border-radius:12px;background:#fbfcff}.bookCopy h3{margin:0 0 6px}

@@ -7,6 +7,7 @@ import {loopback,matchesOrderCode,orderForCode,OrderBusy,OrderCodeChanged,saveOr
 import {cloudCustomerRequest,cloudStorageEnabled} from '../../../../lib/storybook/cloud-config';
 import {trustedCloudWorker} from '../../../../lib/storybook/cloud-signing';
 import {kickCloudText} from '../../../../lib/storybook/cloud-tasks';
+import {storedBook} from '../../../../lib/storybook/order-assets';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -32,7 +33,8 @@ export async function GET(request:Request){
   if(!loopback(request)&&!cloudCustomerRequest(request))return json({error:'동화 제작을 이용할 수 없습니다.'},403);
   const order=await orderForCode(codeFrom(request));
   if(!order)return json({error:'결제 후 받은 제작 코드를 입력해 주세요.'},401);
-  if(order.book)return json({state:'completed',book:order.book});
+  // 코드로 다시 불러올 때는 그림과 짝이 맞는 보관본(그림을 시작할 때의 글)을 돌려준다.
+  if(order.book)return json({state:'completed',book:storedBook(order)});
   // A queued request that no worker picked up must not look like it is running forever.
   if(order.request?.status==='queued'&&Date.now()-order.request.startedAt>=queuedWindow)return json({state:'paused',requestId:order.request.id,error:'온라인 작업이 시작되지 않았어요. 글을 쓰기 전이라 AI 비용은 발생하지 않았습니다. 대기 기록 해제 안내를 확인한 뒤 다시 시작할 수 있습니다. (진단 코드: worker_not_started)'});
   if(order.request?.status==='queued'){await kickCloudText(order);return json({state:'running',phase:'queued',requestId:order.request?.id});}
