@@ -15,7 +15,8 @@
     "test:admin": "tsc -p tsconfig.admin-tests.json && node scripts/admin-auth-test.cjs",
     "test:gate": "tsc -p tsconfig.lib-tests.json && node scripts/site-gate-test.cjs",
     "test:pdf": "tsc -p tsconfig.lib-tests.json && node scripts/book-pdf-test.cjs",
-    "test:emphasis": "tsc -p tsconfig.lib-tests.json && node scripts/emphasis-test.cjs"
+    "test:emphasis": "tsc -p tsconfig.lib-tests.json && node scripts/emphasis-test.cjs",
+    "test:scene-prompt": "tsc -p tsconfig.lib-tests.json && node scripts/scene-prompt-test.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.8",

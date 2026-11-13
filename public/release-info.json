@@ -1,6 +1,7 @@
 {
-  "version": "2026-11-13-full-bleed-spreads-v1",
+  "version": "2026-11-13-distinct-scenes-v1",
   "features": [
+    "distinct-scene-illustrations",
     "full-bleed-spreads",
     "handwriting-emphasis",
     "story-pdf-download",
