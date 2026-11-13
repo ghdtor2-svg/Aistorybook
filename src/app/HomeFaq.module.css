@@ -1,0 +1,11 @@
+.faq{margin:40px 0 24px;background:white;border:1px solid #e5eaf2;border-radius:16px;padding:24px}
+.faq h2{font-size:22px;margin:0 0 12px}
+.faq details{border-top:1px solid #e5eaf2;padding:14px 0}
+.faq details:first-of-type{border-top:0}
+.faq summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';font-size:20px;color:#315cf5;flex:none}
+.faq details[open] summary::after{content:'−'}
+.faq h3{margin:0;font-size:16px;line-height:1.5;word-break:keep-all}
+.faq p{margin:10px 0 0;line-height:1.8;color:#3d4a60;word-break:keep-all}
+@media(max-width:700px){.faq{padding:18px 16px}}

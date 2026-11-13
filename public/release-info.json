@@ -1,6 +1,7 @@
 {
-  "version": "2026-11-13-distinct-scenes-v1",
+  "version": "2026-11-13-seo-aeo-v1",
   "features": [
+    "seo-aeo-metadata",
     "distinct-scene-illustrations",
     "full-bleed-spreads",
     "handwriting-emphasis",
