@@ -1,6 +1,8 @@
 {
-  "version": "2026-11-11-pdf-download-v1",
+  "version": "2026-11-13-full-bleed-spreads-v1",
   "features": [
+    "full-bleed-spreads",
+    "handwriting-emphasis",
     "story-pdf-download",
     "story-2500-chars-expand-once",
     "story-diagnostic-codes",

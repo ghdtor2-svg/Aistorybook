@@ -14,7 +14,8 @@
     "test:cloud": "tsc -p tsconfig.cloud-tests.json && node scripts/cloud-test.cjs && node scripts/storage-readiness-test.cjs",
     "test:admin": "tsc -p tsconfig.admin-tests.json && node scripts/admin-auth-test.cjs",
     "test:gate": "tsc -p tsconfig.lib-tests.json && node scripts/site-gate-test.cjs",
-    "test:pdf": "tsc -p tsconfig.lib-tests.json && node scripts/book-pdf-test.cjs"
+    "test:pdf": "tsc -p tsconfig.lib-tests.json && node scripts/book-pdf-test.cjs",
+    "test:emphasis": "tsc -p tsconfig.lib-tests.json && node scripts/emphasis-test.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.8",

@@ -2,10 +2,13 @@ import type {Book} from '../../lib/storybook/books';
 import {planStorybook} from '../../lib/storybook/book-layout';
 import {storyQualityProfile} from '../../lib/storybook/quality';
 import {jpegPdf,type PdfImagePage} from '../../lib/storybook/book-pdf';
+import {emphasizePages,type EmphasisPiece} from '../../lib/storybook/emphasis';
 
 // 화면의 펼침면(StoryBookSpreads)과 같은 배치로 쪽을 그립니다.
-// 펼침면 1쪽 = 가로 12인치 × 세로 8인치, 표지 = 8 × 12인치. 2400px 폭이면 인쇄해도 200dpi입니다.
+// 32쪽 동화의 펼침면 = 가로 12인치 × 세로 6인치(아래 2/3는 3:1 삽화, 위는 글), 표지 = 8 × 12인치.
+// 예전 형식(장마다 그림 1장) 동화의 쪽 = 12 × 8인치. 2400px 폭이면 인쇄해도 200dpi입니다.
 const spreadSize={width:2400,height:1600,pt:{width:864,height:576}};
+const bookSpreadSize={width:2400,height:1200,pt:{width:864,height:432}};
 const coverSize={width:1200,height:1800,pt:{width:576,height:864}};
 const paper='#fff9ee',ink='#3b2f22',folio='#9f8d73';
 const quality=0.88;
@@ -15,6 +18,20 @@ export type LoadArt=(index:number)=>Promise<Blob|null>;
 
 function fontFamily(){
   try{return getComputedStyle(document.body).fontFamily||'sans-serif';}catch{return 'sans-serif';}
+}
+/** 화면 본문과 같은 손글씨 글꼴(layout.tsx의 --font-story-hand). 없으면 기본 글꼴을 씁니다. */
+function handFamily(fallback:string){
+  try{
+    const name=getComputedStyle(document.documentElement).getPropertyValue('--font-story-hand').trim();
+    return name?name+', '+fallback:fallback;
+  }catch{return fallback;}
+}
+/** 한글 손글씨 글꼴은 글자 묶음별로 나뉘어 있어, 쓸 글자를 미리 받아 둬야 캔버스에 그 글꼴로 그려집니다. */
+async function loadGlyphs(family:string,text:string){
+  try{
+    if(!document.fonts?.load)return;
+    for(let at=0;at<text.length;at+=4000)await document.fonts.load('700 48px '+family,text.slice(at,at+4000));
+  }catch{}
 }
 
 async function decode(blob:Blob|null):Promise<Art|null>{
@@ -101,14 +118,137 @@ function drawFolio(context:CanvasRenderingContext2D,text:string,centerX:number,y
   context.fillText(text,centerX,y);context.textAlign='left';
 }
 
-/** 그림과 글이 맞닿는 곳을 화면처럼 종이색으로 부드럽게 이어 줍니다. */
-function fadeEdge(context:CanvasRenderingContext2D,x:number,y:number,width:number,towardTop:boolean){
-  const size=56;
-  const top=towardTop?y:y-size;
-  const gradient=context.createLinearGradient(0,top,0,top+size);
-  gradient.addColorStop(towardTop?0:1,paper);
-  gradient.addColorStop(towardTop?1:0,'rgba(255,249,238,0)');
-  context.fillStyle=gradient;context.fillRect(x,top,width,size);
+const emphasisStyle:Record<EmphasisPiece['kind'],{scale:number;color:string;spacing:number}>={
+  plain:{scale:1,color:'#2a2017',spacing:-0.02},
+  speech:{scale:1.22,color:'#4a2410',spacing:-0.02},
+  sound:{scale:1.38,color:'#b0461f',spacing:0.04},
+};
+type RichToken={text:string;kind:EmphasisPiece['kind']};
+type SpacedContext=CanvasRenderingContext2D&{letterSpacing?:string};
+
+/** 강조(대사·흉내말)마다 크기와 색이 다른 글을 어절 단위로 줄 바꿈해 그립니다. 넘치면 글씨를 조금씩 줄입니다. */
+function drawRich(context:SpacedContext,paragraphs:EmphasisPiece[][],x:number,y:number,width:number,height:number,family:string,{size=56,min=30}={}){
+  const setFont=(kind:RichToken['kind'],fontSize:number)=>{
+    const style=emphasisStyle[kind],px=fontSize*style.scale;
+    context.font='700 '+Math.round(px)+'px '+family;
+    if('letterSpacing' in context)context.letterSpacing=(style.spacing*px).toFixed(1)+'px';
+  };
+  const measure=(token:RichToken,fontSize:number)=>{setFont(token.kind,fontSize);return context.measureText(token.text).width;};
+  for(let fontSize=size;;fontSize-=2){
+    type Line={tokens:RichToken[];height:number;gap:number};
+    const lines:Line[]=[];
+    const heightOf=(tokens:RichToken[])=>Math.max(fontSize,...tokens.map(token=>fontSize*emphasisStyle[token.kind].scale))*1.6;
+    for(const pieces of paragraphs){
+      let line:RichToken[]=[],lineWidth=0;
+      const flush=()=>{if(line.length)lines.push({tokens:line,height:heightOf(line),gap:0});line=[];lineWidth=0;};
+      const words:RichToken[]=pieces.flatMap(piece=>(piece.text.match(/\S+\s*|\s+/g)||[]).map(text=>({text,kind:piece.kind})));
+      for(const word of words){
+        const w=measure({text:word.text.trimEnd(),kind:word.kind},fontSize);
+        if(line.length&&lineWidth+w>width)flush();
+        if(!line.length&&w>width){
+          // 한 어절이 한 줄보다 길 때만 글자 단위로 나눕니다.
+          let rest=Array.from(word.text);
+          while(rest.length){
+            let cut=1;
+            while(cut<rest.length&&measure({text:rest.slice(0,cut+1).join(''),kind:word.kind},fontSize)<=width)cut++;
+            line.push({text:rest.slice(0,cut).join(''),kind:word.kind});
+            rest=rest.slice(cut);
+            if(rest.length)flush();
+          }
+          lineWidth=measure(line[line.length-1],fontSize);
+          continue;
+        }
+        line.push(word);lineWidth+=measure(word,fontSize);
+      }
+      flush();
+      if(lines.length)lines[lines.length-1].gap=fontSize*0.55;
+    }
+    if(lines.length)lines[lines.length-1].gap=0;
+    const total=lines.reduce((sum,line)=>sum+line.height+line.gap,0);
+    if(total<=height||fontSize<=min){
+      let top=y;
+      context.textBaseline='alphabetic';
+      for(const line of lines){
+        const base=top+line.height*0.76;
+        let left=x;
+        line.tokens.forEach((token,index)=>{
+          const text=index===line.tokens.length-1?token.text.trimEnd():token.text;
+          setFont(token.kind,fontSize);
+          context.fillStyle=emphasisStyle[token.kind].color;
+          // 흐린 그림 위에서도 읽히게 종이색으로 번진 테두리를 먼저 깔고 글씨를 씁니다(화면의 text-shadow).
+          context.shadowColor=paper;context.shadowBlur=fontSize*0.7;
+          context.fillText(text,left,base);context.fillText(text,left,base);
+          context.shadowBlur=0;
+          context.fillText(text,left,base);
+          left+=context.measureText(token.text).width;
+        });
+        top+=line.height+line.gap;
+      }
+      context.textBaseline='top';
+      if('letterSpacing' in context)context.letterSpacing='0px';
+      return;
+    }
+  }
+}
+
+/** 그림을 아주 작게 줄였다 키워 흐리게 만든 뒤 상자를 채웁니다(화면의 흐린 하늘 배경). 브라우저마다 결과가 같습니다. */
+function drawBlurred(context:CanvasRenderingContext2D,art:Art,x:number,y:number,width:number,height:number){
+  const small=document.createElement('canvas');
+  small.width=Math.max(8,Math.round(width/60));small.height=Math.max(8,Math.round(height/60));
+  const tiny=small.getContext('2d');
+  if(!tiny)return;
+  drawCover(tiny,art,0,0,small.width,small.height);
+  context.save();
+  context.beginPath();context.rect(x,y,width,height);context.clip();
+  context.imageSmoothingEnabled=true;context.imageSmoothingQuality='high';
+  context.drawImage(small,x-width*0.1,y-height*0.1,width*1.2,height*1.2);
+  context.restore();
+}
+
+/** 삽화의 위쪽 가장자리를 흐린 배경으로 부드럽게 이어 그립니다. */
+function drawFadedArt(context:CanvasRenderingContext2D,art:Art,x:number,y:number,width:number,height:number,fade:number){
+  const layer=document.createElement('canvas');
+  layer.width=Math.round(width);layer.height=Math.round(height);
+  const own=layer.getContext('2d');
+  if(!own){drawCover(context,art,x,y,width,height);return;}
+  drawCover(own,art,0,0,layer.width,layer.height);
+  own.globalCompositeOperation='destination-in';
+  const mask=own.createLinearGradient(0,0,0,fade);
+  mask.addColorStop(0,'rgba(0,0,0,0)');mask.addColorStop(1,'rgba(0,0,0,1)');
+  // destination-in은 칠한 곳 밖을 모두 지우므로 그림 전체를 칠합니다(fade 아래는 마지막 색, 즉 불투명).
+  own.fillStyle=mask;own.fillRect(0,0,layer.width,layer.height);
+  context.drawImage(layer,x,y);
+  layer.width=0;layer.height=0;
+}
+
+/** 32쪽 동화의 펼침면: 그림이 종이 전체를 채우고 글은 위쪽 흐린 하늘에 놓입니다(화면과 같은 배치). */
+function drawBookSpread(context:CanvasRenderingContext2D,arts:(Art|null)[],shared:boolean,pages:{number:number;pieces:EmphasisPiece[][]}[],ending:string|null,hand:string,family:string){
+  const {width:W,height:H}=bookSpreadSize;
+  const half=W/2,artH=W/3,artY=H-artH,fade=Math.round(artH*0.16);
+  const slots=shared?[{art:arts[0],x:0,width:W}]:arts.map((art,index)=>({art,x:index*half,width:half}));
+  for(const slot of slots)if(slot.art)drawBlurred(context,slot.art,slot.x,0,slot.width,H);
+  const wash=context.createLinearGradient(0,0,0,H);
+  wash.addColorStop(0,'rgba(255,249,238,0.8)');wash.addColorStop(0.35,'rgba(255,249,238,0.6)');wash.addColorStop(0.6,'rgba(255,249,238,0)');
+  context.fillStyle=wash;context.fillRect(0,0,W,H);
+  for(const slot of slots)if(slot.art)drawFadedArt(context,slot.art,slot.x,artY,slot.width,artH,fade);
+  if(ending!==null){
+    // 마지막 한 쪽: 오른쪽은 종이에 '끝'과 제목.
+    context.fillStyle=paper;context.fillRect(half,0,half,H);
+    drawParagraphs(context,['끝'],half+110,H/2-150,half-220,130,hand,{size:110,min:60,align:'center',weight:'700'});
+    drawParagraphs(context,[ending],half+110,H/2+10,half-220,200,family,{size:40,min:26,align:'center',color:folio});
+  }else{
+    const fold=context.createLinearGradient(half-36,0,half+36,0);
+    fold.addColorStop(0,'rgba(59,47,34,0)');fold.addColorStop(0.5,'rgba(59,47,34,0.13)');fold.addColorStop(1,'rgba(59,47,34,0)');
+    context.fillStyle=fold;context.fillRect(half-36,0,72,H);
+  }
+  const padX=120,padY=80;
+  pages.forEach((page,column)=>{
+    // 글이 길면 삽화의 흐린 윗부분까지 내려올 수 있습니다(화면도 같음).
+    drawRich(context,page.pieces,column*half+padX,padY,half-padX*2,artY+fade*2-padY,hand);
+    context.save();context.shadowColor=paper;context.shadowBlur=12;
+    drawFolio(context,String(page.number),column*half+half/2,H-46,family);
+    context.restore();
+  });
 }
 
 async function toPage(canvas:HTMLCanvasElement,pt:{width:number;height:number}):Promise<PdfImagePage>{
@@ -147,34 +287,15 @@ export async function storyPdf(book:Book,loadArt:LoadArt,onProgress?:(done:numbe
   const half=W/2,pad=110;
   if(spreads){
     const {pages:textPages}=spreads;
-    for(const [index,spread] of spreads.spreads.entries()){
-      const {canvas,context}=canvasOf(W,H);
+    const hand=handFamily(family);
+    const marked=emphasizePages(textPages);
+    await loadGlyphs(hand,textPages.flatMap(page=>page.parts.map(part=>part.text)).join('')+'0123456789 끝');
+    for(const spread of spreads.spreads){
+      const {canvas,context}=canvasOf(bookSpreadSize.width,bookSpreadSize.height);
       const arts=await Promise.all(spread.artIndices.map(async art=>decode(await loadArt(art))));
-      const textOf=(page:number)=>textPages[page].parts.map(part=>part.text);
-      if(spread.shared){
-        // 화면과 같이 홀수 번째 펼침면은 그림이 위, 짝수 번째는 아래에 옵니다.
-        const artFirst=index%2===1,artH=W/3;
-        const artY=artFirst?0:H-artH,textY=artFirst?artH:0,textH=H-artH;
-        if(arts[0]){drawCover(context,arts[0],0,artY,W,artH);fadeEdge(context,0,artFirst?artH:artY,W,!artFirst);}
-        spread.pageIndices.forEach((page,column)=>{
-          drawParagraphs(context,textOf(page),column*half+pad,textY+80,half-pad*2,textH-80-110,family,{middle:true});
-          drawFolio(context,String(page+1),column*half+half/2,textY+textH-56,family);
-        });
-      }else{
-        // 쪽마다 따로 그린 장면: 위에 그림, 아래에 글.
-        const artH=half*2/3;
-        spread.pageIndices.forEach((page,column)=>{
-          const art=arts[column],x=column*half;
-          if(art)drawContain(context,art,x+40,40,half-80,artH-40);
-          drawParagraphs(context,textOf(page),x+pad,artH+60,half-pad*2,H-artH-60-110,family,{middle:true});
-          drawFolio(context,String(page+1),x+half/2,H-56,family);
-        });
-        if(spread.pageIndices.length===1){
-          drawParagraphs(context,['끝'],half+pad,H/2-140,half-pad*2,120,family,{size:96,min:60,align:'center',weight:'700'});
-          drawParagraphs(context,[book.title],half+pad,H/2+10,half-pad*2,200,family,{size:40,min:26,align:'center',color:folio});
-        }
-      }
-      pages.push(await toPage(canvas,spreadSize.pt));
+      const ending=spread.pageIndices.length===1?book.title:null;
+      drawBookSpread(context,arts,spread.shared,spread.pageIndices.map(page=>({number:page+1,pieces:marked[page]})),ending,hand,family);
+      pages.push(await toPage(canvas,bookSpreadSize.pt));
       onProgress?.(pages.length,total);
     }
   }else{

@@ -1,19 +1,61 @@
 .book { margin-top: 18px; }
 .edition { color: #8b7250; font-size: .8em; }
-.spread { margin: 0; background: #fff9ee; overflow: hidden; }
+.spread { margin: 0 0 clamp(18px, 3vw, 32px); }
+/* 펼침면 한 장. 글씨 크기와 글 영역은 이 폭(cqw)을 기준으로 정합니다. */
+.sheet { position: relative; isolation: isolate; container-type: inline-size; display: grid; overflow: hidden; background: #fff9ee; border-radius: 6px; box-shadow: 0 8px 26px #4c3d2514; }
+.spread[data-pages='1'] .sheet { max-width: 640px; margin: 0 auto; }
+
+.panorama img, .individual img { display: block; width: 100%; height: auto; }
+.individual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.individual > :only-child { grid-column: 1 / -1; }
+.backdrop { display: none; }
+
+/* 글: 그림이 아직 없거나 화면이 좁으면 그림 아래에 따로 둡니다. */
 .texts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 4vw, 52px); padding: clamp(20px, 4vw, 42px); }
+.spread[data-pages='1'] .texts { grid-template-columns: minmax(0, 1fr); }
 /* 본문이 약 2,500자로 줄어 쪽당 글이 적다. 읽기 도구에서 고른 크기보다 1.3배 크게 보여 준다. */
-.copy { min-width: 0; overflow-wrap: anywhere; font-size: 1.3em; line-height: 1.8; }
+/* 손글씨 글꼴(Gaegu)은 같은 크기에서 글자가 작아 보여 1.45배로 둔다. 글씨는 굵고 진하게 쓴다. */
+.copy { min-width: 0; overflow-wrap: anywhere; font-family: var(--font-story-hand), 'Gaegu', 'Nanum Pen Script', cursive; font-weight: 700; font-size: 1.45em; line-height: 1.65; letter-spacing: -.02em; color: #2a2017; }
+/* 강조: 이야기 글은 기본 크기, 인물의 대사는 한 단계 크게, 소리·모양 흉내말은 가장 크게. */
+.speech { font-size: 1.22em; color: #4a2410; }
+.sound { font-size: 1.38em; color: #b0461f; letter-spacing: .04em; }
 .copy p { margin: 0 0 .7em; white-space: pre-wrap; word-break: keep-all; scroll-margin-top: 24px; }
 .copy p:last-child { margin-bottom: 0; }
-.panorama img, .individual img { display: block; width: 100%; height: auto; }
-.panorama { mask-image: linear-gradient(to bottom, transparent, #000 7%); }
-.spread[data-art-position='above'] .panorama { mask-image: linear-gradient(to top, transparent, #000 7%); }
-.individual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding: 0 18px; }
-.individual > :only-child { grid-column: 1 / -1; max-width: 70%; justify-self: center; }
-.folios { display: block; padding: 12px 24px; color: #9f8d73; text-align: center; font-size: .65em; letter-spacing: .14em; }
+.folios { display: block; padding: 10px 24px 0; color: #9f8d73; text-align: center; font-size: .65em; letter-spacing: .14em; }
+
+/* 넓은 화면: 그림책 펼침면처럼 그림이 종이 전체를 채웁니다.
+   - 삽화는 아래쪽에 좌우 끝까지 놓고, 위쪽은 같은 그림을 크게 흐려 하늘처럼 이어 채웁니다.
+   - 글은 그 위쪽 여백(각 쪽의 왼쪽 위·오른쪽 위)에 얹어 인물을 가리지 않습니다.
+   - 글이 길면 위쪽 여백이 저절로 늘어납니다. */
+@container (min-width: 720px) {
+  .spread[data-overlay][data-pages='2'] .texts { grid-row: 1; position: relative; z-index: 2; min-height: 15cqw; gap: 9cqw; padding: 3.4cqw 5cqw 0; }
+  .spread[data-overlay][data-pages='2'] .copy { font-size: clamp(17px, 2.3cqw, 1.45em); }
+  .spread[data-overlay][data-pages='2'] :is(.panorama, .individual) { grid-row: 2; margin-top: -4cqw; }
+  .spread[data-overlay][data-pages='2'] .sheet::after { content: ''; position: absolute; z-index: 3; top: 0; bottom: 0; left: 50%; width: 3%; transform: translateX(-50%); pointer-events: none;
+    background: linear-gradient(to right, transparent, #3b2f2212 45%, #3b2f2222 50%, #3b2f2212 55%, transparent); }
+}
+@container (min-width: 440px) {
+  .spread[data-overlay][data-pages='1'] .texts { grid-row: 1; position: relative; z-index: 2; min-height: 26cqw; padding: 6cqw 8cqw 0; }
+  .spread[data-overlay][data-pages='1'] .copy { font-size: clamp(17px, 4.4cqw, 1.45em); }
+  .spread[data-overlay][data-pages='1'] :is(.panorama, .individual) { grid-row: 2; margin-top: -7cqw; }
+}
+@container (min-width: 440px) {
+  .spread[data-overlay][data-pages='1'] .backdrop { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); position: absolute; inset: 0; z-index: 0; }
+  .spread[data-overlay][data-pages='1'] .backdrop > div { background: #e9dcc4 center top / cover no-repeat; filter: blur(28px) saturate(.85); transform: scale(1.25); }
+  /* 흐린 배경 위에 종이색을 옅게 덮어 글이 또렷하게 읽히게 합니다. */
+  .spread[data-overlay][data-pages='1'] .backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, #fff9eecc, #fff9ee99 35%, #fff9ee00 60%); }
+  .spread[data-overlay][data-pages='1'] :is(.panorama, .individual) { position: relative; z-index: 1; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16%); mask-image: linear-gradient(to bottom, transparent, #000 16%); }
+  .spread[data-overlay][data-pages='1'] .copy { text-shadow: 0 0 .35em #fff9ee, 0 0 .8em #fff9ee, 0 0 1.2em #fff9ee; }
+}
+@container (min-width: 720px) {
+  .spread[data-overlay][data-pages='2'] .backdrop { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); position: absolute; inset: 0; z-index: 0; }
+  .spread[data-overlay][data-pages='2'] .backdrop > div { background: #e9dcc4 center top / cover no-repeat; filter: blur(28px) saturate(.85); transform: scale(1.25); }
+  .spread[data-overlay][data-pages='2'] .backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, #fff9eecc, #fff9ee99 35%, #fff9ee00 60%); }
+  .spread[data-overlay][data-pages='2'] :is(.panorama, .individual) { position: relative; z-index: 1; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 16%); mask-image: linear-gradient(to bottom, transparent, #000 16%); }
+  .spread[data-overlay][data-pages='2'] .copy { text-shadow: 0 0 .35em #fff9ee, 0 0 .8em #fff9ee, 0 0 1.2em #fff9ee; }
+}
+
 @media(max-width:620px) {
   .texts { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .individual { grid-template-columns: minmax(0, 1fr); }
-  .individual > :only-child { max-width: 100%; }
 }
