@@ -27,7 +27,13 @@ const singleAppearance=[
 // 이 장면의 글(장 제목 포함)이 무엇을 그릴지 정하며, 바로 앞 장면은 반복하지 말라는 대조용으로만 준다.
 const referenceRule='The attached image is a character and style reference sheet, NOT a picture to edit or continue. Use it only for who the characters are (silhouettes, faces, hair, outfits, signature colors) and how they are painted (the same artistic medium and rendering). Draw a completely new picture: do not reuse its composition, camera angle, poses, character placement, background layout or location unless this passage takes place there.';
 const revisionRule='The attached image is the current illustration of this scene. Keep its characters, artistic medium and overall composition, and change only what the requested adjustment asks for.';
-const sceneRule='What to draw comes only from the passage below: its place, time of day, weather, action, emotion and key objects. Include only the characters who are present or clearly implied in this passage; leave out anyone who is not. Do not add creatures, objects, buildings or landmarks the story never mentions, and never draw words, letters or speech bubbles.';
+// 2026-11-13 실제 재시험(장면 9~11): 글에 엄마가 없는 장면에도 표지에 있던 엄마가 계속 그려졌다.
+// 표지는 등장인물 전체를 보여 주는 참고일 뿐이고, 이 장면 글에 나오는 인물만 그린다고 분명히 한다.
+const sceneRule=[
+  'What to draw comes only from the passage below: its place, time of day, weather, action, emotion and key objects.',
+  'The reference sheet shows the whole cast of the book, not who is in this scene. Draw only the characters who are named or speaking in this passage. If the passage mentions only one character, draw that character alone, without parents, friends or bystanders, even if they appear on the reference sheet or in the previous scene.',
+  'Do not add creatures, objects, buildings or landmarks the story never mentions, and never draw words, letters or speech bubbles.',
+].join(' ');
 const clip=(text:string,length:number)=>{const flat=text.replace(/\s+/g,' ').trim();return flat.length>length?flat.slice(0,length).replace(/\s\S*$/,'')+'…':flat;};
 
 export type ArtPromptInput={book:Book;index:number;hasReference:boolean;hasStyleSample:boolean;direction?:string;styleId?:string;qualityProfile?:string};

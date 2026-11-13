@@ -20,7 +20,7 @@ function makeBook(id,variant){
   }));
   return {id,title:'하린이와 무지개 웅덩이 '+variant,chapters,qualityProfile:storyQualityProfile,artStyleId:'soft-clay'};
 }
-const forbidden=[/tower/i,/whole cast/i,/Four Seasons/i];
+const forbidden=[/tower/i,/preserve the whole cast/i,/Four Seasons/i];
 let runs=0;
 for(let variant=0;variant<6;variant++){
   const book=makeBook('00000000-0000-4000-8000-00000000000'+variant,variant);
@@ -44,7 +44,8 @@ for(let variant=0;variant<6;variant++){
     else assert.match(prompt,/For contrast only, the previous picture already showed this moment: “.{10,}” Do not draw that moment again/);
     // 표지는 생김새·화풍 참고용이며 편집 대상이 아니다. 인물은 이 장면에 나오는 사람만.
     assert.match(prompt,/NOT a picture to edit/);
-    assert.match(prompt,/Include only the characters who are present/);
+    assert.match(prompt,/Draw only the characters who are named or speaking in this passage\. If the passage mentions only one character, draw that character alone/);
+    assert.doesNotMatch(prompt,/clearly implied/);
     assert.match(prompt,/Each character appears exactly once/);
     for(const pattern of forbidden)assert.doesNotMatch(prompt,pattern);
     // 화면 구성은 바로 앞 그림과 다르다.
