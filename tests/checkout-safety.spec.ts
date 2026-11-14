@@ -79,5 +79,8 @@ test('generation conditions and final-confirmation shortcut are explained',async
 test('failed production availability can be retried on the same page',async({browser})=>{
  const context=await browser.newContext();const page=await context.newPage();let checks=0;
  await context.route('https://storybook.test/**',async route=>{const url=new URL(route.request().url());if(url.pathname==='/api/storybook/availability'){checks++;return route.fulfill({json:{ready:checks>1}});}const response=await route.fetch({url:'http://127.0.0.1:3110'+url.pathname+url.search});return route.fulfill({response});});
- await page.goto('https://storybook.test/storybook');const input=page.getByRole('textbox',{name:'제작 코드',exact:true});await expect(input).toBeDisabled();await expect(page.getByRole('button',{name:'연결 다시 확인',exact:true})).toBeEnabled();await page.getByRole('button',{name:'연결 다시 확인',exact:true}).click();await expect(input).toBeEnabled();expect(checks).toBe(2);await context.close();
+ await page.goto('https://storybook.test/storybook');const input=page.getByRole('textbox',{name:'제작 코드',exact:true});await expect(input).toBeDisabled();await expect(page.getByRole('button',{name:'연결 다시 확인',exact:true})).toBeEnabled();await page.getByRole('button',{name:'연결 다시 확인',exact:true}).click();await expect(input).toBeEnabled();expect(checks).toBe(2);
+ // Scrolling to checkout starts lazy thumbnail requests. Let those proxy handlers
+ // finish before disposing their request context; readiness is asserted above.
+ await page.waitForLoadState('networkidle');await context.close();
 });
