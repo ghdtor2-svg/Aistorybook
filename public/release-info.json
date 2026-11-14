@@ -1,6 +1,13 @@
 {
-  "version": "2026-11-13-scene-cast-v1",
+  "version": "2026-11-14-checkout-publication-v1",
   "features": [
+    "question-story-examples",
+    "browser-draft-save",
+    "order-bound-recovery",
+    "bounded-editorial-review",
+    "complete-korean-font-fallback",
+    "high-contrast-folios",
+    "separate-pdf-ending-18-pages",
     "scene-cast-only",
     "seo-aeo-structure",
     "book-restore-by-code",
@@ -19,5 +26,6 @@
   ],
   "publicGenerationReady": false,
   "readinessEndpoint": "/api/storybook/availability",
-  "qualityVerificationUnchanged": true
+  "qualityVerificationUnchanged": true,
+  "sourceRevision": "ce43d4bd272bf5004e6ab6a9684cf3ff6e6647e1"
 }

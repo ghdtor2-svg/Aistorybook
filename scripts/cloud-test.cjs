@@ -9,10 +9,10 @@ Module._load=function(name,...args){if(name==='@netlify/blobs')return {getStore(
  return {get:async(k,{type}={})=>{const row=rows.get(k);if(!row)return null;if(type==='arrayBuffer')return row.data;if(type==='stream')return new Blob([row.data]).stream();return clone(row.data);},getWithMetadata:async(k)=>{const row=rows.get(k);return row?clone(row):null;},setJSON:(k,v,o)=>set(k,clone(v),o),set,list:async function*({prefix}){yield {blobs:[...rows.keys()].filter(k=>k.startsWith(prefix)).map(key=>({key}))};}};}};return nativeLoad.call(this,name,...args);};
 Object.assign(process.env,{NANGMAN_STORAGE:'netlify',NANGMAN_CLOUD_ENABLED:'1',NETLIFY:'true',CONTEXT:'production',NANGMAN_PUBLIC_URL:'https://example.test',NANGMAN_ADMIN_BRIDGE_SECRET:'fixture-admin-connection-secret-123456789',NANGMAN_WORKER_SECRET:'fixture-background-secret-123456789',OPENAI_API_KEY:'fixture-not-a-real-key'});
 const root='../.cloud-test-build/',orders=require(root+'src/lib/storybook/story-orders'),sign=require(root+'src/lib/storybook/cloud-signing'),bridge=require(root+'src/app/api/storybook/admin-bridge/route'),story=require(root+'src/app/api/office/story/route'),art=require(root+'src/app/api/storybook/illustrations/route'),worker=require(root+'netlify/functions/storybook-task-background').default;
-const jobs=[];let textCalls=0,imageCalls=0,failImage=false,shortTexts=0;
+const jobs=[];let textCalls=0,imageCalls=0,failImage=false,shortTexts=0,failReview=false;
 global.fetch=async(url,init)=>{
  if(String(url).includes('/.netlify/functions/')){jobs.push(new Request(url,init));return new Response(null,{status:202});}
- if(String(url).endsWith('/v1/responses')){textCalls++;await new Promise(r=>setTimeout(r,15));const size=shortTexts>0&&shortTexts--?200:500;const chapters=Array.from({length:5},(_,i)=>({title:'장면 '+i,text:'친구들과 함께 사계절 숲을 걸으며 서로의 마음을 나누었어요. '.repeat(50).slice(0,size)}));return Response.json({output:[{content:[{type:'output_text',text:JSON.stringify({title:'공유 저장소 시험',chapters,note:'가상 데이터'})}]}]});}
+ if(String(url).endsWith('/v1/responses')){textCalls++;const reviewing=JSON.parse(init.body).input[0].content.includes('출고 전 편집자');await new Promise(r=>setTimeout(r,15));const size=shortTexts>0&&shortTexts--?200:500;const chapters=Array.from({length:5},(_,i)=>({title:'장면 '+i,text:'친구들과 함께 사계절 숲을 걸으며 서로의 마음을 나누었어요. '.repeat(50).slice(0,size)}));return Response.json({output:[{content:[{type:'output_text',text:JSON.stringify({title:'공유 저장소 시험',chapters,note:'가상 데이터',...(reviewing?{review:{causality:!failReview,continuity:true,characters:true,sourceRespect:true,naturalKorean:true,completeEnding:true}}:{})})}]}]});}
  if(String(url).includes('/v1/images/')){imageCalls++;if(failImage)throw Error('Simulated unknown upstream outcome');return Response.json({data:[{b64_json:Buffer.from([255,216,255,217]).toString('base64')}]});}
  throw Error('Unexpected network: '+url);
 };
@@ -27,16 +27,31 @@ async function run(){
  const list=await (await bridge.POST(signed({action:'list'}))).json();assert.equal(list.source,'cloud');assert.equal(JSON.stringify(list).includes(code),false);
  let release;const gate=new Promise(r=>release=r);const mutations=Array.from({length:2},()=>orders.withOrder(id,async order=>{await gate;await orders.saveOrder({...order,operatorNote:randomUUID()});}));release();const outcomes=await Promise.allSettled(mutations);assert.equal(outcomes.filter(r=>r.status==='fulfilled').length,1);
  const requestId=randomUUID(),body={id:requestId,brief:'가족과 계절 여행',styleId:'watercolor'};
- assert.equal((await story.POST(customer('/api/office/story',code,body))).status,202);
+ // Simulate closing the customer tab after the request was accepted. Only the
+ // detached background worker runs below; no customer polling keeps it alive.
+ const departedText=new AbortController();
+ assert.equal((await story.POST(new Request(customer('/api/office/story',code,body),{signal:departedText.signal}))).status,202);
+ departedText.abort();assert.equal(departedText.signal.aborted,true);
  const duplicate=await story.POST(customer('/api/office/story',code,{...body,id:randomUUID()}));assert.equal((await duplicate.json()).requestId,requestId);
  // The function runtime has no NETLIFY/CONTEXT variables: the invocation context must supply them, and a preview stays closed.
  delete process.env.NETLIFY;delete process.env.CONTEXT;const textTask=jobs.shift();
  await worker(textTask.clone(),{deploy:{context:'deploy-preview'}});assert.equal(textCalls,0);
- const production={deploy:{context:'production'}};await Promise.all([worker(textTask.clone(),production),worker(textTask.clone(),production)]);assert.equal(process.env.CONTEXT,'production');while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,1);
+ const production={deploy:{context:'production'}};await Promise.all([worker(textTask.clone(),production),worker(textTask.clone(),production)]);assert.equal(process.env.CONTEXT,'production');while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,2);
  const restored=await (await story.GET(customer('/api/office/story',code))).json();assert.equal(restored.state,'completed');assert.equal(restored.book.id,requestId);
  const book=restored.book;assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'next',book}))).status,403);
- assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'start',book}))).status,200);
+ const departedArt=new AbortController();
+ assert.equal((await art.POST(new Request(customer('/api/storybook/illustrations',code,{action:'start',book}),{signal:departedArt.signal}))).status,200);
+ departedArt.abort();assert.equal(departedArt.signal.aborted,true);
  const first=jobs.shift();await Promise.all([worker(first.clone()),worker(first.clone())]);while(jobs.length)await worker(jobs.shift());assert.equal(imageCalls,18);assert.equal((await orders.getOrder(id)).art.base.length,18);
+ // A fresh customer lookup after all workers finish restores the same book and
+ // all pictures. Reopening or posting the same order does not buy another story.
+ const textAfterDeparture=textCalls,imagesAfterDeparture=imageCalls;
+ const returned=await (await story.GET(customer('/api/office/story',code))).json();
+ assert.equal(returned.book.id,requestId);
+ const returnedArt=await (await art.GET(customer('/api/storybook/illustrations',code))).json();assert.equal(returnedArt.base.length,18);
+ assert.equal((await (await story.POST(customer('/api/office/story',code,{...body,id:randomUUID()}))).json()).id,requestId);
+ assert.equal(textCalls,textAfterDeparture);assert.equal(imageCalls,imagesAfterDeparture);
+ console.log('PASS page departure: aborted customer connections do not cancel accepted text/art jobs; fresh lookup restores the same book and 18 images without duplicate generation (mocked)');
  const asset=(await orders.getOrder(id)).art.base[0];assert.equal((await art.GET(customer('/api/storybook/illustrations?asset='+asset,code))).status,200);assert.equal((await art.GET(customer('/api/storybook/illustrations?asset='+asset,'NG-invalid'))).status,401);
  failImage=true;await art.POST(customer('/api/storybook/illustrations',code,{action:'revise',book,index:0,direction:'더 밝게'}));while(jobs.length)await worker(jobs.shift());assert.equal((await orders.getOrder(id)).art.job.reason,'uncertain');assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'revise',book,index:0,direction:'더 밝게'}))).status,409);
  failImage=false;await art.POST(customer('/api/storybook/illustrations',code,{action:'revise',book,index:0,direction:'더 밝게',confirmUncertain:true}));while(jobs.length)await worker(jobs.shift());assert.ok((await orders.getOrder(id)).art.alternative);assert.equal(imageCalls,20);
@@ -52,18 +67,24 @@ async function run(){
  assert.equal((await (await story.GET(customer('/api/office/story',lost.code))).json()).state,'paused');assert.equal(jobs.length,0);
  assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:randomUUID()}))).status,409);
  const retryId=randomUUID();assert.equal((await story.POST(customer('/api/office/story',lost.code,{...lostBody,id:retryId,confirmUncertain:true}))).status,202);
- const textBefore=textCalls;while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,textBefore+1);assert.equal((await (await story.GET(customer('/api/office/story',lost.code))).json()).book.id,retryId);
+ const textBefore=textCalls;while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,textBefore+2);assert.equal((await (await story.GET(customer('/api/office/story',lost.code))).json()).book.id,retryId);
  // A too-short first draft is expanded once in the same task. A draft still short after that is a definite
  // failure: it reports the measured length and can be restarted without the uncertain-retry confirmation.
  const shortId=randomUUID(),shortOrder=await (await bridge.POST(signed({action:'issue',id:shortId,transferConfirmed:true}))).json();
  shortTexts=1;let before=textCalls;assert.equal((await story.POST(customer('/api/office/story',shortOrder.code,{...lostBody,id:randomUUID()}))).status,202);
- while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,before+2);assert.equal((await (await story.GET(customer('/api/office/story',shortOrder.code))).json()).state,'completed');
+ while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,before+3);assert.equal((await (await story.GET(customer('/api/office/story',shortOrder.code))).json()).state,'completed');
  const stuckId=randomUUID(),stuck=await (await bridge.POST(signed({action:'issue',id:stuckId,transferConfirmed:true}))).json();
  shortTexts=2;before=textCalls;assert.equal((await story.POST(customer('/api/office/story',stuck.code,{...lostBody,id:randomUUID()}))).status,202);
  while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,before+2);
  const stuckState=await (await story.GET(customer('/api/office/story',stuck.code))).json();assert.equal(stuckState.state,'paused');assert.match(stuckState.error,/story_short, 1000자/);
  assert.equal((await story.POST(customer('/api/office/story',stuck.code,{...lostBody,id:randomUUID()}))).status,202);while(jobs.length)await worker(jobs.shift());
  assert.equal((await (await story.GET(customer('/api/office/story',stuck.code))).json()).state,'completed');
+ // Failed editorial checks never publish a first draft as a finished book.
+ const reviewId=randomUUID(),reviewOrder=await (await bridge.POST(signed({action:'issue',id:reviewId,transferConfirmed:true}))).json();
+ failReview=true;before=textCalls;await story.POST(customer('/api/office/story',reviewOrder.code,{...lostBody,id:randomUUID()}));while(jobs.length)await worker(jobs.shift());
+ assert.equal(textCalls,before+2);assert.equal((await orders.getOrder(reviewId)).book,undefined);
+ const reviewState=await (await story.GET(customer('/api/office/story',reviewOrder.code))).json();assert.equal(reviewState.state,'paused');assert.match(reviewState.error,/story_review/);failReview=false;
+ console.log('PASS one bounded editorial pass; a failed review preserves the request without publishing a draft');
  process.env.CONTEXT='deploy-preview';assert.equal((await story.GET(customer('/api/office/story',rotated.code))).status,403);assert.equal((await bridge.POST(signed({action:'list'}))).status,503);
  console.log('PASS cloud: signed admin bridge, replay/expiry, atomic claims, one text + 18 images, private assets, uncertain retry, rotate/revoke, preview isolation (all APIs mocked)');
 }

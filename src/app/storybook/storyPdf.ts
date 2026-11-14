@@ -1,6 +1,7 @@
 import type {Book} from '../../lib/storybook/books';
 import {planStorybook} from '../../lib/storybook/book-layout';
 import {storyQualityProfile} from '../../lib/storybook/quality';
+import {needsSafeStoryFont,safeStoryFont,validStoryUnicode} from '../../lib/storybook/story-font';
 import {jpegPdf,type PdfImagePage} from '../../lib/storybook/book-pdf';
 import {emphasizePages,type EmphasisPiece} from '../../lib/storybook/emphasis';
 
@@ -16,9 +17,6 @@ const quality=0.88;
 type Art=CanvasImageSource&{width:number;height:number};
 export type LoadArt=(index:number)=>Promise<Blob|null>;
 
-function fontFamily(){
-  try{return getComputedStyle(document.body).fontFamily||'sans-serif';}catch{return 'sans-serif';}
-}
 /** 화면 본문과 같은 손글씨 글꼴(layout.tsx의 --font-story-hand). 없으면 기본 글꼴을 씁니다. */
 function handFamily(fallback:string){
   try{
@@ -27,11 +25,11 @@ function handFamily(fallback:string){
   }catch{return fallback;}
 }
 /** 한글 손글씨 글꼴은 글자 묶음별로 나뉘어 있어, 쓸 글자를 미리 받아 둬야 캔버스에 그 글꼴로 그려집니다. */
-async function loadGlyphs(family:string,text:string){
+async function loadGlyphs(family:string,text:string,weight=700){
   try{
-    if(!document.fonts?.load)return;
-    for(let at=0;at<text.length;at+=4000)await document.fonts.load('700 48px '+family,text.slice(at,at+4000));
-  }catch{}
+    if(!document.fonts?.load)throw Error('Font loading unavailable');
+    for(let at=0;at<text.length;at+=4000){const part=text.slice(at,at+4000);const faces=await document.fonts.load(weight+' 48px '+family,part);if(!faces.length||!document.fonts.check(weight+' 48px '+family,part))throw Error('Story font unavailable');}
+  }catch{throw Error('동화 글꼴을 불러오지 못했어요. 연결을 확인하고 PDF를 다시 받아 주세요.');}
 }
 
 async function decode(blob:Blob|null):Promise<Art|null>{
@@ -114,8 +112,12 @@ function drawParagraphs(context:CanvasRenderingContext2D,paragraphs:string[],x:n
 }
 
 function drawFolio(context:CanvasRenderingContext2D,text:string,centerX:number,y:number,family:string){
-  context.font='400 26px '+family;context.fillStyle=folio;context.textAlign='center';
-  context.fillText(text,centerX,y);context.textAlign='left';
+  context.save();
+  context.shadowBlur=0;context.textBaseline='middle';context.font='700 32px '+family;context.textAlign='center';
+  const width=Math.max(76,context.measureText(text).width+36);
+  context.fillStyle='#fff9ee';context.fillRect(centerX-width/2,y-8,width,46);
+  context.strokeStyle='#b9a381';context.lineWidth=2;context.strokeRect(centerX-width/2,y-8,width,46);
+  context.fillStyle='#463522';context.fillText(text,centerX,y+15);context.restore();
 }
 
 const emphasisStyle:Record<EmphasisPiece['kind'],{scale:number;color:string;spacing:number}>={
@@ -211,7 +213,7 @@ function drawFadedArt(context:CanvasRenderingContext2D,art:Art,x:number,y:number
   layer.width=Math.round(width);layer.height=Math.round(height);
   const own=layer.getContext('2d');
   if(!own){drawCover(context,art,x,y,width,height);return;}
-  drawCover(own,art,0,0,layer.width,layer.height);
+  if(width/height>2.5&&art.width/art.height<2.5)drawContain(own,art,0,0,layer.width,layer.height);else drawCover(own,art,0,0,layer.width,layer.height);
   own.globalCompositeOperation='destination-in';
   const mask=own.createLinearGradient(0,0,0,fade);
   mask.addColorStop(0,'rgba(0,0,0,0)');mask.addColorStop(1,'rgba(0,0,0,1)');
@@ -222,7 +224,7 @@ function drawFadedArt(context:CanvasRenderingContext2D,art:Art,x:number,y:number
 }
 
 /** 32쪽 동화의 펼침면: 그림이 종이 전체를 채우고 글은 위쪽 흐린 하늘에 놓입니다(화면과 같은 배치). */
-function drawBookSpread(context:CanvasRenderingContext2D,arts:(Art|null)[],shared:boolean,pages:{number:number;pieces:EmphasisPiece[][]}[],ending:string|null,hand:string,family:string){
+function drawBookSpread(context:CanvasRenderingContext2D,arts:(Art|null)[],shared:boolean,pages:{number:number;pieces:EmphasisPiece[][]}[],hand:string,family:string){
   const {width:W,height:H}=bookSpreadSize;
   const half=W/2,artH=W/3,artY=H-artH,fade=Math.round(artH*0.16);
   const slots=shared?[{art:arts[0],x:0,width:W}]:arts.map((art,index)=>({art,x:index*half,width:half}));
@@ -231,16 +233,9 @@ function drawBookSpread(context:CanvasRenderingContext2D,arts:(Art|null)[],share
   wash.addColorStop(0,'rgba(255,249,238,0.8)');wash.addColorStop(0.35,'rgba(255,249,238,0.6)');wash.addColorStop(0.6,'rgba(255,249,238,0)');
   context.fillStyle=wash;context.fillRect(0,0,W,H);
   for(const slot of slots)if(slot.art)drawFadedArt(context,slot.art,slot.x,artY,slot.width,artH,fade);
-  if(ending!==null){
-    // 마지막 한 쪽: 오른쪽은 종이에 '끝'과 제목.
-    context.fillStyle=paper;context.fillRect(half,0,half,H);
-    drawParagraphs(context,['끝'],half+110,H/2-150,half-220,130,hand,{size:110,min:60,align:'center',weight:'700'});
-    drawParagraphs(context,[ending],half+110,H/2+10,half-220,200,family,{size:40,min:26,align:'center',color:folio});
-  }else{
-    const fold=context.createLinearGradient(half-36,0,half+36,0);
-    fold.addColorStop(0,'rgba(59,47,34,0)');fold.addColorStop(0.5,'rgba(59,47,34,0.13)');fold.addColorStop(1,'rgba(59,47,34,0)');
-    context.fillStyle=fold;context.fillRect(half-36,0,72,H);
-  }
+  const fold=context.createLinearGradient(half-36,0,half+36,0);
+  fold.addColorStop(0,'rgba(59,47,34,0)');fold.addColorStop(0.5,'rgba(59,47,34,0.13)');fold.addColorStop(1,'rgba(59,47,34,0)');
+  context.fillStyle=fold;context.fillRect(half-36,0,72,H);
   const padX=120,padY=80;
   pages.forEach((page,column)=>{
     // 글이 길면 삽화의 흐린 윗부분까지 내려올 수 있습니다(화면도 같음).
@@ -276,10 +271,17 @@ function drawCoverPage(art:Art|null,title:string,family:string){
 
 export async function storyPdf(book:Book,loadArt:LoadArt,onProgress?:(done:number,total:number)=>void):Promise<Blob>{
   if(typeof document!=='undefined'&&document.fonts?.ready)await document.fonts.ready;
-  const family=fontFamily();
+  const text=book.title+book.chapters.map(chapter=>chapter.title+chapter.text).join('');
+  if(!validStoryUnicode(text))throw Error('동화에 손상된 문자가 있어요. 글을 확인한 뒤 PDF를 받아 주세요.');
+  // Use one complete Korean font for the whole book, rather than mixing an
+  // unsupported syllable (such as 렜) into the middle of handwriting.
+  const safe=needsSafeStoryFont(text);
+  const family=safeStoryFont;
+  await loadGlyphs(family,text+'0123456789 끝');
+  await loadGlyphs(family,text+'0123456789',400);
   const pages:PdfImagePage[]=[];
   const spreads=book.qualityProfile===storyQualityProfile?planStorybook(book):null;
-  const total=1+(spreads?spreads.spreads.length:book.chapters.length);
+  const total=2+(spreads?spreads.spreads.length:book.chapters.length);
   onProgress?.(0,total);
   pages.push(await toPage(drawCoverPage(await decode(await loadArt(0)),book.title,family),coverSize.pt));
   onProgress?.(1,total);
@@ -287,14 +289,13 @@ export async function storyPdf(book:Book,loadArt:LoadArt,onProgress?:(done:numbe
   const half=W/2,pad=110;
   if(spreads){
     const {pages:textPages}=spreads;
-    const hand=handFamily(family);
+    const hand=safe?safeStoryFont:handFamily(family);
     const marked=emphasizePages(textPages);
     await loadGlyphs(hand,textPages.flatMap(page=>page.parts.map(part=>part.text)).join('')+'0123456789 끝');
     for(const spread of spreads.spreads){
       const {canvas,context}=canvasOf(bookSpreadSize.width,bookSpreadSize.height);
       const arts=await Promise.all(spread.artIndices.map(async art=>decode(await loadArt(art))));
-      const ending=spread.pageIndices.length===1?book.title:null;
-      drawBookSpread(context,arts,spread.shared,spread.pageIndices.map(page=>({number:page+1,pieces:marked[page]})),ending,hand,family);
+      drawBookSpread(context,arts,spread.shared,spread.pageIndices.map(page=>({number:page+1,pieces:marked[page]})),hand,family);
       pages.push(await toPage(canvas,bookSpreadSize.pt));
       onProgress?.(pages.length,total);
     }
@@ -312,5 +313,9 @@ export async function storyPdf(book:Book,loadArt:LoadArt,onProgress?:(done:numbe
       onProgress?.(pages.length,total);
     }
   }
+  const {canvas:endingCanvas,context:endingContext}=canvasOf(bookSpreadSize.width,bookSpreadSize.height);
+  drawParagraphs(endingContext,['끝'],200,370,2000,190,family,{size:120,min:70,align:'center',weight:'700'});
+  drawParagraphs(endingContext,[book.title],200,600,2000,180,family,{size:44,min:28,align:'center'});
+  pages.push(await toPage(endingCanvas,bookSpreadSize.pt));onProgress?.(pages.length,total);
   return new Blob([jpegPdf(pages,book.title)],{type:'application/pdf'});
 }

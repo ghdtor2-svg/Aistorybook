@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const {needsSafeStoryFont,validStoryUnicode}=require('../.test-build/story-font');
+const {validStoryReview,reviewChecks,validBookText}=require('../.test-build/story-review');
+const {planStorybook}=require('../.test-build/book-layout');
+const {storyQualityProfile}=require('../.test-build/quality');
+assert.equal(needsSafeStoryFont('마음이 설렜어요.'),true);assert.equal(needsSafeStoryFont('지우는 웃었어요.'),false);
+assert.equal(needsSafeStoryFont('렜 ퟋ'),true);assert.equal(validStoryUnicode('설렜어요. 😀'),true);assert.equal(validStoryUnicode('깨진 \ufffd 글자'),false);assert.equal(validStoryUnicode('\ud800'),false);
+const review=Object.fromEntries(reviewChecks.map(key=>[key,true]));assert.equal(validStoryReview({review}),true);assert.equal(validStoryReview({}),false);
+for(const key of reviewChecks)assert.equal(validStoryReview({review:{...review,[key]:false}}),false);
+const book={id:'publication-fixture',title:'지우의 작은 용기',qualityProfile:storyQualityProfile,chapters:Array.from({length:5},(_,c)=>({title:'장 '+c,text:Array.from({length:12},(_,i)=>`지우는 ${c}번째 길에서 ${i}번째 꽃을 발견하고 친구와 함께 웃었어요. `).join('')})),note:''};
+const plan=planStorybook(book);assert.equal(plan.pages.length,32);assert.equal(plan.spreads.length,16);assert.equal(plan.scenes.length,17);assert.deepEqual(plan.spreads[15].pageIndices,[30,31]);
+assert(plan.pages[30].parts.length);assert(plan.pages[31].parts.length);
+assert.equal(plan.pages.flatMap(page=>page.parts).map(part=>part.text).join(''),book.chapters.map(chapter=>chapter.text).join(''));
+assert.equal(validBookText(book),true);assert.equal(validBookText({...book,title:'손상\ufffd'}),false);
+console.log('PASS safe Hangul fonts, damaged Unicode rejection, editorial gate, all text preserved across 32 sides and separate-ending layout');

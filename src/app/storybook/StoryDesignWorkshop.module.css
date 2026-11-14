@@ -102,3 +102,5 @@
   .rowTitle { font-size: .9rem; }
   .body { padding: 4px 12px 14px; }
 }
+
+.storyExample { display: block; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e3d8eb; line-height: 1.8; }

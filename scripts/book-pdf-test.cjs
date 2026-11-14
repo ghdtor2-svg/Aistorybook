@@ -5,22 +5,22 @@ const {jpegPdf,pdfFileName}=require('../.test-build/storybook/book-pdf');
 const fakeJpeg=size=>{const bytes=new Uint8Array(size);bytes[0]=0xFF;bytes[1]=0xD8;bytes[size-2]=0xFF;bytes[size-1]=0xD9;return bytes;};
 const pages=[
   {jpeg:fakeJpeg(300),pixelWidth:1200,pixelHeight:1800,width:576,height:864},
-  ...Array.from({length:16},()=>({jpeg:fakeJpeg(500),pixelWidth:2400,pixelHeight:1600,width:864,height:576})),
+  ...Array.from({length:17},()=>({jpeg:fakeJpeg(500),pixelWidth:2400,pixelHeight:1600,width:864,height:576})),
 ];
 const pdf=jpegPdf(pages,'지우의 용기 자전거');
 const text=Buffer.from(pdf).toString('latin1');
 assert.ok(text.startsWith('%PDF-1.4\n'));
 assert.ok(text.endsWith('%%EOF\n'));
-assert.match(text,/\/Count 17>>/);
-assert.equal(text.match(/\/Type\/Page\//g).length,17);
-assert.equal(text.match(/\/Filter\/DCTDecode/g).length,17);
+assert.match(text,/\/Count 18>>/);
+assert.equal(text.match(/\/Type\/Page\//g).length,18);
+assert.equal(text.match(/\/Filter\/DCTDecode/g).length,18);
 assert.match(text,/MediaBox\[0 0 576 864\]/);
 assert.match(text,/MediaBox\[0 0 864 576\]/);
 // 목차(xref)의 위치가 정확해야 뷰어가 연다.
 const startxref=Number(text.match(/startxref\n(\d+)\n%%EOF\n$/)[1]);
 assert.ok(text.slice(startxref).startsWith('xref\n0 '));
 const size=Number(text.slice(startxref).match(/^xref\n0 (\d+)/)[1]);
-assert.equal(size,4+17*3);
+assert.equal(size,4+18*3);
 const entries=text.slice(startxref).split('\n').slice(3,3+size-1);
 entries.forEach((entry,index)=>{
   const offset=Number(entry.slice(0,10));
@@ -37,4 +37,4 @@ assert.throws(()=>jpegPdf([]));
 assert.throws(()=>jpegPdf([{jpeg:new Uint8Array([1,2,3]),pixelWidth:1,pixelHeight:1,width:1,height:1}]));
 assert.equal(pdfFileName('하루의 별빛: 정원/모험?'),'하루의 별빛 정원 모험.pdf');
 assert.equal(pdfFileName('   '),'나의 동화.pdf');
-console.log('PASS pdf: 17 pages (cover + 16 spreads), page sizes, exact xref offsets and stream lengths, Korean title, safe file name');
+console.log('PASS pdf: 18 pages (cover + 16 spreads + ending), page sizes, exact xref offsets and stream lengths, Korean title, safe file name');

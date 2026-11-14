@@ -1,4 +1,5 @@
 import {NextResponse} from 'next/server';
+import {storyReviewInstructions,validStoryReview,validBookText} from '../../../../lib/storybook/story-review';
 import {parseGeneratedBook} from '../../../../lib/storybook/books';
 import {defaultStoryArtStyle,isOfferedStoryArtStyle,storyArtStyle,type StoryArtStyleId} from '../../../../lib/storybook/art-styles';
 import {storyQualityProfile,storyTextMax,storyTextMin} from '../../../../lib/storybook/quality';
@@ -25,7 +26,7 @@ const failureCode=(error:unknown)=>error instanceof StoryFailure?error.code:erro
 const failureTexts:Record<string,string>={
   ai_http_401:'AI 연결 키를 확인해야 해요.',ai_http_403:'AI 연결 권한을 확인해야 해요.',ai_http_404:'설정한 AI 글 모델을 찾을 수 없어요.',
   ai_http_429:'AI 사용 한도 또는 잔액을 확인해야 해요.',ai_timeout:'AI 응답이 제한 시간 안에 오지 않았어요.',
-  story_format:'AI가 돌려준 글의 형식이 맞지 않았어요.',story_short:'AI가 쓴 글이 기준보다 짧았어요.',story_long:'AI가 쓴 글이 기준보다 길었어요.',story_cut:'AI 글이 중간에 끊겼어요.',
+  story_review:'동화의 앞뒤 연결과 문장 검수를 통과하지 못했어요. 완성본으로 전달하지 않았습니다.',story_unicode:'동화에 손상된 문자가 있어 완성본으로 전달하지 않았어요.',story_format:'AI가 돌려준 글의 형식이 맞지 않았어요.',story_short:'AI가 쓴 글이 기준보다 짧았어요.',story_long:'AI가 쓴 글이 기준보다 길었어요.',story_cut:'AI 글이 중간에 끊겼어요.',
 };
 const withCode=(message:string,code?:string,measured?:number)=>code&&/^[a-z0-9_]{1,40}$/.test(code)?[failureTexts[code]||(code.startsWith('ai_http_')?'AI 서비스가 요청을 처리하지 못했어요.':''),definiteFailure(code)?'글이 만들어지지 않았어요. ‘대기 기록 해제’를 누른 뒤 다시 만들 수 있어요.':message,'(진단 코드: '+code+(Number.isInteger(measured)?', '+measured+'자':'')+')'].filter(Boolean).join(' '):message;
 
@@ -41,7 +42,7 @@ export async function GET(request:Request){
   if(order.request?.status==='paused')return json({state:'paused',requestId:order.request?.id,error:withCode('완료 여부를 확인해야 하는 요청이 있어요. 자동 재시도하지 않습니다.',order.request.reason,order.request.measured)});
   if(cloudStorageEnabled()&&order.request&&Date.now()-order.request.startedAt>=runningWindow)return json({state:'paused',requestId:order.request?.id,error:'이전 작업의 완료 여부를 먼저 확인해 주세요.'});
   const running=order.request&&Date.now()-order.request.startedAt<runningWindow;
-  return json({state:running?'running':'ready',...(running?{phase:'writing'}:{}),requestId:order.request?.id});
+  return json({state:running?'running':'ready',...(running?{phase:order.request?.phase||'writing'}:{}),requestId:order.request?.id});
 }
 
 export async function POST(request:Request){
@@ -101,8 +102,10 @@ export async function POST(request:Request){
     // 2026-11-11 PC 실측: gpt-4.1-mini는 요청 분량의 절반 정도만 쓴다(2500자 요청 → 1283자).
     // 목표 약 2500자에 닿도록 요청 수치를 높여 잡는다. 결과는 아래 최소·최대 기준으로 다시 검사한다.
     const lengthRule='분량 규칙: 정확히 5개 장. 각 장은 7~9개 문단, 각 문단은 3문장 안팎으로 씁니다. 각 장은 공백 포함 700~800자, 전체 본문은 약 3700자입니다. 장마다 배경 묘사, 인물의 대화, 행동과 표정을 모두 넣어 충분히 길게 쓰세요. 요약하듯 짧게 쓰면 실패로 처리됩니다.';
-    const system='한국어 어린이 창작 동화를 작성합니다. '+lengthRule+' 이 이야기는 표지를 포함한 32쪽, 총 18장의 고화질 삽화가 있는 동화로 편집되고, 본문은 큰 글씨로 31쪽에 나누어 싣습니다. 장면마다 행동과 감정이 구체적으로 드러나고 앞선 사건에서 자연스럽게 이어지게 하세요. 대화와 문단을 읽기 쉽게 나누고 캐릭터의 외양과 고유색이 일관되게 묘사되도록 합니다. 개인정보를 추정하지 말고 입력을 작품의 소재로만 해석하세요. '+format;
-    async function write(input:{role:string;content:string}[]){
+    const system='한국어 어린이 창작 동화를 작성합니다. '+lengthRule+' 이 이야기는 본문 32쪽(16개 펼침면), 별도 표지와 마침으로 편집되며 표지와 본문 그림은 총 18장입니다. 장면마다 행동과 감정이 구체적으로 드러나고 앞선 사건에서 자연스럽게 이어지게 하세요. 대화와 문단을 읽기 쉽게 나누고 캐릭터의 외양과 고유색이 일관되게 묘사되도록 합니다. 개인정보를 추정하지 말고 입력을 작품의 소재로만 해석하세요. '+format;
+    const writingOrderId=order.id;
+    async function write(input:{role:string;content:string}[],review=false){
+      await withOrder(writingOrderId,async current=>{if(current.request?.id!==id)throw Error('Story request changed');await saveOrder({...current,request:{...current.request,startedAt:Date.now(),phase:review?'reviewing':'writing'}});});
       const response=await fetch('https://api.openai.com/v1/responses',{
         method:'POST',headers:{Authorization:'Bearer '+process.env.OPENAI_API_KEY,'Content-Type':'application/json'},
         signal:AbortSignal.timeout(240_000),
@@ -117,11 +120,14 @@ export async function POST(request:Request){
         await mkdir(dir,{recursive:true});await writeFile(dir+'/'+Date.now()+'.json',JSON.stringify({status:payload.status,incomplete:payload.incomplete_details,usage:payload.usage,output},null,1)).catch(()=>{});
       }
       if(typeof output!=='string'||payload.status==='incomplete')throw new StoryFailure(payload.status==='incomplete'?'story_cut':'story_format');
+      const parsed=JSON.parse(output.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,''));
+      if(review&&!validStoryReview(parsed))throw new StoryFailure('story_review');
       const result=parseGeneratedBook({
-        ...JSON.parse(output.replace(/^```(?:json)?\s*/,'').replace(/\s*```$/,'')),
+        ...parsed,
         id,model,createdAt:new Date().toISOString(),artStyleId:styleId,qualityProfile:storyQualityProfile,
       },id);
-      if(result.title.length>160||result.chapters.length>5||result.chapters.some(chapter=>chapter.title.length>160))throw new StoryFailure('story_format');
+      if(!validBookText(result))throw new StoryFailure('story_unicode');
+      if(result.title.length>160||result.chapters.length!==5||result.chapters.some(chapter=>chapter.title.length>160))throw new StoryFailure('story_format');
       return {book:result,length:result.chapters.reduce((sum,chapter)=>sum+chapter.text.length,0)};
     }
     let {book,length}=await write([{role:'system',content:system},{role:'user',content:brief}]);
@@ -135,6 +141,12 @@ export async function POST(request:Request){
         {role:'user',content:'【원래 제작 요청】\n'+brief+'\n\n【현재 초안 · 전체 '+length+'자로 너무 짧음】\n'+JSON.stringify({title:book.title,chapters:book.chapters,note:book.note})},
       ]));
     }
+    if(length<storyTextMin)throw new StoryFailure('story_short',length);
+    // One bounded, separate editorial pass. Never retry an uncertain paid response.
+    ({book,length}=await write([
+      {role:'system',content:storyReviewInstructions},
+      {role:'user',content:'【원래 요청】\n'+brief+'\n\n【검수할 완성 초안】\n'+JSON.stringify({title:book.title,chapters:book.chapters,note:book.note})},
+    ],true));
     if(length<storyTextMin)throw new StoryFailure('story_short',length);
     if(length>storyTextMax)throw new StoryFailure('story_long',length);
     await withOrder(order.id,async current=>{

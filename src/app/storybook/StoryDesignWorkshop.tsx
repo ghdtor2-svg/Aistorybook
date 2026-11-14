@@ -1,6 +1,7 @@
 'use client';
 import styles from './StoryDesignWorkshop.module.css';
 import ChoiceChips from './ChoiceChips';
+import {designStoryUse,designStoryExample} from '../../lib/storybook/question-guidance';
 import {designFields,designLabels,storyDesignQuestions,type DesignField,type StoryDesign} from '../../lib/storybook/story-design';
 import {designQuestionChoices} from '../../lib/storybook/story-choices';
 import type {StoryProfile} from '../../lib/storybook/engine';
@@ -22,7 +23,7 @@ export default function StoryDesignWorkshop({profile,onChange}:{profile:StoryPro
     const writing=<>
      <ul className={styles.prompts}>{item.prompts.map(prompt=><li key={prompt}>{prompt}</li>)}</ul>
      <label htmlFor={'design-'+item.id}>{designLabels[item.id]}</label>
-     <textarea id={'design-'+item.id} maxLength={4000} value={value} placeholder={item.example} onChange={event=>update(item.id,event.target.value)}/>
+     <textarea aria-describedby={'design-use-'+item.id} id={'design-'+item.id} maxLength={4000} value={value} placeholder={item.example} onChange={event=>update(item.id,event.target.value)}/>
      <p className={styles.meta}>예시는 답변에 자동으로 들어가지 않아요. {value.length}/4000자</p>
     </>;
     return <li key={item.id}>
@@ -33,7 +34,7 @@ export default function StoryDesignWorkshop({profile,onChange}:{profile:StoryPro
       </summary>
       <div className={styles.body}>
        <p className={styles.question}>{item.question}</p>
-       <p className={styles.why}>{item.why}</p>
+       <p id={'design-use-'+item.id} className={styles.why}>동화에는 이렇게 담겨요: {designStoryUse[item.id]}<br/><span className={styles.storyExample}>{designStoryExample[item.id]}</span></p>
        {groups.length>0?<>
         <ChoiceChips groups={groups} value={value} onChange={text=>update(item.id,text)} idPrefix={'design-'+item.id}/>
         <details className={styles.writeBox}><summary>보기에 없으면 직접 적어도 돼요 (선택)</summary>{writing}</details>
