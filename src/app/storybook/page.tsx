@@ -16,23 +16,28 @@ import {coreQuestions,demoEngine,editSummary,fields,labels,newProfile,submitAnsw
 import {restoreStory,type SavedStory} from '../../lib/storybook/storage';
 import {changeQuestion,QuestionConflictError,QUESTION_LOCK} from '../../lib/storybook/question-store';
 export default function Storybook(){
- const [story,setStory]=useState<SavedStory|null>(null);const [ready,setReady]=useState(false);
+ const [story,setStory]=useState<SavedStory|null>(null);const [ready,setReady]=useState(false);const [restoredDraft,setRestoredDraft]=useState(false);
  const [error,setError]=useState('');const [storageError,setStorageError]=useState('');const saveFailed=useRef(false);const storyRef=useRef(story);storyRef.current=story;const importedSave=useRef('');const expected=useRef<string|null>(null),frozen=useRef(false),conflict=useRef(false),epoch=useRef(0),pendingWrites=useRef(0);const [saving,setSaving]=useState(false);const [savedDraft,setSavedDraft]=useState('');
- useUnsavedBookGuard(()=>!!story&&(saveFailed.current||pendingWrites.current>0));
+ useUnsavedBookGuard(()=>!!storyRef.current&&(saveFailed.current||pendingWrites.current>0||JSON.stringify({version:1,...storyRef.current})!==expected.current));
  async function questionLock<T>(action:()=>T):Promise<T>{if(!navigator.locks)throw Error('동시 저장을 보호할 수 없습니다. 최신 브라우저에서 이용하세요.');return navigator.locks.request(QUESTION_LOCK,action);}
  function failed(e:unknown){frozen.current=true;saveFailed.current=true;if(e instanceof QuestionConflictError){conflict.current=true;setStorageError(e.message);}else setStorageError('브라우저에 저장할 수 없습니다. 현재 작성본을 내려받아 보관하세요.');}
  async function persist(manual=false){const value=storyRef.current;if(!value||(!manual&&frozen.current))return;if(conflict.current){failed(new QuestionConflictError());return;}const version=epoch.current;pendingWrites.current++;setSaving(true);try{await questionLock(()=>{if(version!==epoch.current||(!manual&&frozen.current))return;expected.current=changeQuestion(localStorage,expected.current,value);frozen.current=false;saveFailed.current=false;setStorageError('');if(manual)setSavedDraft(JSON.stringify(value));});}catch(e){if(version===epoch.current)failed(e);}finally{pendingWrites.current--;setSaving(pendingWrites.current>0);}}
  async function reloadQuestions(){if(!window.confirm('현재 화면 작성본을 최신 질문 저장본으로 바꿀까요? 저장하지 못한 내용은 먼저 내려받아 보관하세요.'))return;epoch.current++;frozen.current=true;try{await questionLock(()=>{const raw=localStorage.getItem('ai-office:storybook:v1'),latest=restoreStory(localStorage);expected.current=raw;conflict.current=false;frozen.current=false;saveFailed.current=false;importedSave.current=JSON.stringify(latest);setStory(latest);setStorageError('');setError('');});}catch{saveFailed.current=true;setStorageError('최신 질문 저장본을 읽지 못했습니다. 화면과 저장 원문은 유지했습니다.');}}
 
  function downloadDraft(format:'json'|'text'){if(!story)return;const json=format==='json';const url=URL.createObjectURL(new Blob([json?questionDraftJSON(story):questionDraftText(story)],{type:json?'application/json;charset=utf-8':'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=json?'storybook-question-draft.json':'storybook-question-draft.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- useEffect(()=>{try{expected.current=localStorage.getItem('ai-office:storybook:v1');setStory(restoreStory(localStorage)??{profile:newProfile(),draft:'',editingId:null});}catch{setStorageError('저장 내용을 복원하지 못했습니다. 새로 작성하거나 저장 내용을 삭제해 주세요.');}finally{setReady(true);}},[]);
+ useEffect(()=>{try{expected.current=localStorage.getItem('ai-office:storybook:v1');const restored=restoreStory(localStorage);setStory(restored??{profile:newProfile(),draft:'',editingId:null});setRestoredDraft(!!restored&&(restored.profile.answers.length>0||!!restored.draft));}catch{setStorageError('저장 내용을 복원하지 못했습니다. 새로 작성하거나 저장 내용을 삭제해 주세요.');}finally{setReady(true);}},[]);
  useEffect(()=>{if(!ready||!story)return;const saved=JSON.stringify(story);if(importedSave.current===saved){importedSave.current='';return;}importedSave.current='';void persist();},[story,ready]);
  useEffect(()=>{const changed=(event:StorageEvent)=>{if(event.key!=='ai-office:storybook:v1'&&event.key!==null)return;try{if(localStorage.getItem('ai-office:storybook:v1')!==expected.current)failed(new QuestionConflictError());}catch(e){failed(e);}};window.addEventListener('storage',changed);return ()=>window.removeEventListener('storage',changed);},[]);
  async function importDraft(preview:{story:SavedStory;stored:string|null;memory:string}){await questionLock(()=>{if(pendingWrites.current||localStorage.getItem('ai-office:storybook:v1')!==preview.stored||JSON.stringify(storyRef.current)!==preview.memory)throw Error('미리보기 후 질문이 변경되었거나 저장 중입니다. 파일을 다시 선택해 확인하세요.');try{expected.current=changeQuestion(localStorage,preview.stored,preview.story);}catch{throw Error('복원 내용을 저장하지 못했습니다. 기존 질문과 화면을 유지했습니다.');}epoch.current++;conflict.current=false;frozen.current=false;importedSave.current=JSON.stringify(preview.story);saveFailed.current=false;setStory(preview.story);setStorageError('');setError('');});}
+ // Mobile browsers may suspend without beforeunload. Start the existing locked save
+ // when hidden/pagehide, without sending customer data over the network.
+ const flushDraft=useRef<()=>void>(()=>{});flushDraft.current=()=>{if(ready&&storyRef.current&&!frozen.current)void persist();};
+ useEffect(()=>{const hidden=()=>{if(document.visibilityState==='hidden')flushDraft.current();};const leaving=()=>flushDraft.current();document.addEventListener('visibilitychange',hidden);window.addEventListener('pagehide',leaving);return ()=>{document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',leaving);};},[]);
  const profile=story?.profile;
  const question=story?.editingId?profile?.answers.find(a=>a.question.id===story.editingId)?.question:profile?.currentQuestion;
- function begin(){setError('');setStory({profile:newProfile(),draft:'',editingId:null});}
- async function remove(reset:boolean){if(!window.confirm(reset?'현재 내용을 지우고 처음부터 시작할까요?':'질문 답변과 작성 중인 내용만 삭제할까요? 책장에 저장된 동화와 서버 생성 기록은 유지됩니다.'))return;if(conflict.current){failed(new QuestionConflictError());return;}epoch.current++;frozen.current=true;try{await questionLock(()=>{expected.current=changeQuestion(localStorage,expected.current,null);frozen.current=false;saveFailed.current=false;setStorageError('');setError('');setStory(reset?{profile:newProfile(),draft:'',editingId:null}:null);});}catch(e){failed(e);}}
+ function jumpToCheckout(){const target=document.getElementById('story-checkout');target?.focus({preventScroll:true});target?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
+ function begin(){setRestoredDraft(false);setError('');setStory({profile:newProfile(),draft:'',editingId:null});}
+ async function remove(reset:boolean){if(!window.confirm(reset?'현재 내용을 지우고 처음부터 시작할까요?':'질문 답변과 작성 중인 내용만 삭제할까요? 책장에 저장된 동화와 서버 생성 기록은 유지됩니다.'))return;if(conflict.current){failed(new QuestionConflictError());return;}epoch.current++;frozen.current=true;try{await questionLock(()=>{expected.current=changeQuestion(localStorage,expected.current,null);frozen.current=false;saveFailed.current=false;setStorageError('');setError('');setRestoredDraft(false);setStory(reset?{profile:newProfile(),draft:'',editingId:null}:null);});}catch(e){failed(e);}}
  function submit(event:FormEvent|undefined,skip=false){event?.preventDefault();if(!story||!question)return;try{setStory({profile:submitAnswer(story.profile,question,story.draft,skip),draft:'',editingId:null});setError('');}catch(e){setError(e instanceof Error?e.message:'답변을 확인해 주세요.');}}
  function editAt(index:number){if(!story)return;const answer=story.profile.answers[index];if(!answer)return;setError('');setStory({...story,editingId:answer.question.id,draft:answer.text});}
  function previous(){if(!story)return;const index=story.editingId?story.profile.answers.findIndex(a=>a.question.id===story.editingId):story.profile.answers.length;editAt(index-1);}
@@ -52,6 +57,7 @@ export default function Storybook(){
    <nav aria-label="서비스 이동"><a className={styles.homeLink} href="#purchase-guide">구매 문의 · 입금 안내</a>{' '}<Link className={styles.homeLink} href="/">동화 홈</Link></nav>
   </header>
 
+  {restoredDraft&&story&&<section className={styles.tools} aria-label="저장한 이야기 이어 쓰기"><p role="status">저장한 이야기를 불러왔어요. {question?'작성하던 질문부터 이어서 들려주세요.':profile?.completionStatus==='confirmed'?'최종 확인한 내용이 남아 있어요. 저장·입금 안내와 제작 코드 입력으로 이어갈 수 있어요.':'정리된 내용을 확인한 뒤 내용 최종 확인을 눌러 주세요.'}</p><button className="secondary" onClick={jumpToCheckout}>저장 · 입금 안내 · 제작 코드로 이동</button></section>}
   {storageError&&<>
    <p className="error" role="alert">{storageError}</p>
    <StorageRescue keys={['ai-office:storybook:v1']} label="질문 저장 원문 내려받기"/>
@@ -120,6 +126,7 @@ export default function Storybook(){
      <textarea id="fictional-elements" maxLength={4000} placeholder="예: 숲속 배경이나 말하는 동물. 실제 추억과 구분해 저장합니다." value={profile!.fictionalElements} onChange={e=>setStory({...story,profile:{...profile!,fictionalElements:e.target.value,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
      <button disabled={profile!.completionStatus==='confirmed'} onClick={()=>setStory({...story,profile:{...profile!,completionStatus:'confirmed',updatedAt:new Date().toISOString()}})}>내용 최종 확인</button>
      <p role="status">{profile!.completionStatus==='confirmed'?'최종 확인되었습니다. 내용을 수정하면 다시 확인할 수 있어요.':'건너뛴 항목이 있어도 확인할 수 있어요.'}</p>
+     {profile!.completionStatus==='confirmed'&&<button onClick={jumpToCheckout}>가격 확인 · 브라우저 저장 · 제작 코드 입력으로 이동</button>}
     </section>}
    </div>
 

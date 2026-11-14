@@ -1,4 +1,5 @@
-.checkout { margin: 20px 0 28px; color: #30273d; line-height: 1.75; min-width: 0; }
+.checkout { scroll-margin-top: 20px; margin: 20px 0 28px; color: #30273d; line-height: 1.75; min-width: 0; }
+.checkout:focus-visible { outline: 3px solid #73538d; outline-offset: 4px; }
 .checkout h3 { font-size: 1.3rem; margin: 0 0 8px; }
 .checkout h4 { font-size: 1.1rem; line-height: 1.6; margin: 0 0 10px; }
 .checkout p { margin: 8px 0 14px; overflow-wrap: anywhere; }

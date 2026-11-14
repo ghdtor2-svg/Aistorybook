@@ -1,15 +1,15 @@
 'use client';
 
 import {STORY_PRICE} from '../../lib/storybook/product';
-import {useLocalStoryWorkspace} from './useLocalStoryWorkspace';
+import type {StoryConnection} from './useLocalStoryWorkspace';
 import styles from './StoryCheckout.module.css';
 
 export const productionCodeKey='nangman:production-code:v1';
 export type DraftStorage={onSave:()=>Promise<void>;saving:boolean;saved:boolean;error:string;available:boolean;onBackup:()=>void};
 
-export default function StoryCheckout({code,onCode,draftStorage}:{code:string;onCode:(value:string)=>void;draftStorage:DraftStorage}){
-  const local=useLocalStoryWorkspace();
-  return <section className={styles.checkout} aria-label="결제와 제작 코드">
+export default function StoryCheckout({code,onCode,draftStorage,connection,codeLocked}:{code:string;onCode:(value:string)=>void;draftStorage:DraftStorage;connection:StoryConnection;codeLocked:boolean}){
+  const {available:local,checking,retry}=connection;
+  return <section id="story-checkout" tabIndex={-1} className={styles.checkout} aria-label="결제와 제작 코드">
     <h3>동화 한 편 · {STORY_PRICE.toLocaleString('ko-KR')}원</h3>
     <p>기본 구성은 표지 포함 32쪽, 표지와 본문 그림 총 18장이에요.</p>
     <section className={styles.saveCard} aria-labelledby="draft-save-title">
@@ -25,10 +25,12 @@ export default function StoryCheckout({code,onCode,draftStorage}:{code:string;on
     </section>
     <section className={styles.codeCard} aria-labelledby="production-code-title">
       <h4 id="production-code-title">입금 후 받은 제작 코드를 입력해 주세요</h4>
-      {local?<p>인스타그램 DM으로 입금 확인을 요청하고, 담당자에게 받은 제작 코드를 아래에 붙여 넣어 주세요.</p>:<p id="production-unavailable" role="status">현재 온라인 제작 연결을 확인 중이라 코드 입력이 잠겨 있어요. 입금 전에 아래 구매 안내의 인스타그램 DM으로 제작 가능 여부를 확인해 주세요.</p>}
+      {local?<p>인스타그램 DM으로 입금 확인을 요청하고, 담당자에게 받은 제작 코드를 아래에 붙여 넣어 주세요.</p>:<p id="production-unavailable" role="status">{checking?'제작 연결을 확인하고 있어요. 잠시만 기다려 주세요.':'제작 연결을 확인하지 못해 코드 입력이 잠겨 있어요. 연결을 다시 확인하거나, 입금 전에 아래 구매 안내의 인스타그램 DM으로 제작 가능 여부를 확인해 주세요.'}</p>}
+      {!local&&<button type="button" className="secondary" disabled={checking} onClick={retry}>{checking?'연결 확인 중…':'연결 다시 확인'}</button>}
       <label htmlFor="story-production-code">제작 코드</label>
-      <input id="story-production-code" aria-describedby={'production-code-help'+(!local?' production-unavailable':'')} disabled={!local} autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="받으신 제작 코드를 붙여 넣어 주세요" value={code} maxLength={72} onChange={event=>onCode(event.target.value)}/>
-      <p id="production-code-help" className={styles.note}>제작 코드 하나로 동화 한 편을 만들고 다시 열 수 있어요. 코드는 따로 잘 보관해 주세요.</p>
+      <input id="story-production-code" aria-describedby={'production-code-help'+(!local?' production-unavailable':'')} disabled={!local||codeLocked} autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="받으신 제작 코드를 붙여 넣어 주세요" value={code} maxLength={72} onChange={event=>onCode(event.target.value)}/>
+      <p id="production-code-help" className={styles.note}>제작 코드 하나로 동화 한 편을 만들고 다시 열 수 있어요. 질문 저장과 달리 코드는 이 탭에만 임시로 보관돼요. 탭을 닫으면 다시 입력해야 할 수 있으니 받은 DM을 보관해 주세요.</p>
+      {codeLocked&&<p role="status">진행 중인 작업을 마친 뒤 제작 코드를 바꿀 수 있어요.</p>}
     </section>
   </section>;
 }

@@ -80,6 +80,15 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     },2000);
     return ()=>{current=false;clearInterval(timer);};
   },[art?.job?.status,book.id,code]);
+  useEffect(()=>{
+    let active=true;
+    const resume=()=>{
+      if(document.visibilityState!=='visible'||busy)return;
+      void request(code).then(result=>{if(active&&result.bookId===book.id)setArt(result);}).catch(()=>{if(active)setMessage('그림 진행 상태를 확인하지 못했어요. 기존 제작은 계속될 수 있으니 그림 상태 다시 확인을 눌러 주세요.');});
+    };
+    window.addEventListener('pageshow',resume);document.addEventListener('visibilitychange',resume);
+    return ()=>{active=false;window.removeEventListener('pageshow',resume);document.removeEventListener('visibilitychange',resume);};
+  },[book.id,code,busy]);
   function artAt(index:number,onRatio?:(ratio:number)=>void){
     const original=art?.base[index];
     const alternative=art?.alternative?.index===index?art.alternative.image:null;
@@ -141,6 +150,7 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
   }
   return <><StoryPages book={book} artAt={artAt}/><section className={styles.controls} aria-label="동화 삽화">
     <h3>표지와 삽화</h3>
+    {working&&<p role="status">접수된 그림 제작은 화면을 떠나도 별도로 진행돼요. 돌아오면 진행 상태를 다시 확인해요.{onLocalPc()?' 컴퓨터와 제작 서버는 켜 두세요.':''}</p>}
     {art?.style&&<p>이 동화의 화풍 · {art.style}</p>}
     {!art?<button type="button" onClick={()=>void refresh()}>삽화 제작 상태 확인</button>:<>
       <p role="status">완료 {art.base.length}/{art.total}장</p>

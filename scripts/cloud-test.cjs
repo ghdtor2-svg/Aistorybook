@@ -27,7 +27,11 @@ async function run(){
  const list=await (await bridge.POST(signed({action:'list'}))).json();assert.equal(list.source,'cloud');assert.equal(JSON.stringify(list).includes(code),false);
  let release;const gate=new Promise(r=>release=r);const mutations=Array.from({length:2},()=>orders.withOrder(id,async order=>{await gate;await orders.saveOrder({...order,operatorNote:randomUUID()});}));release();const outcomes=await Promise.allSettled(mutations);assert.equal(outcomes.filter(r=>r.status==='fulfilled').length,1);
  const requestId=randomUUID(),body={id:requestId,brief:'가족과 계절 여행',styleId:'watercolor'};
- assert.equal((await story.POST(customer('/api/office/story',code,body))).status,202);
+ // Simulate closing the customer tab after the request was accepted. Only the
+ // detached background worker runs below; no customer polling keeps it alive.
+ const departedText=new AbortController();
+ assert.equal((await story.POST(new Request(customer('/api/office/story',code,body),{signal:departedText.signal}))).status,202);
+ departedText.abort();assert.equal(departedText.signal.aborted,true);
  const duplicate=await story.POST(customer('/api/office/story',code,{...body,id:randomUUID()}));assert.equal((await duplicate.json()).requestId,requestId);
  // The function runtime has no NETLIFY/CONTEXT variables: the invocation context must supply them, and a preview stays closed.
  delete process.env.NETLIFY;delete process.env.CONTEXT;const textTask=jobs.shift();
@@ -35,8 +39,19 @@ async function run(){
  const production={deploy:{context:'production'}};await Promise.all([worker(textTask.clone(),production),worker(textTask.clone(),production)]);assert.equal(process.env.CONTEXT,'production');while(jobs.length)await worker(jobs.shift());assert.equal(textCalls,1);
  const restored=await (await story.GET(customer('/api/office/story',code))).json();assert.equal(restored.state,'completed');assert.equal(restored.book.id,requestId);
  const book=restored.book;assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'next',book}))).status,403);
- assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'start',book}))).status,200);
+ const departedArt=new AbortController();
+ assert.equal((await art.POST(new Request(customer('/api/storybook/illustrations',code,{action:'start',book}),{signal:departedArt.signal}))).status,200);
+ departedArt.abort();assert.equal(departedArt.signal.aborted,true);
  const first=jobs.shift();await Promise.all([worker(first.clone()),worker(first.clone())]);while(jobs.length)await worker(jobs.shift());assert.equal(imageCalls,18);assert.equal((await orders.getOrder(id)).art.base.length,18);
+ // A fresh customer lookup after all workers finish restores the same book and
+ // all pictures. Reopening or posting the same order does not buy another story.
+ const textAfterDeparture=textCalls,imagesAfterDeparture=imageCalls;
+ const returned=await (await story.GET(customer('/api/office/story',code))).json();
+ assert.equal(returned.book.id,requestId);
+ const returnedArt=await (await art.GET(customer('/api/storybook/illustrations',code))).json();assert.equal(returnedArt.base.length,18);
+ assert.equal((await (await story.POST(customer('/api/office/story',code,{...body,id:randomUUID()}))).json()).id,requestId);
+ assert.equal(textCalls,textAfterDeparture);assert.equal(imageCalls,imagesAfterDeparture);
+ console.log('PASS page departure: aborted customer connections do not cancel accepted text/art jobs; fresh lookup restores the same book and 18 images without duplicate generation (mocked)');
  const asset=(await orders.getOrder(id)).art.base[0];assert.equal((await art.GET(customer('/api/storybook/illustrations?asset='+asset,code))).status,200);assert.equal((await art.GET(customer('/api/storybook/illustrations?asset='+asset,'NG-invalid'))).status,401);
  failImage=true;await art.POST(customer('/api/storybook/illustrations',code,{action:'revise',book,index:0,direction:'더 밝게'}));while(jobs.length)await worker(jobs.shift());assert.equal((await orders.getOrder(id)).art.job.reason,'uncertain');assert.equal((await art.POST(customer('/api/storybook/illustrations',code,{action:'revise',book,index:0,direction:'더 밝게'}))).status,409);
  failImage=false;await art.POST(customer('/api/storybook/illustrations',code,{action:'revise',book,index:0,direction:'더 밝게',confirmUncertain:true}));while(jobs.length)await worker(jobs.shift());assert.ok((await orders.getOrder(id)).art.alternative);assert.equal(imageCalls,20);
