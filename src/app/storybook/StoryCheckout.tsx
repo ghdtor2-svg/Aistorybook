@@ -2,17 +2,33 @@
 
 import {STORY_PRICE} from '../../lib/storybook/product';
 import {useLocalStoryWorkspace} from './useLocalStoryWorkspace';
+import styles from './StoryCheckout.module.css';
 
 export const productionCodeKey='nangman:production-code:v1';
+export type DraftStorage={onSave:()=>Promise<void>;saving:boolean;saved:boolean;error:string;available:boolean;onBackup:()=>void};
 
-export default function StoryCheckout({code,onCode}:{code:string;onCode:(value:string)=>void}){
+export default function StoryCheckout({code,onCode,draftStorage}:{code:string;onCode:(value:string)=>void;draftStorage:DraftStorage}){
   const local=useLocalStoryWorkspace();
-  return <section aria-label="결제와 제작 코드">
+  return <section className={styles.checkout} aria-label="결제와 제작 코드">
     <h3>동화 한 편 · {STORY_PRICE.toLocaleString('ko-KR')}원</h3>
-    {local?<p>이미 입금하셨나요? 인스타그램 DM으로 입금 확인을 요청하고, 담당자에게 받은 제작 코드를 입력해 주세요.</p>:<p role="status">현재 온라인 제작 연결을 확인 중입니다. 입금 전에 페이지 아래 구매 안내의 인스타그램 DM으로 제작 가능 여부를 확인해 주세요. 이야기 소재 작성, 화풍 살펴보기와 샘플 읽기는 이용할 수 있어요.</p>}
     <p>기본 구성은 표지 포함 32쪽, 표지와 본문 그림 총 18장이에요.</p>
-    <label htmlFor="story-production-code">제작 코드</label>
-    <input id="story-production-code" disabled={!local} autoComplete="off" spellCheck={false} value={code} maxLength={72} onChange={event=>onCode(event.target.value)}/>
-    <small>제작 코드 하나로 동화 한 편을 만들고 다시 열 수 있어요.</small>
+    <section className={styles.saveCard} aria-labelledby="draft-save-title">
+      <h4 id="draft-save-title">입금 전에, 작성한 이야기를 보관하세요</h4>
+      <p>질문 답변과 요약, 추가로 적은 내용을 이 브라우저에 저장해 두세요. 같은 기기·같은 브라우저로 다시 방문하면 이어서 만들 수 있어요.</p>
+      <div className="story-actions">
+        <button type="button" disabled={!draftStorage.available||draftStorage.saving} onClick={()=>void draftStorage.onSave()}>{draftStorage.saving?'저장 중…':'브라우저에 저장하기'}</button>
+        <a className={styles.guideLink} href="#purchase-guide">구매 문의 · 입금 안내 보기</a>
+      </div>
+      <p role="status" className={styles.saveStatus}>{draftStorage.error?'저장하지 못했어요. 위쪽 저장 오류 안내를 확인하고 작성본 파일을 보관해 주세요.':draftStorage.saved?'이 브라우저에 저장했어요. 입금 안내를 확인한 뒤, 돌아와서 이어서 만들어 주세요.':draftStorage.available?'작성 내용은 자동 저장되며, 버튼을 누르면 현재 내용의 저장을 확인할 수 있어요.':'질문을 작성하면 여기에 저장할 수 있어요.'}</p>
+      <p className={styles.note}>브라우저 데이터를 지우거나 다른 기기에서 열면 작성 내용이 보이지 않아요. 따로 보관하려면 작성본 파일도 받아 두세요. 공용 기기에서는 이용 후 답변을 삭제해 주세요.</p>
+      <button type="button" className="secondary" disabled={!draftStorage.available} onClick={draftStorage.onBackup}>질문 작성본 파일로 보관하기</button>
+    </section>
+    <section className={styles.codeCard} aria-labelledby="production-code-title">
+      <h4 id="production-code-title">입금 후 받은 제작 코드를 입력해 주세요</h4>
+      {local?<p>인스타그램 DM으로 입금 확인을 요청하고, 담당자에게 받은 제작 코드를 아래에 붙여 넣어 주세요.</p>:<p id="production-unavailable" role="status">현재 온라인 제작 연결을 확인 중이라 코드 입력이 잠겨 있어요. 입금 전에 아래 구매 안내의 인스타그램 DM으로 제작 가능 여부를 확인해 주세요.</p>}
+      <label htmlFor="story-production-code">제작 코드</label>
+      <input id="story-production-code" aria-describedby={'production-code-help'+(!local?' production-unavailable':'')} disabled={!local} autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="받으신 제작 코드를 붙여 넣어 주세요" value={code} maxLength={72} onChange={event=>onCode(event.target.value)}/>
+      <p id="production-code-help" className={styles.note}>제작 코드 하나로 동화 한 편을 만들고 다시 열 수 있어요. 코드는 따로 잘 보관해 주세요.</p>
+    </section>
   </section>;
 }

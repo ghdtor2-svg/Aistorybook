@@ -17,11 +17,11 @@ import {restoreStory,type SavedStory} from '../../lib/storybook/storage';
 import {changeQuestion,QuestionConflictError,QUESTION_LOCK} from '../../lib/storybook/question-store';
 export default function Storybook(){
  const [story,setStory]=useState<SavedStory|null>(null);const [ready,setReady]=useState(false);
- const [error,setError]=useState('');const [storageError,setStorageError]=useState('');const saveFailed=useRef(false);const storyRef=useRef(story);storyRef.current=story;const importedSave=useRef('');const expected=useRef<string|null>(null),frozen=useRef(false),conflict=useRef(false),epoch=useRef(0),pendingWrites=useRef(0);const [saving,setSaving]=useState(false);
+ const [error,setError]=useState('');const [storageError,setStorageError]=useState('');const saveFailed=useRef(false);const storyRef=useRef(story);storyRef.current=story;const importedSave=useRef('');const expected=useRef<string|null>(null),frozen=useRef(false),conflict=useRef(false),epoch=useRef(0),pendingWrites=useRef(0);const [saving,setSaving]=useState(false);const [savedDraft,setSavedDraft]=useState('');
  useUnsavedBookGuard(()=>!!story&&(saveFailed.current||pendingWrites.current>0));
  async function questionLock<T>(action:()=>T):Promise<T>{if(!navigator.locks)throw Error('동시 저장을 보호할 수 없습니다. 최신 브라우저에서 이용하세요.');return navigator.locks.request(QUESTION_LOCK,action);}
  function failed(e:unknown){frozen.current=true;saveFailed.current=true;if(e instanceof QuestionConflictError){conflict.current=true;setStorageError(e.message);}else setStorageError('브라우저에 저장할 수 없습니다. 현재 작성본을 내려받아 보관하세요.');}
- async function persist(manual=false){const value=storyRef.current;if(!value||(!manual&&frozen.current))return;if(conflict.current){failed(new QuestionConflictError());return;}const version=epoch.current;pendingWrites.current++;setSaving(true);try{await questionLock(()=>{if(version!==epoch.current||(!manual&&frozen.current))return;expected.current=changeQuestion(localStorage,expected.current,value);frozen.current=false;saveFailed.current=false;setStorageError('');});}catch(e){if(version===epoch.current)failed(e);}finally{pendingWrites.current--;setSaving(pendingWrites.current>0);}}
+ async function persist(manual=false){const value=storyRef.current;if(!value||(!manual&&frozen.current))return;if(conflict.current){failed(new QuestionConflictError());return;}const version=epoch.current;pendingWrites.current++;setSaving(true);try{await questionLock(()=>{if(version!==epoch.current||(!manual&&frozen.current))return;expected.current=changeQuestion(localStorage,expected.current,value);frozen.current=false;saveFailed.current=false;setStorageError('');if(manual)setSavedDraft(JSON.stringify(value));});}catch(e){if(version===epoch.current)failed(e);}finally{pendingWrites.current--;setSaving(pendingWrites.current>0);}}
  async function reloadQuestions(){if(!window.confirm('현재 화면 작성본을 최신 질문 저장본으로 바꿀까요? 저장하지 못한 내용은 먼저 내려받아 보관하세요.'))return;epoch.current++;frozen.current=true;try{await questionLock(()=>{const raw=localStorage.getItem('ai-office:storybook:v1'),latest=restoreStory(localStorage);expected.current=raw;conflict.current=false;frozen.current=false;saveFailed.current=false;importedSave.current=JSON.stringify(latest);setStory(latest);setStorageError('');setError('');});}catch{saveFailed.current=true;setStorageError('최신 질문 저장본을 읽지 못했습니다. 화면과 저장 원문은 유지했습니다.');}}
 
  function downloadDraft(format:'json'|'text'){if(!story)return;const json=format==='json';const url=URL.createObjectURL(new Blob([json?questionDraftJSON(story):questionDraftText(story)],{type:json?'application/json;charset=utf-8':'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=json?'storybook-question-draft.json':'storybook-question-draft.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -141,7 +141,7 @@ export default function Storybook(){
     </footer>
   </div>}
   <QuestionImport story={story} disabled={!ready||(!story&&!!storageError)} onBackup={()=>downloadDraft('json')} onApply={importDraft}/>
-  {ready&&<StoryReader profile={profile??null}/>}
+  {ready&&<StoryReader profile={profile??null} draftStorage={{onSave:()=>persist(true),saving,saved:!!story&&savedDraft===JSON.stringify(story)&&!storageError,error:storageError,available:!!story,onBackup:()=>downloadDraft('json')}}/>}
   <PurchaseGuide/>
  </main>;
 }

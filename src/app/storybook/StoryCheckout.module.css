@@ -1,0 +1,16 @@
+.checkout { margin: 20px 0 28px; color: #30273d; line-height: 1.75; min-width: 0; }
+.checkout h3 { font-size: 1.3rem; margin: 0 0 8px; }
+.checkout h4 { font-size: 1.1rem; line-height: 1.6; margin: 0 0 10px; }
+.checkout p { margin: 8px 0 14px; overflow-wrap: anywhere; }
+.saveCard, .codeCard { padding: clamp(16px, 3vw, 24px); border-radius: 16px; margin-top: 18px; }
+.saveCard { background: #f5f0f8; border: 1px solid #d7c7e3; }
+.codeCard { background: #fffaf0; border: 2px solid #967244; }
+.codeCard label { display: block; font-weight: 700; margin: 18px 0 8px; font-size: 1rem; }
+.codeCard input { display: block; width: 100%; min-width: 0; min-height: 58px; padding: 15px; border: 2px solid #73538d; border-radius: 10px; background: #fff; color: #30213d; font: inherit; font-size: 16px; }
+.codeCard input::placeholder { color: #6d6074; opacity: 1; }
+.codeCard input:disabled { background: #eee9e2; color: #574c40; border-color: #8c7e6c; opacity: 1; cursor: not-allowed; }
+.codeCard input:focus-visible { outline: 3px solid #73538d; outline-offset: 3px; }
+.checkout .note { font-size: .875rem; color: #594e60; }
+.checkout .saveStatus { font-weight: 700; margin-top: 16px; }
+.guideLink { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; padding: 10px 6px; color: #56356d; text-underline-offset: 4px; font-weight: 700; }
+@media (max-width: 500px) { .saveCard button, .guideLink { width: 100%; justify-content: center; text-align: center; } }
