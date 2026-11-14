@@ -30,11 +30,17 @@ export function storyDesignQuestions(profile:{memorableEvent:string;emotions:str
  ];
 }
 export function designProgress(value:StoryDesign={}){const design=parseStoryDesign(value);return {answered:designFields.filter(f=>design[f]?.trim()).length,total:designFields.length};}
-export function coreQuestionHint(group:string){
- const hints:Record<string,string>={recipient:'이름 대신 별칭으로 적어도 좋아요. 주인공이 될 사람과 어떤 사이인지 함께 들려주세요.',event:'그날의 장소, 작은 문제, 직접 한 행동, 이후 달라진 일을 떠오르는 만큼 적어 보세요.',emotion:'“행복했어요”에 그때의 말이나 행동을 한 가지 더하면 마음이 더 잘 전해져요.',details:'그림마다 유지할 모습·고유색·소중한 물건이나 말버릇을 떠올려 보세요.',message:'교훈 한 문장보다 마지막에 아이가 어떤 행동을 해 보면 좋을지 적어도 좋아요.'};
+export function coreQuestionHint(group:string,target?:string){
+ if(group==='recipient'){
+  if(target==='protagonist')return '이름이나 별칭을 적어 주세요. 여러 명이 주인공이면 함께 등장할 인물도 알려 주세요.';
+  if(target==='relationship')return '선물하는 나와 받는 사람의 관계를 적어 주세요. 예: 부모와 아이, 친구, 부부.';
+  return '선물 받을 분의 이름이나 별칭을 적어 주세요. 이야기 속 주인공과는 따로 정할 수 있어요.';
+ }
+ const hints:Record<string,string>={event:'그날의 장소, 작은 문제, 직접 한 행동, 이후 달라진 일을 떠오르는 만큼 적어 보세요.',emotion:'“행복했어요”에 그때의 말이나 행동을 한 가지 더하면 마음이 더 잘 전해져요.',details:'그림마다 유지할 모습·고유색·소중한 물건이나 말버릇을 떠올려 보세요.',message:'교훈 한 문장보다 마지막에 아이가 어떤 행동을 해 보면 좋을지 적어도 좋아요.'};
  return hints[group]||'떠오르는 만큼만 적어 주세요.';
 }
 export const storyCraftInstructions=[
+ '선물 대상은 동화를 받을 사람이고 주인공은 이야기 속 중심 인물이다. 확인한 주인공 이름·별칭·인물 구성을 그대로 중심에 두고, 선물 대상이 다르더라도 임의로 주인공을 바꾸지 않는다. 주인공이 비어 있으면 선물 대상을 실제 주인공이라고 단정하지 않는다.',
  '입력은 사용자가 확인한 이야기 소재다. 실제 정보와 허용된 창작 각색을 구분하고 비어 있는 개인정보·성격·관계를 실제 사실로 추측하지 않는다.',
  '사계의 탑은 완성도의 목표다. 원작의 줄거리·캐릭터를 복제하거나 같은 품질을 보장한다는 뜻이 아니다.',
  '읽는 연령과 목소리, 캐릭터 고유색·복장·관계, 세계 규칙을 유지한다. 허용한 각색과 반드시 지킬 조건을 따른다.',

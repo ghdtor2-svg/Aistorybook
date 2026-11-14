@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "typecheck:browser": "tsc --noEmit --strict --skipLibCheck --target ES2017 --module esnext --moduleResolution bundler --types node,@playwright/test tests/*.spec.ts playwright.config.ts",
     "test:smoke": "node scripts/smoke-test.mjs",
+    "test:checkout:browser": "playwright test --config=playwright.checkout.config.ts",
     "test:checkout": "tsc -p tsconfig.engine-tests.json && node scripts/checkout-safety-test.cjs",
     "test:engine": "tsc -p tsconfig.engine-tests.json && node scripts/storybook-test.cjs",
     "test:browser": "playwright test",
