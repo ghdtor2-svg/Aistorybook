@@ -1,14 +1,14 @@
 import {test,expect} from '@playwright/test';
 import {newProfile,submitAnswer,fields} from '../src/lib/storybook/engine';
-import {questionStoryUse,designStoryUse,fictionalStoryUse} from '../src/lib/storybook/question-guidance';
+import {questionStoryUse,questionStoryExample,designStoryUse,designStoryExample,fictionalStoryUse,fictionalStoryExample} from '../src/lib/storybook/question-guidance';
 import {designFields,designLabels} from '../src/lib/storybook/story-design';
 test('each core question explains how its answer will be used',async({page})=>{
  await page.goto('/storybook');
  for(const field of ['recipient','memorableEvent','emotions','specialDetails','message'] as const){
-  await expect(page.locator('#question-story-use')).toContainText(questionStoryUse[field]);await expect(page.locator('#story-answer')).toHaveAttribute('aria-describedby','question-story-use');await page.getByRole('button',{name:'이 질문 건너뛰기',exact:true}).click();
+  await expect(page.locator('#question-story-use')).toContainText(questionStoryUse[field]);await expect(page.locator('#question-story-use')).toContainText(questionStoryExample[field]);await expect(page.locator('#story-answer')).toHaveAttribute('aria-describedby','question-story-use');await page.getByRole('button',{name:'이 질문 건너뛰기',exact:true}).click();
  }
  for(const field of fields){await expect(page.locator('#summary-use-'+field)).toHaveText(questionStoryUse[field]);await expect(page.locator('#summary-'+field)).toHaveAttribute('aria-describedby','summary-use-'+field);}
- await expect(page.locator('#fictional-story-use')).toHaveText(fictionalStoryUse);
+ await expect(page.locator('#fictional-story-use')).toHaveText(fictionalStoryUse);await expect(page.getByText(fictionalStoryExample,{exact:true})).toBeVisible();
 });
 test('protagonist guidance stays visible while entering and editing the protagonist',async({page})=>{
  await page.setViewportSize({width:360,height:900});await page.goto('/storybook');await page.getByLabel('답변',{exact:true}).fill('딸');await page.getByRole('button',{name:'답변 저장하고 계속',exact:true}).click();
@@ -26,5 +26,5 @@ test('recipient follow-up explains gift recipient instead of promising a protago
 test('all nine optional planning questions explain their role in the story',async({page})=>{
  await page.goto('/');let p=newProfile();while(p.currentQuestion)p=submitAnswer(p,p.currentQuestion,'',true);
  await page.evaluate(profile=>localStorage.setItem('ai-office:storybook:v1',JSON.stringify({version:1,profile,draft:'',editingId:null})),p);await page.goto('/storybook');
- for(const field of designFields){await page.getByText(designLabels[field],{exact:true}).first().click();await expect(page.locator('#design-use-'+field)).toContainText(designStoryUse[field]);}
+ for(const field of designFields){await page.getByText(designLabels[field],{exact:true}).first().click();await expect(page.locator('#design-use-'+field)).toContainText(designStoryUse[field]);await expect(page.locator('#design-use-'+field)).toContainText(designStoryExample[field]);}
 });

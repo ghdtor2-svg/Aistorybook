@@ -142,7 +142,7 @@ export default function StoryReader({profile,draftStorage}:{profile:StoryProfile
      if(result.data.state==='completed'){await acceptBook(result.data.book,activeReceipt);return;}
      if(result.data.state==='paused')throw Error(result.data.error||'작업의 완료 여부를 확인해야 해요. 자동 재시도하지 않습니다.');
      if(result.data.state==='ready')throw Error('서버에 진행 중인 작업이 없어요. 글이 만들어지지 않았습니다.');
-     setProgress((result.data.phase==='queued'?'온라인 작업이 시작되기를 기다리고 있어요':'AI가 동화를 쓰고 있어요')+' · '+elapsed()+'. 보통 1~2분이 걸려요.');
+     setProgress((result.data.phase==='queued'?'온라인 작업이 시작되기를 기다리고 있어요':result.data.phase==='reviewing'?'동화의 앞뒤 연결과 문장을 확인하고 있어요':'AI가 동화를 쓰고 있어요')+' · '+elapsed()+'. 보통 1~2분이 걸려요.');
     }
     throw Error('온라인 작업의 결과를 아직 확인하지 못했어요. 잠시 뒤 결과 확인·복구를 눌러 주세요.');
    }

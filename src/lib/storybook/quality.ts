@@ -1,7 +1,10 @@
 export const legacyStoryQualityProfile='seasons-tower-v1';
 export const storyQualityProfile='seasons-tower-32-v1';
-export const storyPageCount=32;
-// 대표 지시(2026-11-11): 본문은 약 2,500자. 쪽수(32쪽)와 그림 수(18장)는 그대로 두고 글씨를 키운다.
+// 32 body sides (16 PDF spreads), plus cover and a separate ending side.
+export const storyBodyPageCount=32;
+export const storyPageCount=storyBodyPageCount+2;
+export const storyPdfPageCount=18;
+// 본문은 약 2,500자. 2026-11-14: 마지막 펼침면도 본문으로 채우고 마침을 별도 PDF 쪽으로 둔다.
 export const storyTextTarget=2500;
 export const storyTextMin=1800;
 export const storyTextMax=3600;

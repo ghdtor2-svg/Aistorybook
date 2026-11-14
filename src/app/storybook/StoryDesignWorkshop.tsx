@@ -1,7 +1,7 @@
 'use client';
 import styles from './StoryDesignWorkshop.module.css';
 import ChoiceChips from './ChoiceChips';
-import {designStoryUse} from '../../lib/storybook/question-guidance';
+import {designStoryUse,designStoryExample} from '../../lib/storybook/question-guidance';
 import {designFields,designLabels,storyDesignQuestions,type DesignField,type StoryDesign} from '../../lib/storybook/story-design';
 import {designQuestionChoices} from '../../lib/storybook/story-choices';
 import type {StoryProfile} from '../../lib/storybook/engine';
@@ -34,7 +34,7 @@ export default function StoryDesignWorkshop({profile,onChange}:{profile:StoryPro
       </summary>
       <div className={styles.body}>
        <p className={styles.question}>{item.question}</p>
-       <p id={'design-use-'+item.id} className={styles.why}>동화에는 이렇게 담겨요: {designStoryUse[item.id]}</p>
+       <p id={'design-use-'+item.id} className={styles.why}>동화에는 이렇게 담겨요: {designStoryUse[item.id]}<br/><span className={styles.storyExample}>{designStoryExample[item.id]}</span></p>
        {groups.length>0?<>
         <ChoiceChips groups={groups} value={value} onChange={text=>update(item.id,text)} idPrefix={'design-'+item.id}/>
         <details className={styles.writeBox}><summary>보기에 없으면 직접 적어도 돼요 (선택)</summary>{writing}</details>

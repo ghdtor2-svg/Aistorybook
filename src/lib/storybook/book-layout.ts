@@ -1,5 +1,5 @@
 import type {Book} from './books';
-import {storyPageCount} from './quality';
+import {storyBodyPageCount} from './quality';
 
 export type StoryPagePart={text:string;chapterIndex:number;paragraphIndex:number};
 export type StoryPage={parts:StoryPagePart[]};
@@ -12,7 +12,9 @@ function textBoundary(text:string,position:number){
 }
 
 export function planStorybook(book:Book){
-  const pageCount=storyPageCount-1;
+  // Preserve existing illustration/text associations on the first 30 sides.
+  // Only split the old final side into two sides using its existing illustration.
+  const pageCount=storyBodyPageCount-1;
   const segmenter=new Intl.Segmenter('ko',{granularity:'sentence'});
   const units:StoryPagePart[]=[];
   book.chapters.forEach((chapter,chapterIndex)=>{
@@ -64,6 +66,21 @@ export function planStorybook(book:Book){
     start=end;
     remaining-=length;
   }
+  const last=pages.pop()!;
+  const left:StoryPage={parts:[]},right:StoryPage={parts:[]};
+  const target=last.parts.reduce((sum,part)=>sum+part.text.length,0)/2;
+  let used=0;
+  for(const part of last.parts){
+    if(used>=target){right.parts.push({...part});continue;}
+    if(used+part.text.length<=target){left.parts.push({...part});used+=part.text.length;continue;}
+    const middle=Math.max(1,Math.min(part.text.length-1,Math.round(target-used)));
+    const before=part.text.lastIndexOf(' ',middle),after=part.text.indexOf(' ',middle);
+    const boundary=before>0?before+1:after>0?after+1:textBoundary(part.text,middle);
+    left.parts.push({...part,text:part.text.slice(0,boundary)});
+    if(part.text.slice(boundary))right.parts.push({...part,text:part.text.slice(boundary)});
+    used=target;
+  }
+  pages.push(left,right);
   // Prefer separate illustrations where the narrative crosses a chapter boundary.
   let transition=7;
   let distance=Infinity;
@@ -83,7 +100,7 @@ export function planStorybook(book:Book){
     return scenes.length;
   }
   for(let index=0;index<16;index++){
-    const pageIndices=index===15?[30]:[index*2,index*2+1];
+    const pageIndices=[index*2,index*2+1];
     const shared=pageIndices.length===2&&index!==transition;
     const artIndices=shared?[addScene(pageIndices)]:pageIndices.map(page=>addScene([page]));
     spreads.push({pageIndices,artIndices,shared});

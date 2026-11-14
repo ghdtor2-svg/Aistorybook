@@ -11,7 +11,7 @@ export default function StoryCheckout({code,onCode,draftStorage,connection,codeL
   const {available:local,checking,retry}=connection;
   return <section id="story-checkout" tabIndex={-1} className={styles.checkout} aria-label="결제와 제작 코드">
     <h3>동화 한 편 · {STORY_PRICE.toLocaleString('ko-KR')}원</h3>
-    <p>기본 구성은 표지 포함 32쪽, 표지와 본문 그림 총 18장이에요.</p>
+    <p>본문 32쪽과 표지·마침으로 구성되며, 그림은 총 18장이에요. PDF는 표지 1쪽·본문 펼침면 16쪽·마침 1쪽, 총 18쪽으로 받아요.</p>
     <section className={styles.saveCard} aria-labelledby="draft-save-title">
       <h4 id="draft-save-title">입금 전에, 작성한 이야기를 보관하세요</h4>
       <p>질문 답변과 요약, 추가로 적은 내용을 이 브라우저에 저장해 두세요. 같은 기기·같은 브라우저로 다시 방문하면 이어서 만들 수 있어요.</p>

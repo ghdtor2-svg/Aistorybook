@@ -22,3 +22,26 @@ export const designStoryUse:Record<DesignField,string>={
  boundaries:'바꾸지 않을 사실과 피할 표현을 정해 이야기와 그림을 만드는 기준으로 전달해요.',
 };
 export const fictionalStoryUse='실제 추억을 어떤 범위까지 상상 속 장면으로 바꿔도 되는지 정해요.';
+
+// Illustrative sentences, never copied into the customer's answers or generation brief.
+export const questionStoryExample:Record<Field,string>={
+ recipient:'예) 선물 대상이 ‘하린’이면, “하린에게 전하고 싶은 따뜻한 마음을 이 이야기에 담았어요.”처럼 선물의 뜻을 담아요.',
+ protagonist:'예) 주인공을 ‘지우’로 적으면, “지우는 작은 용기를 내어 숲속으로 한 걸음 들어갔어요.”처럼 이야기가 펼쳐져요.',
+ relationship:'예) ‘엄마와 딸’이면, “엄마는 지우의 손을 잡고 언제나 네 편이라고 말했어요.”처럼 따뜻한 마음을 담아요.',
+ memorableEvent:'예) ‘처음 자전거를 탄 날’이면, “넘어진 지우는 무릎을 털고 다시 페달을 밟았어요.” 같은 중심 장면이 돼요.',
+ emotions:'예) ‘무서웠지만 뿌듯했어요’라면, “지우는 떨리는 손을 꼭 쥐었다가, 해낸 뒤 활짝 웃었어요.”처럼 표현해요.',
+ specialDetails:'예) ‘노란 장화’라면, “지우의 노란 장화가 물웅덩이 위로 첨벙 뛰어올랐어요.”처럼 특징이 장면에 들어가요.',
+ message:'예) ‘실패해도 괜찮아’라면, “지우는 한 번 더 해 볼 수 있다는 마음으로 새로운 길을 바라보았어요.”처럼 마무리해요.',
+};
+export const designStoryExample:Record<DesignField,string>={
+ readingExperience:'예) ‘여섯 살과 함께 읽는 포근한 이야기’라면, “괜찮아, 천천히 가 보자.”처럼 짧고 다정한 문장을 써요.',
+ characters:'예) ‘빨간 가방을 멘 토끼’라면, “빨간 가방을 꼭 멘 토끼가 지우를 따라왔어요.”처럼 같은 특징을 이어 가요.',
+ worldRules:'예) ‘고맙다고 말하면 열리는 문’이라면, “지우가 고마워라고 말하자 숲의 문이 살며시 열렸어요.” 같은 규칙이 생겨요.',
+ goalAndObstacle:'예) ‘해 지기 전 집에 가고 싶은데 다리가 끊어졌어요’라면, “지우는 건널 방법을 찾아 강가를 살펴보았어요.”로 사건이 이어져요.',
+ heroChoice:'예) ‘친구에게 도움을 요청해요’라면, “지우는 망설이다가 함께 다리를 만들어 보자고 말했어요.”가 중요한 선택이 돼요.',
+ emotionalJourney:'예) ‘처음에는 수줍지만 마지막에는 먼저 인사해요’라면, “지우가 친구에게 다가가 내일도 같이 놀자고 말했어요.”로 변화를 보여 줘요.',
+ motifAndEnding:'예) ‘처음 주운 작은 열쇠’라면, “지우는 주머니 속 열쇠로 모두가 기다리던 문을 열었어요.”처럼 앞의 단서를 다시 연결해요.',
+ visualScenes:'예) ‘비가 갠 뒤 무지개를 보는 순간’이라면, “지우와 토끼가 반짝이는 하늘을 함께 올려다보았어요.”를 장면의 소재로 삼아요.',
+ boundaries:'예) ‘무서운 괴물은 빼 주세요’라면, “지우는 낯선 소리의 정체가 작은 새임을 알고 안심했어요.”처럼 부담 없는 장면으로 풀어요.',
+};
+export const fictionalStoryExample='예) ‘인형이 말해도 좋아요’라면, “토끼 인형이 지우에게 한 번 더 해 보자고 속삭였어요.”처럼 상상 장면을 더할 수 있어요.';

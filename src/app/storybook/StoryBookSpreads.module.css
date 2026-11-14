@@ -21,7 +21,7 @@
 .sound { font-size: 1.38em; color: #b0461f; letter-spacing: .04em; }
 .copy p { margin: 0 0 .7em; white-space: pre-wrap; word-break: keep-all; scroll-margin-top: 24px; }
 .copy p:last-child { margin-bottom: 0; }
-.folios { display: block; padding: 10px 24px 0; color: #9f8d73; text-align: center; font-size: .65em; letter-spacing: .14em; }
+.folios { display: block; padding: 10px 24px 0; color: #453623; background: #fff9ee; border: 1px solid #d8c9ad; border-radius: 8px; text-align: center; font-size: .65em; letter-spacing: .14em; }
 
 /* 넓은 화면: 그림책 펼침면처럼 그림이 종이 전체를 채웁니다.
    - 삽화는 아래쪽에 좌우 끝까지 놓고, 위쪽은 같은 그림을 크게 흐려 하늘처럼 이어 채웁니다.
@@ -59,3 +59,9 @@
   .texts { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .individual { grid-template-columns: minmax(0, 1fr); }
 }
+
+.ending { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 280px; aspect-ratio: 2 / 1; background: #fff9ee; border: 1px solid #e3d7c3; color: #493b29; text-align: center; padding: 30px; }
+.ending h3 { font-size: 2.5rem; margin: 0 0 20px; }.ending p { margin: 0; overflow-wrap: anywhere; }
+
+/* Older books used a narrower final illustration. Keep the entire picture visible. */
+.panorama img { aspect-ratio: 3 / 1; object-fit: contain; }

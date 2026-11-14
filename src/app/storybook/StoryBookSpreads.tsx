@@ -2,6 +2,7 @@
 
 import {useCallback,useMemo,useState,type ReactNode} from 'react';
 import type {Book} from '../../lib/storybook/books';
+import {needsSafeStoryFont,safeStoryFont} from '../../lib/storybook/story-font';
 import {planStorybook} from '../../lib/storybook/book-layout';
 import {emphasizePages,type EmphasisPiece} from '../../lib/storybook/emphasis';
 import styles from './StoryBookSpreads.module.css';
@@ -38,6 +39,7 @@ function Piece({piece}:{piece:EmphasisPiece}){
 }
 
 export default function StoryBookSpreads({book,artAt}:{book:Book;artAt?:(index:number,onRatio?:(ratio:number)=>void)=>ReactNode}){
+  const useSafeFont=needsSafeStoryFont(book.title+book.chapters.map(c=>c.title+c.text).join(''));
   const layout=useMemo(()=>planStorybook(book),[book]);
   // 대사와 반복말은 크게, 이야기 글은 조금 작게 보여 줍니다. 대사가 쪽을 넘어가도 같은 문단이면 이어서 강조합니다.
   const emphasis=useMemo(()=>emphasizePages(layout.pages),[layout]);
@@ -46,14 +48,14 @@ export default function StoryBookSpreads({book,artAt}:{book:Book;artAt?:(index:n
     if(!firstPageByChapter.has(part.chapterIndex))firstPageByChapter.set(part.chapterIndex,index);
   }));
   return <div data-storybook-pages="32" className={styles.book}>
-    <p className={styles.edition}>32쪽 동화 · 표지와 삽화 총 18장</p>
+    <p className={styles.edition}>본문 32쪽 · 표지와 마침 별도 · 그림 총 18장</p>
     {layout.spreads.map((spread,index)=>{
       const images=spread.artIndices.map(art=>artAt?.(art));
       const hasArt=images.some(Boolean);
       return <section key={index} data-spread-index={index} data-overlay={hasArt?'':undefined} data-pages={spread.pageIndices.length} className={styles.spread}>
         <Sheet shared={spread.shared} artIndices={spread.artIndices} images={images}>
           <div className={styles.texts}>
-            {spread.pageIndices.map(pageIndex=><div key={pageIndex} data-story-page={pageIndex+1} className={styles.copy}>
+            {spread.pageIndices.map(pageIndex=><div key={pageIndex} data-story-page={pageIndex+1} className={styles.copy} style={useSafeFont?{fontFamily:safeStoryFont}:undefined}>
               {layout.pages[pageIndex].parts.map((part,partIndex)=>{
                 const first=firstPageByChapter.get(part.chapterIndex)===pageIndex&&layout.pages[pageIndex].parts.findIndex(piece=>piece.chapterIndex===part.chapterIndex)===partIndex;
                 return <p key={partIndex} id={first?'book-chapter-'+part.chapterIndex:undefined} tabIndex={first?-1:undefined}>{emphasis[pageIndex][partIndex].map((piece,pieceIndex)=><Piece key={pieceIndex} piece={piece}/>)}</p>;
@@ -64,5 +66,6 @@ export default function StoryBookSpreads({book,artAt}:{book:Book;artAt?:(index:n
         <small className={styles.folios}>{spread.pageIndices.map(page=>page+1).join(' · ')}</small>
       </section>;
     })}
+    <section className={styles.ending} data-story-ending="" aria-label="동화 마침"><h3>끝</h3><p>{book.title}</p></section>
   </div>;
 }

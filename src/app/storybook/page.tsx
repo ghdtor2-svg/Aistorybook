@@ -7,7 +7,7 @@ import StoryReader from './StoryReader';
 import QuestionImport from './QuestionImport';
 import StoryDesignWorkshop from './StoryDesignWorkshop';
 import ChoiceChips from './ChoiceChips';
-import {questionStoryUse,fictionalStoryUse} from '../../lib/storybook/question-guidance';
+import {questionStoryUse,questionStoryExample,fictionalStoryUse,fictionalStoryExample} from '../../lib/storybook/question-guidance';
 import {coreQuestionHint} from '../../lib/storybook/story-design';
 import {coreQuestionChoices} from '../../lib/storybook/story-choices';
 import {useUnsavedBookGuard} from './useUnsavedBookGuard';
@@ -96,7 +96,7 @@ export default function Storybook(){
     {question?<section className={`panel ${styles.card}`} aria-labelledby="current-question">
      <p className={styles.questionTag}>{groupNumber}/5 · {question.kind==='core'?'핵심 질문':'맞춤 후속 질문 '+question.number+'/2'}</p>
      <h2 id="current-question" tabIndex={-1} className={styles.questionHeading} aria-describedby="question-story-use">{question.text}</h2>
-     <p id="question-story-use" className={styles.usageNote}><strong>동화에는 이렇게 담겨요</strong><span>{questionStoryUse[question.target]}</span></p>
+     <p id="question-story-use" className={styles.usageNote}><strong>동화에는 이렇게 담겨요</strong><span>{questionStoryUse[question.target]}</span><span className={styles.exampleNote}>{questionStoryExample[question.target]}</span></p>
      <p className={styles.promptNote}>{story.editingId?'이전 답변을 수정 중입니다. 저장하거나 건너뛰면 이후 답변과 요약 수정 내용이 삭제되고 질문을 다시 평가합니다.':coreQuestionHint(question.group,question.target)}</p>
      <form onSubmit={event=>submit(event)}>
       {choiceGroups.length>0&&<p className={styles.choiceLead}>보기를 눌러 고르면 아래 답변에 담겨요. 보기에 없으면 직접 적어도 괜찮고, 여러 개 골라도 돼요.</p>}
@@ -122,13 +122,13 @@ export default function Storybook(){
      <div className={`summary-fields ${styles.reviewGrid}`}>
       {fields.map(field=><div key={field}>
        <label htmlFor={'summary-'+field}>{labels[field]}</label>
-       <p id={'summary-use-'+field} className={styles.fieldHint}>{questionStoryUse[field]}</p>
+       <p id={'summary-use-'+field} className={styles.fieldHint}>{questionStoryUse[field]}</p><p className={styles.exampleNote}>{questionStoryExample[field]}</p>
        <textarea aria-describedby={'summary-use-'+field} id={'summary-'+field} value={profile![field]} maxLength={4000} placeholder="원하면 추가해 주세요" onChange={e=>summary(field,e.target.value)}/>
       </div>)}
      </div>
      <StoryDesignWorkshop profile={profile!} onChange={design=>setStory({...story,profile:{...profile!,storyDesign:design,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
      <label htmlFor="fictional-elements">동화적으로 각색해도 좋은 요소 (선택)</label>
-     <p id="fictional-story-use" className={styles.fieldHint}>{fictionalStoryUse}</p>
+     <p id="fictional-story-use" className={styles.fieldHint}>{fictionalStoryUse}</p><p className={styles.exampleNote}>{fictionalStoryExample}</p>
      <textarea id="fictional-elements" aria-describedby="fictional-story-use" maxLength={4000} placeholder="예: 숲속 배경이나 말하는 동물. 실제 추억과 구분해 저장합니다." value={profile!.fictionalElements} onChange={e=>setStory({...story,profile:{...profile!,fictionalElements:e.target.value,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
      <button disabled={profile!.completionStatus==='confirmed'} onClick={()=>setStory({...story,profile:{...profile!,completionStatus:'confirmed',updatedAt:new Date().toISOString()}})}>내용 최종 확인</button>
      <p role="status">{profile!.completionStatus==='confirmed'?'최종 확인되었습니다. 내용을 수정하면 다시 확인할 수 있어요.':'건너뛴 항목이 있어도 확인할 수 있어요.'}</p>

@@ -222,3 +222,6 @@ main.workshop {
 .fieldHint { margin: 8px 0 4px; color: #5e5067; font-size: .875rem; line-height: 1.7; overflow-wrap: anywhere; }
 
 .questionHeading { scroll-margin-top: 20px; }
+
+.exampleNote { display: block; margin: 8px 0; color: #66536f; font-size: .875rem; line-height: 1.8; overflow-wrap: anywhere; }
+.usageNote .exampleNote { margin: 3px 0 0; padding-top: 9px; border-top: 1px solid #dfd1e8; }

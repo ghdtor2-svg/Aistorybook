@@ -18,7 +18,7 @@ export type Order = {
   operatorNote?:string;
   adminEvents?:{action:string;at:number}[];
   book?: Book;
-  request?: {id:string; startedAt:number; styleId?:string;status?:'queued'|'running'|'paused';brief?:string;reason?:string;measured?:number};
+  request?: {id:string; startedAt:number; styleId?:string;status?:'queued'|'running'|'paused';phase?:'writing'|'reviewing';brief?:string;reason?:string;measured?:number};
   art?: {base:string[]; book?:Book; styleId?:string; qualityProfile?:string; alternative?:{index:number; image:string}; active?:{kind:'base'|'revision'; startedAt:number}; job?:{status:'queued'|'running'|'paused'|'completed';updatedAt:number;origin?:string;token?:string;kind?:'base'|'revision';index?:number;direction?:string;dispatchedAt?:number;inFlightIndex?:number;reason?:'failed'|'uncertain'}};
 };
 

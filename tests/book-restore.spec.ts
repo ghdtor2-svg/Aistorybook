@@ -9,7 +9,7 @@ import path from 'node:path';
 const directory=path.join(process.cwd(),'.office-data','storybook-orders');
 const id=randomUUID(),code='NG-'+id+'.'+randomBytes(24).toString('base64url');
 const label='복구시험-'+id.slice(0,8);
-const sentence=(n:number)=>`하린이는 ${n}번째 웅덩이 앞에서 우산을 꼭 쥐고 숨을 크게 쉬었어요. "할 수 있어!" 개구리 친구가 말했어요.`;
+const sentence=(n:number)=>`하린이는 ${n}번째 웅덩이 앞에서 우산을 꼭 쥐고 설렜어요. "할 수 있어!" 개구리 친구가 말했어요.`;
 const chapters=['비 오는 아침','놀이터의 웅덩이','무지개를 따라서','맑게 갠 하늘','그림일기'].map((title,c)=>({title,text:Array.from({length:5},(_,p)=>Array.from({length:2},(_,k)=>sentence(c*10+p*2+k)).join(' ')).join('\n\n')}));
 const book={id:randomUUID(),title:'하린이와 무지개 웅덩이',chapters,note:'',model:'test',createdAt:new Date().toISOString(),artStyleId:'soft-clay',qualityProfile:'seasons-tower-32-v1'};
 const drawnBook={...book,title:'하린이와 무지개 웅덩이 (그림 보관본)'};
@@ -29,10 +29,20 @@ async function restore(page:Page,value=code){
   await page.getByRole('button',{name:'제작 코드로 내 동화 다시 불러오기'}).click();
 }
 async function pdfFrom(page:Page,button:string){
+  await page.evaluate(()=>{
+    const target=window as typeof window&{__pdfDraw?:{text:string;font:string;y:number}[]};target.__pdfDraw=[];
+    const draw=CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText=function(text,x,y,maxWidth){target.__pdfDraw!.push({text,font:this.font,y});if(maxWidth===undefined)draw.call(this,text,x,y);else draw.call(this,text,x,y,maxWidth);};
+  });
   const [download]=await Promise.all([page.waitForEvent('download',{timeout:120_000}),page.getByRole('button',{name:button}).click()]);
   const bytes=await readFile(await download.path());
   expect(bytes.subarray(0,5).toString()).toBe('%PDF-');
-  expect((bytes.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length).toBe(17);
+  expect((bytes.toString('latin1').match(/\/Type\s*\/Page\b/g)||[]).length).toBe(18);
+  const drawn=await page.evaluate(()=>(window as typeof window&{__pdfDraw:{text:string;font:string;y:number}[]}).__pdfDraw);
+  expect(drawn.filter(row=>/^\d+$/.test(row.text)&&row.y>1100).map(row=>Number(row.text))).toEqual(Array.from({length:32},(_,i)=>i+1));
+  expect(drawn.filter(row=>row.text==='끝')).toHaveLength(1);
+  expect(drawn.filter(row=>row.text.includes('설렜')).every(row=>row.font.includes('Nangman Story Korean'))).toBe(true);
+  await writeFile('work/publication-regression.pdf',bytes);
   return download.suggestedFilename();
 }
 
@@ -72,6 +82,14 @@ test.describe('restore a finished book from the server copy',()=>{
     await restore(page,'NG-'+randomUUID()+'.'+randomBytes(24).toString('base64url'));
     await expect(page.locator('p[role=alert]')).toHaveText('결제 후 받은 제작 코드를 입력해 주세요.',{timeout:30_000});
     expect(await page.evaluate(()=>localStorage.getItem('ai-office:books:v1'))).toBeNull();
+  });
+
+  test('unavailable Korean font blocks PDF export instead of silently mixing glyphs',async({page})=>{
+    let downloads=0;page.on('download',()=>downloads++);
+    await page.route('**/fonts/story-korean-700.woff2',route=>route.abort());
+    await restore(page);await expect(page.getByText('완료 18/18장')).toBeVisible({timeout:30000});
+    await page.getByRole('button',{name:'PDF로 내려받기',exact:true}).click();
+    await expect(page.getByText('동화 글꼴을 불러오지 못했어요. 연결을 확인하고 PDF를 다시 받아 주세요.',{exact:true})).toBeVisible();expect(downloads).toBe(0);
   });
 
   test('admin book copy needs a session and only serves pictures of that order',async({request})=>{
