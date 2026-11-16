@@ -7,6 +7,7 @@ import StoryReader from './StoryReader';
 import QuestionImport from './QuestionImport';
 import StoryDesignWorkshop from './StoryDesignWorkshop';
 import ChoiceChips from './ChoiceChips';
+import AnswerEditor from './AnswerEditor';
 import {questionStoryUse,questionStoryExample,fictionalStoryUse,fictionalStoryExample} from '../../lib/storybook/question-guidance';
 import {coreQuestionHint} from '../../lib/storybook/story-design';
 import {coreQuestionChoices} from '../../lib/storybook/story-choices';
@@ -96,13 +97,14 @@ export default function Storybook(){
     {question?<section className={`panel ${styles.card}`} aria-labelledby="current-question">
      <p className={styles.questionTag}>{groupNumber}/5 · {question.kind==='core'?'핵심 질문':'맞춤 후속 질문 '+question.number+'/2'}</p>
      <h2 id="current-question" tabIndex={-1} className={styles.questionHeading} aria-describedby="question-story-use">{question.text}</h2>
-     <p id="question-story-use" className={styles.usageNote}><strong>동화에는 이렇게 담겨요</strong><span>{questionStoryUse[question.target]}</span><span className={styles.exampleNote}>{questionStoryExample[question.target]}</span></p>
      <p className={styles.promptNote}>{story.editingId?'이전 답변을 수정 중입니다. 저장하거나 건너뛰면 이후 답변과 요약 수정 내용이 삭제되고 질문을 다시 평가합니다.':coreQuestionHint(question.group,question.target)}</p>
      <form onSubmit={event=>submit(event)}>
       {choiceGroups.length>0&&<p className={styles.choiceLead}>보기를 눌러 고르면 아래 답변에 담겨요. 보기에 없으면 직접 적어도 괜찮고, 여러 개 골라도 돼요.</p>}
       <ChoiceChips key={question.id} groups={choiceGroups} value={story.draft} onChange={text=>setStory({...story,draft:text})} idPrefix={'core-'+question.id}/>
+      <AnswerEditor key={question.id+':'+(story.editingId||'')} id="question-story-use" usage={questionStoryUse[question.target]} example={questionStoryExample[question.target]}>
       <label htmlFor="story-answer">답변</label>
       <textarea id="story-answer" aria-describedby="question-story-use" value={story.draft} maxLength={4000} onChange={e=>setStory({...story,draft:e.target.value})} placeholder={question.target==='protagonist'?'동화의 주인공으로 만들 이름이나 인물을 적어 주세요. 예: 지우, 아이와 토끼 친구':'기억나는 장면이나 마음을 적어 보세요. 이름 대신 별칭을 써도 좋아요.'}/>
+      </AnswerEditor>
       <p className={styles.answerMeta}>
        <span role="status">{saving?'질문 작성본 저장 중…':storageError?'저장 상태를 확인해 주세요.':'이 브라우저에 자동 저장돼요.'}</span>
        <span>{story.draft.length}/4000자</span>

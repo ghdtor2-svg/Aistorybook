@@ -1,0 +1,7 @@
+.offer { display: grid; justify-items: start; gap: 3px; max-width: 100%; color: #503979; line-height: 1.45; }
+.previous { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; font-size: 14px; color: #75697b; }
+.previous del { text-decoration-thickness: 1.5px; }
+.badge { padding: 4px 10px; border-radius: 999px; background: #503979; color: #fff; font-size: 13px; font-weight: 700; }
+.offer .amount { display: block; margin: 0; font-size: clamp(36px, 6vw, 46px); line-height: 1.2; letter-spacing: -.04em; color: #503979; }
+.amount span { margin-left: 3px; font-size: .5em; letter-spacing: 0; }
+.saving { font-size: 13px; font-weight: 700; }

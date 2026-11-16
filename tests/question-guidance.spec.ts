@@ -16,7 +16,7 @@ test('protagonist guidance stays visible while entering and editing the protagon
  await page.getByLabel('답변',{exact:true}).fill('대우');await page.getByRole('button',{name:'답변 저장하고 계속',exact:true}).click();
  await expect.poll(()=>page.evaluate(()=>JSON.parse(localStorage.getItem('ai-office:storybook:v1')!).profile.protagonist)).toBe('대우');
  await expect(page.locator('#question-story-use')).toContainText(questionStoryUse.relationship);
- await page.getByRole('button',{name:'답변 2 수정',exact:true}).click();await expect(page.locator('#current-question')).toBeFocused();await expect(page.locator('#question-story-use')).toBeInViewport();await expect(page.locator('#question-story-use')).toContainText(questionStoryUse.protagonist);await expect(page.getByLabel('답변',{exact:true})).toHaveValue('대우');
+ await page.getByRole('button',{name:'답변 2 수정',exact:true}).click();await expect(page.locator('#current-question')).toBeFocused();await page.getByLabel('답변',{exact:true}).focus();await expect(page.locator('#question-story-use')).toBeInViewport();await expect(page.locator('#question-story-use')).toContainText(questionStoryUse.protagonist);await expect(page.getByLabel('답변',{exact:true})).toHaveValue('대우');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'work/protagonist-guidance-mobile.png'});
 });
 test('recipient follow-up explains gift recipient instead of promising a protagonist',async({page})=>{

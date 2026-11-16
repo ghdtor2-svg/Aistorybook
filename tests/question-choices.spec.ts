@@ -33,7 +33,7 @@ test('the real memory question is answered by writing, with no choices',async({p
  await expect(page.getByLabel('답변',{exact:true})).toBeVisible();
  await page.getByLabel('답변',{exact:true}).fill('바닷가에서 처음 혼자 파도를 넘은 날이에요.');
  await page.getByRole('button',{name:'답변 저장하고 계속',exact:true}).click();
- expect(await page.evaluate(k=>JSON.parse(localStorage.getItem(k)!).profile.memorableEvent,key)).toBe('바닷가에서 처음 혼자 파도를 넘은 날이에요.');
+ await expect.poll(()=>page.evaluate(k=>JSON.parse(localStorage.getItem(k)!).profile.memorableEvent,key)).toBe('바닷가에서 처음 혼자 파도를 넘은 날이에요.');
 });
 test('nine planning topics are listed, closed, and open one at a time without blocking confirmation',async({page})=>{
  await page.goto('/storybook');

@@ -2,7 +2,7 @@
 
 import {useState} from 'react';
 import {PURCHASE_CONTACT} from '../lib/storybook/purchase-info';
-import {STORY_PRICE,STORY_PRICE_LABEL} from '../lib/storybook/product';
+import StoryPrice from './StoryPrice';
 import styles from './PurchaseGuide.module.css';
 
 export default function PurchaseGuide(){
@@ -14,7 +14,7 @@ export default function PurchaseGuide(){
  return <section id="purchase-guide" tabIndex={-1} className={styles.guide} aria-labelledby="purchase-guide-title">
   <div className={styles.intro}>
    <div><p className={styles.eyebrow}>구매를 원하시나요?</p><h2 id="purchase-guide-title">구매 문의 · 입금 안내</h2><p>담당자에게 먼저 DM을 보내주세요.<br/>제작 가능 여부와 입금 안내를 확인해 드려요.</p></div>
-   <p className={styles.price}>맞춤형 디지털 동화 1편<strong>{STORY_PRICE_LABEL} {STORY_PRICE.toLocaleString('ko-KR')}원</strong></p>
+   <div className={styles.price}><p>맞춤형 디지털 동화 1편</p><StoryPrice/></div>
   </div>
   <div className={styles.columns}>
    <div className={styles.contact}>

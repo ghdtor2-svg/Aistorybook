@@ -1,6 +1,7 @@
 'use client';
 import styles from './StoryDesignWorkshop.module.css';
 import ChoiceChips from './ChoiceChips';
+import AnswerEditor from './AnswerEditor';
 import {designStoryUse,designStoryExample} from '../../lib/storybook/question-guidance';
 import {designFields,designLabels,storyDesignQuestions,type DesignField,type StoryDesign} from '../../lib/storybook/story-design';
 import {designQuestionChoices} from '../../lib/storybook/story-choices';
@@ -22,8 +23,10 @@ export default function StoryDesignWorkshop({profile,onChange}:{profile:StoryPro
     const value=design[item.id]||'',groups=designQuestionChoices(item.id),filled=!!value.trim();
     const writing=<>
      <ul className={styles.prompts}>{item.prompts.map(prompt=><li key={prompt}>{prompt}</li>)}</ul>
+     <AnswerEditor id={'design-input-use-'+item.id} usage={designStoryUse[item.id]} example={designStoryExample[item.id]} mobileOnly>
      <label htmlFor={'design-'+item.id}>{designLabels[item.id]}</label>
-     <textarea aria-describedby={'design-use-'+item.id} id={'design-'+item.id} maxLength={4000} value={value} placeholder={item.example} onChange={event=>update(item.id,event.target.value)}/>
+     <textarea aria-describedby={'design-use-'+item.id+' design-input-use-'+item.id} id={'design-'+item.id} maxLength={4000} value={value} placeholder={item.example} onChange={event=>update(item.id,event.target.value)}/>
+     </AnswerEditor>
      <p className={styles.meta}>예시는 답변에 자동으로 들어가지 않아요. {value.length}/4000자</p>
     </>;
     return <li key={item.id}>

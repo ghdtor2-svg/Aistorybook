@@ -1,0 +1,19 @@
+.editor { min-width: 0; scroll-margin-top: 8px; }
+.editor > label { display: block; margin: 0 0 6px; font-size: .9rem; font-weight: 700; }
+.editor[data-mobile-guide='true'] .guide { display: none; }
+.guide { margin: 0 0 14px; padding: 14px 16px; border: 1px solid #dfd1e8; border-left: 4px solid #76558c; border-radius: 12px; background: #f4eef8; color: #46334f; }
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.heading strong { color: #634476; font-size: .82rem; }
+.content p { margin: 7px 0 0; font-size: .9rem; line-height: 1.65; word-break: keep-all; overflow-wrap: break-word; }
+.content .example { color: #51425d; }
+.toggle { display: none; }
+@media(max-width:700px) {
+ .editor[data-mobile-guide='true'] .guide { display: block; }
+ .guide { position: sticky; top: 8px; z-index: 5; padding: 9px 12px; margin-bottom: 10px; box-shadow: 0 3px 12px #382a5110; }
+ .heading strong { font-size: 12px; }
+ .guide .toggle { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 80px; margin: -6px -5px -6px 0; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: #503979; font: inherit; font-size: 12px; font-weight: 700; }
+ .guide[data-expanded='false'] .usage { display: none; }
+ .content { max-height: min(240px, 35dvh); overflow-y: auto; overscroll-behavior: contain; }
+ .content p { font-size: 13px; line-height: 1.55; }
+ .editor textarea { min-height: 112px; height: clamp(112px, 24dvh, 170px); padding: 12px; font-size: 16px; scroll-margin-top: 150px; }
+}
