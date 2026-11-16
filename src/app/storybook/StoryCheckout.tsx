@@ -1,6 +1,6 @@
 'use client';
 
-import {STORY_PRICE} from '../../lib/storybook/product';
+import {STORY_PRICE,STORY_PRICE_LABEL} from '../../lib/storybook/product';
 import type {StoryConnection} from './useLocalStoryWorkspace';
 import styles from './StoryCheckout.module.css';
 
@@ -10,7 +10,7 @@ export type DraftStorage={onSave:()=>Promise<void>;saving:boolean;saved:boolean;
 export default function StoryCheckout({code,onCode,draftStorage,connection,codeLocked}:{code:string;onCode:(value:string)=>void;draftStorage:DraftStorage;connection:StoryConnection;codeLocked:boolean}){
   const {available:local,checking,retry}=connection;
   return <section id="story-checkout" tabIndex={-1} className={styles.checkout} aria-label="결제와 제작 코드">
-    <h3>동화 한 편 · {STORY_PRICE.toLocaleString('ko-KR')}원</h3>
+    <h3>동화 한 편 · {STORY_PRICE_LABEL} {STORY_PRICE.toLocaleString('ko-KR')}원</h3>
     <p>본문 32쪽과 표지·마침으로 구성되며, 그림은 총 18장이에요. PDF는 표지 1쪽·본문 펼침면 16쪽·마침 1쪽, 총 18쪽으로 받아요.</p>
     <section className={styles.saveCard} aria-labelledby="draft-save-title">
       <h4 id="draft-save-title">입금 전에, 작성한 이야기를 보관하세요</h4>

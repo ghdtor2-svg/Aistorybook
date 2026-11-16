@@ -16,7 +16,7 @@ const decode=text=>text.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&
   assert.match(html,/<h2 id="how-title">우리 아이 맞춤 동화는 이렇게 만들어져요<\/h2>/);
   assert.match(html,/<meta name="viewport" content="width=device-width, initial-scale=1"/);
   assert.match(html,/<img src="\/storybook\/sample\/cover.webp"[^>]*height="933"/);
-  assert.match(meta(html,'name','description'),/9,900원/);
+  assert.match(meta(html,'name','description'),/오픈 특가 5,900원/);
   assert.ok(meta(html,'name','keywords').includes('AI 동화'));
   assert.equal(html.match(/<link rel="canonical" href="([^"]+)"/)?.[1],site);
   assert.equal(meta(html,'property','og:image'),site+'/og-image.jpg');
@@ -33,7 +33,7 @@ const decode=text=>text.replace(/&quot;/g,'"').replace(/&#x27;/g,"'").replace(/&
   const faq=ld['@graph'][3].mainEntity;
   assert.ok(faq.length>=5);
   for(const item of faq){assert.ok(decode(html).includes(item.name),'question not visible: '+item.name);assert.ok(decode(html).includes(item.acceptedAnswer.text),'answer not visible: '+item.name);}
-  assert.equal(ld['@graph'][2].offers.price,'9900');
+  assert.equal(ld['@graph'][2].offers.price,'5900');
   assert.equal(ld['@graph'][2].audience.audienceType,'아이를 키우는 부모와 가족');
   assert.ok(!/인쇄|배송/.test(JSON.stringify(ld)),'public text must not mention printing or delivery');
   // 동화 만들기 화면

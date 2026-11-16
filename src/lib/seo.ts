@@ -10,14 +10,14 @@
  * 확인되지 않은 기능, 인쇄·배송, 제작 단가는 쓰지 않습니다.
  */
 import {SITE_NAME} from './brand';
-import {STORY_PRICE} from './storybook/product';
+import {STORY_PRICE,STORY_PRICE_LABEL} from './storybook/product';
 import {PURCHASE_CONTACT} from './storybook/purchase-info';
 import {offeredStoryArtStyles} from './storybook/art-styles';
 import {storyIllustrationCount,storyPageCount} from './storybook/quality';
 
 export const SITE_URL=(process.env.NEXT_PUBLIC_SITE_URL||'https://nangman-hanjul.netlify.app').replace(/\/+$/,'');
 export const SEO_TITLE='AI 맞춤 동화 만들기 | 우리 아이 이야기로 만드는 동화 - '+SITE_NAME;
-export const SEO_DESCRIPTION='우리 아이의 일상과 가족의 추억으로 만드는 AI 맞춤 동화. 몇 가지 질문에 답하면 글과 그림 '+storyIllustrationCount+'장이 담긴 '+storyPageCount+'쪽 동화를 만들어 드려요. '+offeredStoryArtStyles.length+'가지 화풍, 1편 '+STORY_PRICE.toLocaleString('ko-KR')+'원.';
+export const SEO_DESCRIPTION='우리 아이의 일상과 가족의 추억으로 만드는 AI 맞춤 동화. 몇 가지 질문에 답하면 글과 그림 '+storyIllustrationCount+'장이 담긴 '+storyPageCount+'쪽 동화를 만들어 드려요. '+offeredStoryArtStyles.length+'가지 화풍, 1편 '+STORY_PRICE_LABEL+' '+STORY_PRICE.toLocaleString('ko-KR')+'원.';
 export const SEO_KEYWORDS=['AI 동화','맞춤 동화','맞춤형 동화','개인화 동화','아이 이름 동화','우리 아이 동화 만들기','AI 동화 만들기','디지털 동화','가족 추억 동화','아이 선물','그림 동화',SITE_NAME];
 export const OG_IMAGE={url:'/og-image.jpg',width:1200,height:630,alt:SITE_NAME+' 샘플 동화 펼침면'};
 export const styleNames=offeredStoryArtStyles.map(style=>style.name);
@@ -25,7 +25,7 @@ export const styleNames=offeredStoryArtStyles.map(style=>style.name);
 /** 화면에 보이는 질문과 답. 같은 내용을 FAQPage 구조화 데이터로도 내보냅니다(내용이 서로 같아야 합니다). */
 export const FAQ:{question:string;answer:string}[]=[
   {question:SITE_NAME+'은 어떤 서비스인가요?',answer:'부모님이 들려주는 아이의 정보와 가족의 사연을 바탕으로 AI가 세상에 하나뿐인 맞춤형 디지털 동화를 만들어 주는 서비스예요. 몇 가지 질문에 편하게 답하면 이야기와 그림이 함께 있는 동화가 완성돼요.'},
-  {question:'동화 한 편의 가격은 얼마인가요?',answer:'맞춤형 디지털 동화 1편에 '+STORY_PRICE.toLocaleString('ko-KR')+'원이에요.'},
+  {question:'동화 한 편의 가격은 얼마인가요?',answer:'맞춤형 디지털 동화 1편, '+STORY_PRICE_LABEL+' '+STORY_PRICE.toLocaleString('ko-KR')+'원이에요.'},
   {question:'동화는 몇 쪽이고 그림은 몇 장인가요?',answer:'표지를 포함해 '+storyPageCount+'쪽이고, 표지 1장과 본문 삽화를 합쳐 그림 '+storyIllustrationCount+'장이 들어가요. 본문은 약 2,500자로 아이가 읽기 편한 큰 글씨로 보여 드려요.'},
   {question:'어떤 화풍을 고를 수 있나요?',answer:styleNames.join(', ')+' 중에서 고를 수 있어요. 고르기 전에 화풍별 예시 그림을 볼 수 있고, 고른 화풍은 표지부터 마지막 그림까지 동화 전체에 적용돼요.'},
   {question:'어떻게 구매하고 만드나요?',answer:'인스타그램 @'+PURCHASE_CONTACT.instagramHandle+'로 "동화 구매 문의합니다"라고 DM을 보내 안내를 받은 뒤 계좌이체하면, 담당자가 입금을 확인하고 제작 코드를 알려 드려요. 동화 만들기 화면에서 질문에 답하고 제작 코드를 입력하면 동화가 만들어져요.'},
@@ -44,7 +44,7 @@ export function homeJsonLd(){
       {'@type':'Service','@id':id('service'),name:'AI 맞춤형 디지털 동화 제작',serviceType:'AI 기반 개인 맞춤 디지털 동화 제작',category:'어린이 동화',provider:{'@id':id('organization')},areaServed:'KR',availableLanguage:'ko',url:SITE_URL+'/storybook',
         audience:{'@type':'PeopleAudience',audienceType:'아이를 키우는 부모와 가족'},
         description:SEO_DESCRIPTION,
-        offers:{'@type':'Offer',price:String(STORY_PRICE),priceCurrency:'KRW',url:SITE_URL+'/#purchase-guide',description:'맞춤형 디지털 동화 1편 ('+storyPageCount+'쪽, 그림 '+storyIllustrationCount+'장)'}},
+        offers:{'@type':'Offer',price:String(STORY_PRICE),priceCurrency:'KRW',url:SITE_URL+'/#purchase-guide',description:STORY_PRICE_LABEL+' · 맞춤형 디지털 동화 1편 ('+storyPageCount+'쪽, 그림 '+storyIllustrationCount+'장)'}},
       {'@type':'FAQPage','@id':id('faq'),mainEntity:FAQ.map(item=>({'@type':'Question',name:item.question,acceptedAnswer:{'@type':'Answer',text:item.answer}}))},
     ],
   };
