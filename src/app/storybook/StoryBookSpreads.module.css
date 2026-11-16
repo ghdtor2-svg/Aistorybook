@@ -15,7 +15,7 @@
 .spread[data-pages='1'] .texts { grid-template-columns: minmax(0, 1fr); }
 /* 본문이 약 2,500자로 줄어 쪽당 글이 적다. 읽기 도구에서 고른 크기보다 1.3배 크게 보여 준다. */
 /* 손글씨 글꼴(Gaegu)은 같은 크기에서 글자가 작아 보여 1.45배로 둔다. 글씨는 굵고 진하게 쓴다. */
-.copy { min-width: 0; overflow-wrap: anywhere; font-family: var(--font-story-hand), 'Gaegu', 'Nanum Pen Script', cursive; font-weight: 700; font-size: 1.45em; line-height: 1.65; letter-spacing: -.02em; color: #2a2017; }
+.copy { min-width: 0; overflow-wrap: normal; font-family: var(--font-story-hand), 'Gaegu', 'Nanum Pen Script', cursive; font-weight: 700; font-size: 1.45em; line-height: 1.65; letter-spacing: -.02em; color: #2a2017; }
 /* 강조: 이야기 글은 기본 크기, 인물의 대사는 한 단계 크게, 소리·모양 흉내말은 가장 크게. */
 .speech { font-size: 1.22em; color: #4a2410; }
 .sound { font-size: 1.38em; color: #b0461f; letter-spacing: .04em; }

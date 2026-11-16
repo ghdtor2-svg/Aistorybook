@@ -1,3 +1,5 @@
+import {wrapText,wordGroups} from '../../lib/storybook/word-wrap';
+export {wrapText} from '../../lib/storybook/word-wrap';
 import type {Book} from '../../lib/storybook/books';
 import {planStorybook} from '../../lib/storybook/book-layout';
 import {storyQualityProfile} from '../../lib/storybook/quality';
@@ -66,37 +68,16 @@ function drawContain(context:CanvasRenderingContext2D,art:Art,x:number,y:number,
   context.drawImage(art,x+(width-w)/2,y+(height-h)/2,w,h);
 }
 
-/** 한국어는 어절 단위로 줄을 바꿉니다(word-break: keep-all). 한 어절이 너무 길 때만 글자 단위로 나눕니다. */
-export function wrapText(measure:(text:string)=>number,text:string,width:number){
-  const lines:string[]=[];
-  for(const raw of text.split('\n')){
-    let line='';
-    for(const token of raw.match(/\S+\s*/g)||['']){
-      if(measure((line+token).trimEnd())<=width){line+=token;continue;}
-      if(line.trim())lines.push(line.trimEnd());
-      line='';
-      let piece=Array.from(token);
-      while(piece.length&&measure(piece.join('').trimEnd())>width){
-        let cut=1;
-        while(cut<piece.length&&measure(piece.slice(0,cut+1).join(''))<=width)cut++;
-        lines.push(piece.slice(0,cut).join(''));
-        piece=piece.slice(cut);
-      }
-      line=piece.join('');
-    }
-    lines.push(line.trimEnd());
-  }
-  return lines;
-}
-
-/** 문단들을 상자 안에 그립니다. 넘치면 글씨를 조금씩 줄입니다. */
+/** 문단들을 상자 안에 그립니다. 넘치면 어절을 자르지 않고 글씨를 줄여 맞춥니다. */
 function drawParagraphs(context:CanvasRenderingContext2D,paragraphs:string[],x:number,y:number,width:number,height:number,family:string,{size=50,min=24,align='left' as CanvasTextAlign,weight='400',color=ink,middle=false}={}){
   for(let fontSize=size;;fontSize-=2){
     context.font=weight+' '+fontSize+'px '+family;
     const lineHeight=fontSize*1.75,gap=fontSize*0.7;
     const blocks=paragraphs.map(text=>wrapText(value=>context.measureText(value).width,text,width));
     const total=blocks.reduce((sum,lines)=>sum+lines.length*lineHeight,0)+gap*Math.max(0,blocks.length-1);
-    if(total<=height||fontSize<=min){
+    const fits=total<=height&&blocks.every(lines=>lines.every(line=>context.measureText(line).width<=width));
+    if(!fits&&fontSize<=min)throw Error('한 쪽에 글이 너무 길어요. 문장을 짧게 다듬은 뒤 PDF를 다시 받아 주세요.');
+    if(fits){
       context.fillStyle=color;context.textAlign=align;
       const left=align==='center'?x+width/2:x;
       // 글이 적은 쪽은 글 영역의 세로 가운데에 둡니다.
@@ -128,7 +109,7 @@ const emphasisStyle:Record<EmphasisPiece['kind'],{scale:number;color:string;spac
 type RichToken={text:string;kind:EmphasisPiece['kind']};
 type SpacedContext=CanvasRenderingContext2D&{letterSpacing?:string};
 
-/** 강조(대사·흉내말)마다 크기와 색이 다른 글을 어절 단위로 줄 바꿈해 그립니다. 넘치면 글씨를 조금씩 줄입니다. */
+/** 강조(대사·흉내말)마다 크기와 색이 다른 글을 어절 단위로 줄 바꿈해 그립니다. 넘치면 어절을 자르지 않고 글씨를 줄여 맞춥니다. */
 function drawRich(context:SpacedContext,paragraphs:EmphasisPiece[][],x:number,y:number,width:number,height:number,family:string,{size=56,min=30}={}){
   const setFont=(kind:RichToken['kind'],fontSize:number)=>{
     const style=emphasisStyle[kind],px=fontSize*style.scale;
@@ -143,31 +124,20 @@ function drawRich(context:SpacedContext,paragraphs:EmphasisPiece[][],x:number,y:
     for(const pieces of paragraphs){
       let line:RichToken[]=[],lineWidth=0;
       const flush=()=>{if(line.length)lines.push({tokens:line,height:heightOf(line),gap:0});line=[];lineWidth=0;};
-      const words:RichToken[]=pieces.flatMap(piece=>(piece.text.match(/\S+\s*|\s+/g)||[]).map(text=>({text,kind:piece.kind})));
-      for(const word of words){
-        const w=measure({text:word.text.trimEnd(),kind:word.kind},fontSize);
+      for(const group of wordGroups(pieces)){
+        const w=group.reduce((sum,token,index)=>sum+measure(index===group.length-1?{...token,text:token.text.trimEnd()}:token,fontSize),0);
         if(line.length&&lineWidth+w>width)flush();
-        if(!line.length&&w>width){
-          // 한 어절이 한 줄보다 길 때만 글자 단위로 나눕니다.
-          let rest=Array.from(word.text);
-          while(rest.length){
-            let cut=1;
-            while(cut<rest.length&&measure({text:rest.slice(0,cut+1).join(''),kind:word.kind},fontSize)<=width)cut++;
-            line.push({text:rest.slice(0,cut).join(''),kind:word.kind});
-            rest=rest.slice(cut);
-            if(rest.length)flush();
-          }
-          lineWidth=measure(line[line.length-1],fontSize);
-          continue;
-        }
-        line.push(word);lineWidth+=measure(word,fontSize);
+        line.push(...group);
+        lineWidth+=group.reduce((sum,token)=>sum+measure(token,fontSize),0);
       }
       flush();
       if(lines.length)lines[lines.length-1].gap=fontSize*0.55;
     }
     if(lines.length)lines[lines.length-1].gap=0;
     const total=lines.reduce((sum,line)=>sum+line.height+line.gap,0);
-    if(total<=height||fontSize<=min){
+    const fits=total<=height&&lines.every(line=>line.tokens.reduce((sum,token,index)=>sum+measure(index===line.tokens.length-1?{...token,text:token.text.trimEnd()}:token,fontSize),0)<=width);
+    if(!fits&&fontSize<=min)throw Error('한 쪽에 글이 너무 길어요. 문장을 짧게 다듬은 뒤 PDF를 다시 받아 주세요.');
+    if(fits){
       let top=y;
       context.textBaseline='alphabetic';
       for(const line of lines){

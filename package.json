@@ -20,7 +20,8 @@
     "test:pdf": "tsc -p tsconfig.lib-tests.json && node scripts/book-pdf-test.cjs",
     "test:emphasis": "tsc -p tsconfig.lib-tests.json && node scripts/emphasis-test.cjs",
     "test:scene-prompt": "tsc -p tsconfig.lib-tests.json && node scripts/scene-prompt-test.cjs",
-    "check:seo": "node scripts/seo-check.cjs"
+    "check:seo": "node scripts/seo-check.cjs",
+    "test:layout": "tsc -p tsconfig.lib-tests.json && node scripts/book-layout-test.cjs"
   },
   "dependencies": {
     "@netlify/blobs": "^11.1.8",

@@ -6,81 +6,57 @@ export type StoryPage={parts:StoryPagePart[]};
 export type StoryArtScene={text:string;label:string;pageIndices:number[]};
 export type StorySpread={pageIndices:number[];artIndices:number[];shared:boolean};
 
-function textBoundary(text:string,position:number){
-  const code=text.charCodeAt(position);
-  return code>=0xDC00&&code<=0xDFFF?position-1:position;
-}
-
-export function planStorybook(book:Book){
-  // Preserve existing illustration/text associations on the first 30 sides.
-  // Only split the old final side into two sides using its existing illustration.
-  const pageCount=storyBodyPageCount-1;
+/** 문장을 쪼개지 않고 쪽별 분량을 맞춥니다. 짧은 원고는 빈 쪽을 허용합니다. */
+export function planStoryPages(chapters:Pick<Book,'chapters'>['chapters'],pageCount=storyBodyPageCount):StoryPage[]{
+  if(!Number.isInteger(pageCount)||pageCount<1)throw Error('Invalid page count');
   const segmenter=new Intl.Segmenter('ko',{granularity:'sentence'});
   const units:StoryPagePart[]=[];
-  book.chapters.forEach((chapter,chapterIndex)=>{
+  chapters.forEach((chapter,chapterIndex)=>{
     chapter.text.split(/\n\s*\n/).forEach((paragraph,paragraphIndex)=>{
       for(const sentence of segmenter.segment(paragraph)){
-        let text=sentence.segment;
-        while(text.length>190){
-          const space=text.lastIndexOf(' ',160);
-          const split=textBoundary(text,space>60?space+1:160);
-          units.push({text:text.slice(0,split),chapterIndex,paragraphIndex});
-          text=text.slice(split);
-        }
-        if(text.trim())units.push({text,chapterIndex,paragraphIndex});
+        if(sentence.segment.trim())units.push({text:sentence.segment,chapterIndex,paragraphIndex});
       }
     });
   });
-  while(units.length<pageCount){
-    const longest=units.reduce((chosen,unit,index)=>unit.text.length>(units[chosen]?.text.length||0)?index:chosen,0);
-    const unit=units[longest];
-    if(!unit||unit.text.length<2)break;
-    const middle=Math.floor(unit.text.length/2);
-    const space=unit.text.lastIndexOf(' ',middle);
-    const split=textBoundary(unit.text,space>middle/2?space+1:middle);
-    if(split===0)break;
-    units.splice(longest,1,{...unit,text:unit.text.slice(0,split)},{...unit,text:unit.text.slice(split)});
+  // 줄바꿈/빈 줄만으로 미완성 문장이 새 쪽으로 넘어가지 않게 묶습니다.
+  const sentences:StoryPagePart[][]=[];
+  for(const unit of units){
+    const previous=sentences[sentences.length-1];
+    const last=previous?.[previous.length-1];
+    if(last&&last.chapterIndex===unit.chapterIndex&&!/[.!?…。！？][”’"'）)\]]*\s*$/.test(last.text))previous.push(unit);
+    else sentences.push([unit]);
   }
+  const lengthOf=(sentence:StoryPagePart[])=>sentence.reduce((sum,part)=>sum+part.text.length,0);
   const pages:StoryPage[]=[];
+  const populated=Math.min(pageCount,sentences.length);
   let start=0;
-  let remaining=units.reduce((sum,unit)=>sum+unit.text.length,0);
+  let remaining=sentences.reduce((sum,sentence)=>sum+lengthOf(sentence),0);
   for(let index=0;index<pageCount;index++){
-    const pagesLeft=pageCount-index;
-    const target=remaining/pagesLeft;
-    const limit=Math.max(start+1,units.length-pagesLeft+1);
-    let end=start,length=0;
-    while(end<units.length&&end<limit){
-      const next=units[end].text.length;
-      if(end>start&&Math.abs(length-target)<=Math.abs(length+next-target))break;
-      length+=next;
-      end++;
-    }
-    if(index===pageCount-1){end=units.length;length=units.slice(start).reduce((sum,unit)=>sum+unit.text.length,0);}
     const parts:StoryPagePart[]=[];
-    for(const unit of units.slice(start,end)){
-      const last=parts[parts.length-1];
-      if(last&&last.chapterIndex===unit.chapterIndex&&last.paragraphIndex===unit.paragraphIndex)last.text+=unit.text;
-      else parts.push({...unit});
+    if(index<populated){
+      const pagesLeft=populated-index,target=remaining/pagesLeft;
+      const limit=sentences.length-pagesLeft+1;
+      let end=start,length=0;
+      while(end<limit){
+        const next=lengthOf(sentences[end]);
+        if(end>start&&Math.abs(length-target)<=Math.abs(length+next-target))break;
+        length+=next;end++;
+      }
+      if(pagesLeft===1){end=sentences.length;length=remaining;}
+      for(const unit of sentences.slice(start,end).flat()){
+        const last=parts[parts.length-1];
+        if(last&&last.chapterIndex===unit.chapterIndex&&last.paragraphIndex===unit.paragraphIndex)last.text+=unit.text;
+        else parts.push({...unit});
+      }
+      start=end;remaining-=length;
     }
     pages.push({parts});
-    start=end;
-    remaining-=length;
   }
-  const last=pages.pop()!;
-  const left:StoryPage={parts:[]},right:StoryPage={parts:[]};
-  const target=last.parts.reduce((sum,part)=>sum+part.text.length,0)/2;
-  let used=0;
-  for(const part of last.parts){
-    if(used>=target){right.parts.push({...part});continue;}
-    if(used+part.text.length<=target){left.parts.push({...part});used+=part.text.length;continue;}
-    const middle=Math.max(1,Math.min(part.text.length-1,Math.round(target-used)));
-    const before=part.text.lastIndexOf(' ',middle),after=part.text.indexOf(' ',middle);
-    const boundary=before>0?before+1:after>0?after+1:textBoundary(part.text,middle);
-    left.parts.push({...part,text:part.text.slice(0,boundary)});
-    if(part.text.slice(boundary))right.parts.push({...part,text:part.text.slice(boundary)});
-    used=target;
-  }
-  pages.push(left,right);
+  return pages;
+}
+
+export function planStorybook(book:Book){
+  const pages=planStoryPages(book.chapters);
   // Prefer separate illustrations where the narrative crosses a chapter boundary.
   let transition=7;
   let distance=Infinity;

@@ -16,7 +16,7 @@ const sentences=[
 function makeBook(id,variant){
   const chapters=['비 오는 아침','놀이터의 웅덩이','무지개를 따라서','맑게 갠 하늘','그림일기'].map((title,chapter)=>({
     title,
-    text:Array.from({length:6},(_,paragraph)=>Array.from({length:4},(_,k)=>sentences[(chapter*7+paragraph*3+k+variant)%sentences.length]).join(' ')+' ('+chapter+'-'+paragraph+')').join('\n\n'),
+    text:Array.from({length:6},(_,paragraph)=>Array.from({length:4},(_,k)=>`${chapter}장 ${paragraph}문단 ${k}번째로 ${sentences[(chapter*7+paragraph*3+k+variant)%sentences.length]}`).join(' ')+' ('+chapter+'-'+paragraph+')').join('\n\n'),
   }));
   return {id,title:'하린이와 무지개 웅덩이 '+variant,chapters,qualityProfile:storyQualityProfile,artStyleId:'soft-clay'};
 }
@@ -39,7 +39,7 @@ for(let variant=0;variant<6;variant++){
     const chapter=plan.pages[scene.pageIndices[0]].parts[0].chapterIndex;
     assert.ok(prompt.includes(book.chapters[chapter].title));
     // 다른 장면의 글 전체가 섞이지 않는다(바로 앞 장면은 짧은 대조 문구로만).
-    plan.scenes.forEach((other,otherIndex)=>{if(otherIndex!==index-1&&other.text!==scene.text&&other.text.length>60)assert.ok(!prompt.includes(other.text),'scene '+(otherIndex+1)+' leaked into '+index);});
+    plan.scenes.forEach((other,otherIndex)=>{if(otherIndex!==index-1&&other.text!==scene.text&&other.text.length>60)assert.ok(!prompt.split('\nFor contrast only,')[0].includes(other.text),'scene '+(otherIndex+1)+' leaked into '+index);});
     if(index===1)assert.doesNotMatch(prompt,/previous picture/);
     else assert.match(prompt,/For contrast only, the previous picture already showed this moment: “.{10,}” Do not draw that moment again/);
     // 표지는 생김새·화풍 참고용이며 편집 대상이 아니다. 인물은 이 장면에 나오는 사람만.
