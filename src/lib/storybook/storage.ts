@@ -10,7 +10,7 @@ export function restoreStory(storage:StoryStorage):SavedStory|null {
  if(raw.length>200000)throw new Error('저장 용량 초과');
  const saved=JSON.parse(raw);const p=saved?.profile;
  if(saved.version!==1||!p||typeof p.storyId!=='string'||!Array.isArray(p.answers)||p.answers.length>15||!Number.isFinite(Date.parse(p.createdAt)))throw new Error('Invalid saved story');
- let profile={...newProfile(),storyId:p.storyId,createdAt:p.createdAt};
+ let profile={...newProfile(p.shortFlow===true),storyId:p.storyId,createdAt:p.createdAt};
  // 저장된 질문 객체를 신뢰하지 않고 엔진으로 질문과 정보를 재구축합니다.
  for(const answer of p.answers){
   if(!profile.currentQuestion||answer?.question?.id!==profile.currentQuestion.id||typeof answer.text!=='string'||answer.text.length>4000||typeof answer.skipped!=='boolean')throw new Error('Invalid answer');

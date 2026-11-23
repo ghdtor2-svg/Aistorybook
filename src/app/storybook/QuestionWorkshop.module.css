@@ -225,3 +225,6 @@ main.workshop {
 
 .exampleNote { display: block; margin: 8px 0; color: #66536f; font-size: .875rem; line-height: 1.8; overflow-wrap: anywhere; }
 .usageNote .exampleNote { margin: 3px 0 0; padding-top: 9px; border-top: 1px solid #dfd1e8; }
+
+.workshop :global(.story-wait) { position:fixed; inset:0; z-index:50; display:grid; place-items:center; background:#faf7f1; padding:24px; }
+.workshop :global(.story-wait section) { max-width:32rem; text-align:center; }

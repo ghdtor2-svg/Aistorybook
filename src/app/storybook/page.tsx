@@ -14,7 +14,7 @@ import {coreQuestionChoices} from '../../lib/storybook/story-choices';
 import {useUnsavedBookGuard} from './useUnsavedBookGuard';
 import {questionDraftJSON,questionDraftText} from '../../lib/storybook/question-draft';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
-import {coreQuestions,demoEngine,editSummary,fields,labels,newProfile,submitAnswer,type Field} from '../../lib/storybook/engine';
+import {coreQuestions,shortQuestions,shortEngine,demoEngine,editSummary,fields,labels,newProfile,submitAnswer,type Field} from '../../lib/storybook/engine';
 import {restoreStory,type SavedStory} from '../../lib/storybook/storage';
 import {changeQuestion,questionJSON,QuestionConflictError,QUESTION_LOCK} from '../../lib/storybook/question-store';
 export default function Storybook(){
@@ -27,7 +27,7 @@ export default function Storybook(){
  async function reloadQuestions(){if(!window.confirm('현재 화면 작성본을 최신 질문 저장본으로 바꿀까요? 저장하지 못한 내용은 먼저 내려받아 보관하세요.'))return;epoch.current++;frozen.current=true;try{await questionLock(()=>{const raw=localStorage.getItem('ai-office:storybook:v1'),latest=restoreStory(localStorage);expected.current=raw;conflict.current=false;frozen.current=false;saveFailed.current=false;importedSave.current=JSON.stringify(latest);setStory(latest);setStorageError('');setError('');});}catch{saveFailed.current=true;setStorageError('최신 질문 저장본을 읽지 못했습니다. 화면과 저장 원문은 유지했습니다.');}}
 
  function downloadDraft(format:'json'|'text'){if(!story)return;const json=format==='json';const url=URL.createObjectURL(new Blob([json?questionDraftJSON(story):questionDraftText(story)],{type:json?'application/json;charset=utf-8':'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=json?'storybook-question-draft.json':'storybook-question-draft.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
- useEffect(()=>{try{expected.current=localStorage.getItem('ai-office:storybook:v1');const restored=restoreStory(localStorage);setStory(restored??{profile:newProfile(),draft:'',editingId:null});setRestoredDraft(!!restored&&(restored.profile.answers.length>0||!!restored.draft));}catch{setStorageError('저장 내용을 복원하지 못했습니다. 새로 작성하거나 저장 내용을 삭제해 주세요.');}finally{setReady(true);}},[]);
+ useEffect(()=>{try{expected.current=localStorage.getItem('ai-office:storybook:v1');const restored=restoreStory(localStorage);setStory(restored??{profile:newProfile(true),draft:'',editingId:null});setRestoredDraft(!!restored&&(restored.profile.answers.length>0||!!restored.draft));}catch{setStorageError('저장 내용을 복원하지 못했습니다. 새로 작성하거나 저장 내용을 삭제해 주세요.');}finally{setReady(true);}},[]);
  useEffect(()=>{if(!ready||!story)return;const saved=JSON.stringify(story);if(importedSave.current===saved){importedSave.current='';return;}importedSave.current='';void persist();},[story,ready]);
  useEffect(()=>{const changed=(event:StorageEvent)=>{if(event.key!=='ai-office:storybook:v1'&&event.key!==null)return;try{const raw=localStorage.getItem('ai-office:storybook:v1');if(raw!==expected.current){if(storyRef.current&&raw===questionJSON(storyRef.current)){expected.current=raw;return;}failed(new QuestionConflictError());}}catch(e){failed(e);}};window.addEventListener('storage',changed);return ()=>window.removeEventListener('storage',changed);},[]);
  async function importDraft(preview:{story:SavedStory;stored:string|null;memory:string}){await questionLock(()=>{if(pendingWrites.current||localStorage.getItem('ai-office:storybook:v1')!==preview.stored||JSON.stringify(storyRef.current)!==preview.memory)throw Error('미리보기 후 질문이 변경되었거나 저장 중입니다. 파일을 다시 선택해 확인하세요.');try{expected.current=changeQuestion(localStorage,preview.stored,preview.story);}catch{throw Error('복원 내용을 저장하지 못했습니다. 기존 질문과 화면을 유지했습니다.');}epoch.current++;conflict.current=false;frozen.current=false;importedSave.current=JSON.stringify(preview.story);saveFailed.current=false;setStory(preview.story);setStorageError('');setError('');});}
@@ -37,19 +37,30 @@ export default function Storybook(){
  useEffect(()=>{const hidden=()=>{if(document.visibilityState==='hidden')flushDraft.current();};const leaving=()=>flushDraft.current();document.addEventListener('visibilitychange',hidden);window.addEventListener('pagehide',leaving);return ()=>{document.removeEventListener('visibilitychange',hidden);window.removeEventListener('pagehide',leaving);};},[]);
  const profile=story?.profile;
  const question=story?.editingId?profile?.answers.find(a=>a.question.id===story.editingId)?.question:profile?.currentQuestion;
- const lastQuestion=useRef<string|null>(null);
- useEffect(()=>{const current=question?question.id+':'+(story?.editingId||''):'';if(lastQuestion.current!==null&&current&&lastQuestion.current!==current){const heading=document.getElementById('current-question');heading?.focus({preventScroll:true});heading?.scrollIntoView({block:'start'});}lastQuestion.current=current;},[question?.id,story?.editingId]);
- function jumpToCheckout(){const target=document.getElementById('story-checkout');target?.focus({preventScroll:true});target?.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}
- function begin(){setRestoredDraft(false);setError('');setStory({profile:newProfile(),draft:'',editingId:null});}
- async function remove(reset:boolean){if(!window.confirm(reset?'현재 내용을 지우고 처음부터 시작할까요?':'질문 답변과 작성 중인 내용만 삭제할까요? 책장에 저장된 동화와 서버 생성 기록은 유지됩니다.'))return;if(conflict.current){failed(new QuestionConflictError());return;}epoch.current++;frozen.current=true;try{await questionLock(()=>{expected.current=changeQuestion(localStorage,expected.current,null);frozen.current=false;saveFailed.current=false;setStorageError('');setError('');setRestoredDraft(false);setStory(reset?{profile:newProfile(),draft:'',editingId:null}:null);});}catch(e){failed(e);}}
+ const [view,setView]=useState('questions');
+ useEffect(()=>{
+  function sync(){const hash=window.location.hash;setView(hash==='#purchase-guide'?'purchase':['#my-books','#story-checkout','#art-quality-proof'].includes(hash)?'books':'questions');}
+  sync();window.addEventListener('hashchange',sync);return ()=>window.removeEventListener('hashchange',sync);
+ },[]);
+ const step=question?.id??'review';
+ useEffect(()=>{
+  if(!ready)return;
+  const target=view==='questions'?document.getElementById('current-question'):document.querySelector<HTMLElement>(['#purchase-guide','#story-checkout','#art-quality-proof','#my-books'].includes(location.hash)?location.hash:'#my-books');
+  target?.focus({preventScroll:true});
+  if(view==='questions')window.scrollTo(0,0);else target?.scrollIntoView({block:'start'});
+ },[ready,step,view]);
+ function jumpToCheckout(){window.location.hash='story-checkout';}
+ function begin(){setRestoredDraft(false);setError('');setStory({profile:newProfile(true),draft:'',editingId:null});}
+ async function remove(reset:boolean){if(!window.confirm(reset?'현재 내용을 지우고 처음부터 시작할까요?':'질문 답변과 작성 중인 내용만 삭제할까요? 책장에 저장된 동화와 서버 생성 기록은 유지됩니다.'))return;if(conflict.current){failed(new QuestionConflictError());return;}epoch.current++;frozen.current=true;try{await questionLock(()=>{expected.current=changeQuestion(localStorage,expected.current,null);frozen.current=false;saveFailed.current=false;setStorageError('');setError('');setRestoredDraft(false);setStory(reset?{profile:newProfile(true),draft:'',editingId:null}:null);});}catch(e){failed(e);}}
  function submit(event:FormEvent|undefined,skip=false){event?.preventDefault();if(!story||!question)return;try{setStory({profile:submitAnswer(story.profile,question,story.draft,skip),draft:'',editingId:null});setError('');}catch(e){setError(e instanceof Error?e.message:'답변을 확인해 주세요.');}}
  function editAt(index:number){if(!story)return;const answer=story.profile.answers[index];if(!answer)return;setError('');setStory({...story,editingId:answer.question.id,draft:answer.text});}
  function previous(){if(!story)return;const index=story.editingId?story.profile.answers.findIndex(a=>a.question.id===story.editingId):story.profile.answers.length;editAt(index-1);}
  function summary(field:Field,value:string){if(story)setStory({...story,profile:editSummary(story.profile,field,value)});}
- const progress=profile?Math.round(demoEngine.evaluate(profile.answers).resolvedGroups/5*100):0;
+ const questions=profile?.shortFlow?shortQuestions:coreQuestions;
+ const progress=profile?Math.round((profile.shortFlow?shortEngine:demoEngine).evaluate(profile.answers).resolvedGroups/questions.length*100):0;
  const editingIndex=story?.editingId?profile?.answers.findIndex(a=>a.question.id===story.editingId):-1;
  const currentStage=question?'write':profile?.completionStatus==='confirmed'?'create':'review';
- const groupNumber=question?coreQuestions.findIndex(item=>item.group===question.group)+1:5;
+ const groupNumber=question?questions.findIndex(item=>item.group===question.group)+1:5;
  const choiceGroups=question?coreQuestionChoices(question):[];
  return <main className={`storybook ${styles.workshop}`}>
   <header className={styles.banner}>
@@ -58,9 +69,10 @@ export default function Storybook(){
     <h1>이야기의 씨앗</h1>
     <p className={styles.bannerText}>기억에 남는 순간을 하나씩 들려주세요. 작은 기억도 이야기의 시작이 돼요.</p>
    </div>
-   <nav aria-label="서비스 이동"><a className={styles.homeLink} href="#purchase-guide">구매 문의 · 입금 안내</a>{' '}<Link className={styles.homeLink} href="/">동화 홈</Link></nav>
+   <nav aria-label="서비스 이동"><a className={styles.homeLink} href="#questions">질문 작성</a> <a className={styles.homeLink} href="#my-books">내 책장</a> <a className={styles.homeLink} href="#purchase-guide">구매 문의 · 입금 안내</a>{' '}<Link className={styles.homeLink} href="/">동화 홈</Link></nav>
   </header>
 
+  <div hidden={view!=='questions'}>
   {restoredDraft&&story&&<section className={styles.tools} aria-label="저장한 이야기 이어 쓰기"><p role="status">저장한 이야기를 불러왔어요. {question?'작성하던 질문부터 이어서 들려주세요.':profile?.completionStatus==='confirmed'?'최종 확인한 내용이 남아 있어요. 저장·입금 안내와 제작 코드 입력으로 이어갈 수 있어요.':'정리된 내용을 확인한 뒤 내용 최종 확인을 눌러 주세요.'}</p><button className="secondary" onClick={jumpToCheckout}>저장 · 입금 안내 · 제작 코드로 이동</button></section>}
   {storageError&&<>
    <p className="error" role="alert">{storageError}</p>
@@ -91,11 +103,11 @@ export default function Storybook(){
       <li aria-current={currentStage==='review'?'step':undefined}><span>02</span> 내용 확인하기</li>
       <li aria-current={currentStage==='create'?'step':undefined}><span>03</span> 동화 만들기</li>
      </ol>
-     <p className={styles.railNote}>핵심 질문 5가지 · 필요할 때 후속 질문이 이어져요.</p>
+     <p className={styles.railNote}>{profile?.shortFlow?'핵심 질문 3가지':'핵심 질문 5가지 · 필요할 때 후속 질문이 이어져요.'}</p>
     </aside>
 
     {question?<section className={`panel ${styles.card}`} aria-labelledby="current-question">
-     <p className={styles.questionTag}>{groupNumber}/5 · {question.kind==='core'?'핵심 질문':'맞춤 후속 질문 '+question.number+'/2'}</p>
+     <p className={styles.questionTag}>{groupNumber}/{questions.length} · {question.kind==='core'?'핵심 질문':'맞춤 후속 질문 '+question.number+'/2'}</p>
      <h2 id="current-question" tabIndex={-1} className={styles.questionHeading} aria-describedby="question-story-use">{question.text}</h2>
      <p className={styles.promptNote}>{story.editingId?'이전 답변을 수정 중입니다. 저장하거나 건너뛰면 이후 답변과 요약 수정 내용이 삭제되고 질문을 다시 평가합니다.':coreQuestionHint(question.group,question.target)}</p>
      <form onSubmit={event=>submit(event)}>
@@ -119,31 +131,32 @@ export default function Storybook(){
      {error&&<p role="alert" className="error">{error}</p>}
     </section>:<section className={`panel ${styles.card}`}>
      <p className={styles.questionTag}>동화에 담길 내용</p>
-     <h2>이야기의 씨앗을 모았어요</h2>
+     <h2 id="current-question" tabIndex={-1}>이야기의 씨앗을 모았어요</h2>
      <p className={styles.promptNote}>동화에 담고 싶은 내용이 맞는지 살펴보세요. 더하고 싶은 기억이 있으면 아래에서 고칠 수 있어요.</p>
-     <div className={`summary-fields ${styles.reviewGrid}`}>
+     <details><summary>요약 확인 및 수정</summary><div className={`summary-fields ${styles.reviewGrid}`}>
       {fields.map(field=><div key={field}>
        <label htmlFor={'summary-'+field}>{labels[field]}</label>
        <p id={'summary-use-'+field} className={styles.fieldHint}>{questionStoryUse[field]}</p><p className={styles.exampleNote}>{questionStoryExample[field]}</p>
        <textarea aria-describedby={'summary-use-'+field} id={'summary-'+field} value={profile![field]} maxLength={4000} placeholder="원하면 추가해 주세요" onChange={e=>summary(field,e.target.value)}/>
       </div>)}
      </div>
-     <StoryDesignWorkshop profile={profile!} onChange={design=>setStory({...story,profile:{...profile!,storyDesign:design,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
+     </details><details><summary>추가로 담고 싶은 내용</summary><StoryDesignWorkshop profile={profile!} onChange={design=>setStory({...story,profile:{...profile!,storyDesign:design,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
      <label htmlFor="fictional-elements">동화적으로 각색해도 좋은 요소 (선택)</label>
      <p id="fictional-story-use" className={styles.fieldHint}>{fictionalStoryUse}</p><p className={styles.exampleNote}>{fictionalStoryExample}</p>
      <textarea id="fictional-elements" aria-describedby="fictional-story-use" maxLength={4000} placeholder="예: 숲속 배경이나 말하는 동물. 실제 추억과 구분해 저장합니다." value={profile!.fictionalElements} onChange={e=>setStory({...story,profile:{...profile!,fictionalElements:e.target.value,completionStatus:'review',updatedAt:new Date().toISOString()}})}/>
-     <button disabled={profile!.completionStatus==='confirmed'} onClick={()=>setStory({...story,profile:{...profile!,completionStatus:'confirmed',updatedAt:new Date().toISOString()}})}>내용 최종 확인</button>
+     </details><button disabled={profile!.completionStatus==='confirmed'} onClick={()=>setStory({...story,profile:{...profile!,completionStatus:'confirmed',updatedAt:new Date().toISOString()}})}>내용 최종 확인</button>
      <p role="status">{profile!.completionStatus==='confirmed'?'최종 확인되었습니다. 내용을 수정하면 다시 확인할 수 있어요.':'건너뛴 항목이 있어도 확인할 수 있어요.'}</p>
      {profile!.completionStatus==='confirmed'&&<button onClick={jumpToCheckout}>가격 확인 · 브라우저 저장 · 제작 코드 입력으로 이동</button>}
     </section>}
    </div>
 
-   {profile!.answers.length>0&&<section className={styles.tools} aria-label="이전 답변 수정">
+   {!question&&profile!.answers.length>0&&<section className={styles.tools} aria-label="이전 답변 수정">
     <h2>이전 답변 수정</h2>
     <div className="story-actions">{profile!.answers.map((answer,index)=><button className="secondary" key={answer.question.id} onClick={()=>editAt(index)}>답변 {index+1} 수정{answer.skipped?' · 건너뜀':''}</button>)}</div>
    </section>}
   </>}
 
+  <details className={styles.tools}><summary>작성본 관리</summary>
   <details className={styles.tools}>
    <summary>답변 저장과 개인정보 안내</summary>
    <p>답변과 작성 중인 내용은 현재 브라우저에 저장돼요. 동화 생성을 선택하면 확인한 요약을 AI에 전달합니다. 공용 기기에서 작성했다면 이용을 마친 뒤 답변을 삭제해 주세요.</p>
@@ -156,7 +169,8 @@ export default function Storybook(){
     </footer>
   </div>}
   <QuestionImport story={story} disabled={!ready||(!story&&!!storageError)} onBackup={()=>downloadDraft('json')} onApply={importDraft}/>
-  {ready&&<StoryReader profile={profile??null} draftStorage={{onSave:()=>persist(true),saving,saved:!!story&&savedDraft===JSON.stringify(story)&&!storageError,error:storageError,available:!!story,onBackup:()=>downloadDraft('json')}}/>}
-  <PurchaseGuide/>
+  </details></div>
+  <div hidden={view!=='books'}>{ready&&<StoryReader profile={profile??null} draftStorage={{onSave:()=>persist(true),saving,saved:!!story&&savedDraft===JSON.stringify(story)&&!storageError,error:storageError,available:!!story,onBackup:()=>downloadDraft('json')}}/>}
+  </div><div hidden={view!=='purchase'}><PurchaseGuide/></div>
  </main>;
 }
