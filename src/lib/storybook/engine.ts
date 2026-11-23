@@ -5,7 +5,7 @@ export type Group = 'recipient'|'event'|'emotion'|'details'|'message';
 export type Question = {id:string;group:Group;kind:'core'|'followup';text:string;target:Field;number:number};
 export type Answer = {question:Question;text:string;skipped:boolean};
 export type StoryProfile = Record<Field,string> & {
- storyId:string;answers:Answer[];currentQuestion:Question|null;
+ shortFlow?:true;storyId:string;answers:Answer[];currentQuestion:Question|null;
  completionStatus:'in_progress'|'review'|'confirmed';createdAt:string;updatedAt:string;
  facts:Partial<Record<Field,{value:string;sourceAnswerIds:string[];source:'answer'|'summary_edit'}>>;
  fictionalElements:string;summaryEdits:Partial<Record<Field,string>>;storyDesign?:StoryDesign;
@@ -83,10 +83,21 @@ export const demoEngine:QuestionEngine={evaluate(answers){
  }
  return {values,facts,next:null,resolvedGroups:5};
 }};
-export function newProfile():StoryProfile {
- const now=new Date().toISOString();return rebuild({ ...emptyValues(),storyId:crypto.randomUUID(),answers:[],currentQuestion:null,completionStatus:'in_progress',createdAt:now,updatedAt:now,facts:{},summaryEdits:{},fictionalElements:''});
+export const shortQuestions = [
+ {...coreQuestions[0],text:'누구를 위한 동화인가요? 주인공의 이름이나 별칭과 두 분의 관계를 들려주세요.'},
+ {...coreQuestions[1],text:'함께한 순간 중 어떤 장면을 담을까요? 그때의 표정이나 말도 좋아요.'},
+ coreQuestions[4]
+];
+export const shortEngine:QuestionEngine={evaluate(answers){
+ const {values,facts}=collect(answers);
+ const remaining=shortQuestions.filter(q=>!values[q.target]&&!answers.some(a=>a.question.group===q.group));
+ const core=remaining[0];
+ return {values,facts,resolvedGroups:shortQuestions.length-remaining.length,next:core?{...core,id:core.group+':core',kind:'core',number:0}:null};
+}};
+export function newProfile(shortFlow=false):StoryProfile {
+ const now=new Date().toISOString();return rebuild({ ...emptyValues(),...(shortFlow?{shortFlow:true as const}:{}),storyId:crypto.randomUUID(),answers:[],currentQuestion:null,completionStatus:'in_progress',createdAt:now,updatedAt:now,facts:{},summaryEdits:{},fictionalElements:''});
 }
-export function rebuild(profile:StoryProfile,engine:QuestionEngine=demoEngine):StoryProfile{
+export function rebuild(profile:StoryProfile,engine:QuestionEngine=profile.shortFlow?shortEngine:demoEngine):StoryProfile{
  const evaluated=engine.evaluate(profile.answers);
  const facts={...evaluated.facts};const values={...evaluated.values};
  for(const field of fields)if(profile.summaryEdits[field]!==undefined){values[field]=profile.summaryEdits[field]!;facts[field]={value:values[field],sourceAnswerIds:[],source:'summary_edit'};}
@@ -95,7 +106,7 @@ export function rebuild(profile:StoryProfile,engine:QuestionEngine=demoEngine):S
 export function submitAnswer(profile:StoryProfile,question:Question,text:string,skipped=false):StoryProfile{
  const index=profile.answers.findIndex(a=>a.question.id===question.id);
  const prefix=index<0?profile.answers:profile.answers.slice(0,index);
- const expected=demoEngine.evaluate(prefix).next;
+ const expected=(profile.shortFlow?shortEngine:demoEngine).evaluate(prefix).next;
  if(!expected||expected.id!==question.id)throw new Error('질문 순서가 변경되었습니다.');
  if(!skipped&&(!text.trim()||text.length>4000))throw new Error('답변은 1~4000자로 입력하거나 건너뛰어 주세요.');
  return rebuild({...profile,answers:[...prefix,{question:expected,text:skipped?'':text.trim(),skipped}],summaryEdits:{},completionStatus:'in_progress',updatedAt:new Date().toISOString()});

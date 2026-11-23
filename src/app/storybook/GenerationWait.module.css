@@ -1,0 +1,16 @@
+.screen[open]{box-sizing:border-box;position:fixed;inset:0;margin:auto;width:100%;height:100%;max-width:none;max-height:none;border:0;padding:20px;background:#faf5ed;display:grid;place-items:safe center;color:#392d33;overflow:auto;font-family:inherit}
+.card{width:min(100%,370px);background:#fffdf9;border-radius:24px;overflow:hidden;box-shadow:0 12px 38px #53351716;border:1px solid #e9dfd1}
+.card img{display:block;width:100%;height:220px;object-fit:cover}
+.tower{object-position:center 72%}
+.copy{padding:24px;text-align:left}
+.copy small{color:#765a72;font-size:13px;font-weight:bold}
+.copy h2{margin:6px 0;font-size:26px;line-height:1.4;color:#38293b}
+.copy p{font-size:14px;line-height:1.6;margin:6px 0;color:#655960}
+.row{display:flex;align-items:baseline;justify-content:space-between;margin-top:24px;font-size:13px}
+.row strong{font-size:26px;color:#705180}
+.copy progress{display:block;appearance:none;width:100%;height:9px;border:0;border-radius:12px;background:#eee6ed;overflow:hidden}
+.copy progress::-webkit-progress-bar{background:#eee6ed}
+.copy progress::-webkit-progress-value{background:#876692;border-radius:12px}
+.copy progress::-moz-progress-bar{background:#876692}
+.copy .detail{margin:8px 0 20px;font-size:13px}
+.copy button{font:inherit;font-size:13px;color:#60565e;background:#f5f0ea;border:0;padding:10px 16px;border-radius:12px;cursor:pointer}
