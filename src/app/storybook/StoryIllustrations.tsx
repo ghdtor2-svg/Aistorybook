@@ -2,6 +2,7 @@
 
 import {useEffect,useRef,useState} from 'react';
 import type {Book} from '../../lib/storybook/books';
+import GenerationWait from './GenerationWait';
 import StoryPages from './StoryPages';
 import styles from './StoryPages.module.css';
 import {storyPdf} from './storyPdf';
@@ -60,7 +61,9 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
   const [direction,setDirection]=useState('');
   const [showAlternative,setShowAlternative]=useState(true);
   const [pdf,setPdf]=useState<{done:number;total:number}|null>(null);
+  const [waitHidden,setWaitHidden]=useState(false);
   const working=busy||!!art?.busy||!!art?.job&&['queued','running'].includes(art.job.status);
+  useEffect(()=>{if(!working)setWaitHidden(false);},[working]);
   useEffect(()=>{onWorking?.(working);return ()=>onWorking?.(false);},[working,onWorking]);
   useEffect(()=>{
     let current=true;
@@ -148,7 +151,7 @@ export default function StoryIllustrations({book,code,onWorking}:{book:Book;code
     }catch(error){setMessage((error as Error).message);}
     finally{setBusy(false);}
   }
-  return <><StoryPages book={book} artAt={artAt}/><section className={styles.controls} aria-label="동화 삽화">
+  return <>{working&&art&&art.base.length<art.total&&!waitHidden&&!message&&<GenerationWait kind="art" done={art.base.length} total={art.total} onClose={()=>setWaitHidden(true)}/>}<StoryPages book={book} artAt={artAt}/><section className={styles.controls} aria-label="동화 삽화">
     <h3>표지와 삽화</h3>
     {working&&<p role="status">접수된 그림 제작은 화면을 떠나도 별도로 진행돼요. 돌아오면 진행 상태를 다시 확인해요.{onLocalPc()?' 컴퓨터와 제작 서버는 켜 두세요.':''}</p>}
     {art?.style&&<p>이 동화의 화풍 · {art.style}</p>}
